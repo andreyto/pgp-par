@@ -1,0 +1,42 @@
+<h1>Inspect: A Proteomics Search Toolkit</h1>
+Copyright 2007, The Regents of the University of California
+<h3>Table of Contents</h1>
+<li><a href="index.html">Overview</a>
+<li><a href="Copyright.html">Copyright information</a>
+<li><a href="Installation.html">Installation</a>
+<li><a href="Database.html">Database</a>
+<li><a href="Searching.html">Searching</a>
+<li><a href="Analysis.html">Analysis</a>
+<li><a href="InspectTutorial.pdf">Basic Tutorial</a>
+<li><a href="InspectAdvancedTutorial.pdf">Advanced Tutorial</a>
+<li><a href="UnrestrictedSearchTutorial.pdf">Unrestricted Search Tutorial</a>
+
+<hr>
+<h1>Installation</h1>
+To install Inspect, first unzip the source distribution.  You may need to compile it:
+<li> On Windows, use the included executable
+inspect.exe.  You can build the source code on Windows using the makefile, or
+the included Visual Studio project.
+<li> On Linux, first install <a href="http://sourceforge.net/projects/expat/">expat</a>.  Then,
+build Inspect using the included makefile.
+<li> Macintosh is not officially supported.  Follow the instructions for Linux, they are likely to work.
+<br><br>
+Other things to do while you're installing:
+<li> Inspect requires <a href="http://www.python.org">Python</a> (version 2.1 or later) in order
+to run various analysis and utility scripts.
+<li> (Optional) You may wish to
+install the <a href="http://www.pythonware.com/products/pil/">Python Imaging Library (PIL)</a>
+for generation of simple spectrum images.
+<li> (Optional) If the <a href="http://psyco.sourceforge.net/">psyco</a>
+library is installed, it is automatically loaded to speed up analysis scripts; this is entirely
+optional.
+<li> (Recommended) The Python numeric library (numpy) is required for some analysis scripts.
+<li>The distribution includes some system tests.  After installing, go to the Inspect directory, and
+run them to be sure that things are installed properly:<br>
+<tt><b>python SystemTest.py</b></tt><br>
+After the run completes, any errors will be reported.  Files used by the system tests are stored
+in the "SystemTest" subdirectory.  The test input file "TestInput.txt" is annotated
+with comments, and you can refer to it (or copy and modify it) when starting up searches.
+<br><br>
+If the tests fail, please <a href="mailto:spayne@ucsd.edu">submit a bug report</a> (and include
+any relevant-looking error messages).

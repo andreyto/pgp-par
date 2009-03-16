@@ -1,0 +1,9 @@
+spectra,SystemTest/TestSpectrum.dta
+instrument,ESI-ION-TRAP
+protease,None
+DB,TestDatabase.trie
+mod,+57,C,fix
+mods,1
+taglength,1
+tagsonly
+

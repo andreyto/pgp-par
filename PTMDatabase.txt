@@ -1,0 +1,563 @@
+#Database	ID	Mass	Name	AA	Terminus
+"#UniMOD PTM reference, parsed from http://www.unimod.org on 2/20/6. "					
+UniMOD	1	42.0367	Acetylation		N-term
+UniMOD	1	42.0367	Acetylation	K	
+UniMOD	1	42.0367	Acetylation	C	
+UniMOD	1	42.0367	Acetylation	S	
+UniMOD	2	-0.9848	Amidation		C-term
+UniMOD	3	226.2954	Biotinylation		N-term
+UniMOD	3	226.2954	Biotinylation	K	
+UniMOD	4	57.0513	Iodoacetamide derivative	D	
+UniMOD	4	57.0513	Iodoacetamide derivative	H	
+UniMOD	4	57.0513	Iodoacetamide derivative		N-term
+UniMOD	4	57.0513	Iodoacetamide derivative	K	
+UniMOD	4	57.0513	Iodoacetamide derivative	C	
+UniMOD	4	57.0513	Iodoacetamide derivative	E	
+UniMOD	5	43.0247	Carbamylation	C	
+UniMOD	5	43.0247	Carbamylation	R	
+UniMOD	5	43.0247	Carbamylation		N-term
+UniMOD	5	43.0247	Carbamylation	K	
+UniMOD	6	58.0361	Iodoacetic acid derivative	C	
+UniMOD	7	0.9848	Deamidation	Q	
+UniMOD	7	0.9848	Deamidation	N	
+UniMOD	8	486.6253	Gygi ICAT(TM) d0	C	
+UniMOD	9	494.6746	Gygi ICAT(TM) d8	C	
+UniMOD	10	-30.0922	Homoserine	M	
+UniMOD	11	-48.1075	Homoserine lactone	M	
+UniMOD	12	450.6221	Applied Biosystems original ICAT(TM) d8	C	
+UniMOD	13	442.5728	Applied Biosystems original ICAT(TM) d0	C	
+UniMOD	14	14.0266	Methyl ester	T	
+UniMOD	14	14.0266	Methyl ester	S	
+UniMOD	14	14.0266	Methyl ester	E	
+UniMOD	14	14.0266	Methyl ester	D	
+UniMOD	14	14.0266	Methyl ester		C-term
+UniMOD	15	42.0367	N-Acetylation		N-term
+UniMOD	16	28.0101	N-Formylation		N-term
+UniMOD	17	99.1311	N-isopropylcarboxamidomethyl	C	
+UniMOD	18	1.9998	O18 label		C-term
+UniMOD	19	15.9994	Oxidation	W	
+UniMOD	19	15.9994	Oxidation	H	
+UniMOD	19	15.9994	Oxidation	M	
+UniMOD	20	414.5196	"Biotinyl-iodoacetamidyl-3,6-dioxaoctanediamine"	C	
+UniMOD	21	79.9799	Phosphorylation	Y	
+UniMOD	21	79.9799	Phosphorylation	D	
+UniMOD	21	79.9799	Phosphorylation	C	
+UniMOD	21	79.9799	Phosphorylation	H	
+UniMOD	21	79.9799	Phosphorylation	T	
+UniMOD	21	79.9799	Phosphorylation	S	
+UniMOD	21	79.9799	Phosphorylation	R	
+UniMOD	22	79.9799	Phosphorylation without neutral loss	T	
+UniMOD	22	79.9799	Phosphorylation without neutral loss	S	
+UniMOD	23	-18.0153	Phosphorylation with prompt loss of phosphate	S	
+UniMOD	23	-18.0153	Phosphorylation with prompt loss of phosphate	T	
+UniMOD	23	-18.0153	Phosphorylation with prompt loss of phosphate	Y	
+UniMOD	24	71.0779	Acrylamide adduct	C	
+UniMOD	25	119.1207	pyridylacetyl		N-term
+UniMOD	25	119.1207	pyridylacetyl	K	
+UniMOD	26	-17.0305	S-carbamoylmethylcysteine cyclization (N-terminus)	C	
+UniMOD	27	-18.0153	Pyro-glu from E	E	
+UniMOD	28	-17.0305	Pyro-glu from Q	Q	
+UniMOD	29	127.1412	N-Succinimidyl-3-morpholine acetate		N-term
+UniMOD	29	127.1412	N-Succinimidyl-3-morpholine acetate	K	
+UniMOD	30	21.9818	Sodium adduct	D	
+UniMOD	30	21.9818	Sodium adduct		C-term
+UniMOD	30	21.9818	Sodium adduct	E	
+UniMOD	31	105.1372	S-pyridylethylation	C	
+UniMOD	32	31.9988	Sulphone	M	
+UniMOD	33	0.9848	Citrullination	R	
+UniMOD	34	14.0266	Methylation	I	
+UniMOD	34	14.0266	Methylation	Q	
+UniMOD	34	14.0266	Methylation	R	
+UniMOD	34	14.0266	Methylation		N-term
+UniMOD	34	14.0266	Methylation	N	
+UniMOD	34	14.0266	Methylation	K	
+UniMOD	34	14.0266	Methylation	H	
+UniMOD	34	14.0266	Methylation	C	
+UniMOD	34	14.0266	Methylation	L	
+UniMOD	35	15.9994	Hydroxylation	R	
+UniMOD	35	15.9994	Hydroxylation	Y	
+UniMOD	35	15.9994	Hydroxylation	F	
+UniMOD	35	15.9994	Hydroxylation	P	
+UniMOD	35	15.9994	Hydroxylation	N	
+UniMOD	35	15.9994	Hydroxylation	K	
+UniMOD	35	15.9994	Hydroxylation	D	
+UniMOD	36	28.0532	di-Methylation		N-term
+UniMOD	36	28.0532	di-Methylation	R	
+UniMOD	36	28.0532	di-Methylation	K	
+UniMOD	36	28.0532	di-Methylation	N	
+UniMOD	37	42.0797	tri-Methylation	R	
+UniMOD	37	42.0797	tri-Methylation	K	
+UniMOD	38	44.0095	Gamma-carboxylation	E	
+UniMOD	38	44.0095	Gamma-carboxylation	D	
+UniMOD	39	46.0916	Beta-methylthiolation	D	
+UniMOD	39	46.0916	Beta-methylthiolation	N	
+UniMOD	40	80.0632	O-Sulfonation	Y	
+UniMOD	40	80.0632	O-Sulfonation	T	
+UniMOD	40	80.0632	O-Sulfonation	S	
+UniMOD	41	162.1406	Hexose	R	
+UniMOD	41	162.1406	Hexose	C	
+UniMOD	41	162.1406	Hexose	T	
+UniMOD	41	162.1406	Hexose	W	
+UniMOD	41	162.1406	Hexose	N	
+UniMOD	41	162.1406	Hexose		N-term
+UniMOD	41	162.1406	Hexose	K	
+UniMOD	41	162.1406	Hexose	Y	
+UniMOD	42	188.3103	Lipoyl	K	
+UniMOD	43	203.1925	N-Acetylhexosamine	T	
+UniMOD	43	203.1925	N-Acetylhexosamine	S	
+UniMOD	43	203.1925	N-Acetylhexosamine	N	
+UniMOD	44	204.3511	Farnesylation	C	
+UniMOD	45	210.3556	Myristoylation	K	
+UniMOD	45	210.3556	Myristoylation	G	
+UniMOD	45	210.3556	Myristoylation	C	
+UniMOD	46	229.1266	Pyridoxal phosphate	K	
+UniMOD	47	238.4088	Palmitoylation	T	
+UniMOD	47	238.4088	Palmitoylation	S	
+UniMOD	47	238.4088	Palmitoylation	K	
+UniMOD	47	238.4088	Palmitoylation	C	
+UniMOD	48	272.4681	Geranyl-geranyl	C	
+UniMOD	49	340.333	Phosphopantetheine	S	
+UniMOD	50	783.5339	Flavin adenine dinucleotide	Y	
+UniMOD	50	783.5339	Flavin adenine dinucleotide	H	
+UniMOD	50	783.5339	Flavin adenine dinucleotide	C	
+UniMOD	51	789.3049	N-acyl diglyceride cysteine	C	
+UniMOD	52	42.04	Guanidination	K	
+UniMOD	53	156.2221	4-hydroxynonenal (HNE)	C	
+UniMOD	53	156.2221	4-hydroxynonenal (HNE)	H	
+UniMOD	53	156.2221	4-hydroxynonenal (HNE)	K	
+UniMOD	54	176.1241	N-glucuronylation		N-term
+UniMOD	55	305.3076	glutathione disulfide	C	
+UniMOD	56	45.0552	"Acetate labeling reagent (N-term & K) (heavy form, +3amu)"		N-term
+UniMOD	56	45.0552	"Acetate labeling reagent (N-term & K) (heavy form, +3amu)"	K	
+UniMOD	57	42.0367	Acetate labeling reagent light form (N-term & K)		N-term
+UniMOD	57	42.0367	Acetate labeling reagent light form (N-term & K)	K	
+UniMOD	58	56.0633	Propionate labeling reagent light form (N-term & K)		N-term
+UniMOD	58	56.0633	Propionate labeling reagent light form (N-term & K)	K	
+UniMOD	59	59.0412	"Propionate labeling reagent heavy form (+3amu), N-term&K"		N-term
+UniMOD	59	59.0412	"Propionate labeling reagent heavy form (+3amu), N-term&K"	K	
+UniMOD	60	127.1842	Quaternary amine labeling reagent light form (N-term & K)		N-term
+UniMOD	60	127.1842	Quaternary amine labeling reagent light form (N-term & K)	K	
+UniMOD	61	130.2027	"Quaternary amine labeling reagent heavy (+3amu) form, N-term & K"		N-term
+UniMOD	61	130.2027	"Quaternary amine labeling reagent heavy (+3amu) form, N-term & K"	K	
+UniMOD	62	133.2212	"Quaternary amine labeling reagent heavy form (+6amu), N-term & K"		N-term
+UniMOD	62	133.2212	"Quaternary amine labeling reagent heavy form (+6amu), N-term & K"	K	
+UniMOD	63	136.2397	"Quaternary amine labeling reagent heavy form (+9amu), N-term & K"		N-term
+UniMOD	63	136.2397	"Quaternary amine labeling reagent heavy form (+9amu), N-term & K"	K	
+UniMOD	64	100.0728	Succinic anhydride labeling reagent light form (N-term & K)		N-term
+UniMOD	64	100.0728	Succinic anhydride labeling reagent light form (N-term & K)	K	
+UniMOD	65	104.0974	"Succinic anhydride labeling reagent, heavy form (+4amu, 4H2), N-term & K"		N-term
+UniMOD	65	104.0974	"Succinic anhydride labeling reagent, heavy form (+4amu, 4H2), N-term & K"	K	
+UniMOD	66	104.0434	"Succinic anhydride labeling reagent, heavy form (+4amu, 4C13), N-term & K"		N-term
+UniMOD	66	104.0434	"Succinic anhydride labeling reagent, heavy form (+4amu, 4C13), N-term & K"	K	
+UniMOD	89	225.3106	Iminobiotinylation		N-term
+UniMOD	89	225.3106	Iminobiotinylation	K	
+UniMOD	90	338.4682	ESP-Tag light d0		N-term
+UniMOD	90	338.4682	ESP-Tag light d0	K	
+UniMOD	91	348.5299	ESP-Tag heavy d10		N-term
+UniMOD	91	348.5299	ESP-Tag heavy d10	K	
+UniMOD	92	339.453	NHS-LC-Biotin		N-term
+UniMOD	92	339.453	NHS-LC-Biotin	K	
+UniMOD	93	601.8021	EDT-maleimide-PEO-biotin	T	
+UniMOD	93	601.8021	EDT-maleimide-PEO-biotin	S	
+UniMOD	94	68.0773	IMID d0	K	
+UniMOD	95	72.1019	IMID d4	K	
+UniMOD	97	74.0964	Acrylamide d3	C	
+UniMOD	105	227.2603	Applied Biosystems cleavable ICAT(TM) light	C	
+UniMOD	106	236.1942	Applied Biosystems cleavable ICAT(TM) heavy	C	
+UniMOD	107	160.2141	Addition of N-formyl met		N-term
+UniMOD	108	125.1253	N-ethylmaleimide on cysteines	C	
+UniMOD	112	354.4676	"Oxidized lysine biotinylated with biotin-LC-hydrazide, reduced"	K	
+UniMOD	113	352.4518	Oxidized lysine biotinylated with biotin-LC-hydrazide	K	
+UniMOD	114	371.4982	"Oxidized proline biotinylated with biotin-LC-hydrazide, reduced"	P	
+UniMOD	115	369.4823	Oxidized Proline biotinylated with biotin-LC-hydrazide	P	
+UniMOD	116	310.4118	Oxidized arginine biotinylated with biotin-LC-hydrazide	R	
+UniMOD	117	312.4277	"Oxidized arginine biotinylated with biotin-LC-hydrazide, reduced"	R	
+UniMOD	118	490.7034	EDT-iodo-PEO-biotin	T	
+UniMOD	118	490.7034	EDT-iodo-PEO-biotin	S	
+UniMOD	119	316.3759	Thio Ether Formation - BTP Adduct	C	
+UniMOD	121	114.1026	ubiquitinylation residue	K	
+UniMOD	122	28.0101	Formylation		N-term
+UniMOD	122	28.0101	Formylation	T	
+UniMOD	122	28.0101	Formylation	S	
+UniMOD	122	28.0101	Formylation	K	
+UniMOD	123	345.7754	"N-iodoacetyl, p-chlorobenzyl-12C6-glucamine"	C	
+UniMOD	124	351.7313	"N-iodoacetyl, p-chlorobenzyl-13C6-glucamine"	C	
+UniMOD	125	32.0778	reductive amination-D		N-term
+UniMOD	125	32.0778	reductive amination-D	K	
+UniMOD	126	88.1283	thioacylation of primary amines (N-term and Lys)		N-term
+UniMOD	126	88.1283	thioacylation of primary amines (N-term and Lys)	K	
+UniMOD	127	17.9905	fluorophenylalanine replacement of phenylalanine	F	
+UniMOD	128	388.3497	"5-Iodoacetamidofluorescein (Molecular Probe, Eugene, OR)"	C	
+UniMOD	129	125.8965	Iodination	H	
+UniMOD	129	125.8965	Iodination	Y	
+UniMOD	130	251.7931	di-Iodination	Y	
+UniMOD	131	377.6896	tri-Iodination	Y	
+UniMOD	134	208.3398	(cis-delta 5)-tetradecaenoyl	G	
+UniMOD	135	206.3239	"(cis,cis-delta 5, delta 8)-tetradecadienoyl"	G	
+UniMOD	136	104.1061	labeling reagent light form (N-term & K)		N-term
+UniMOD	136	104.1061	labeling reagent light form (N-term & K)	K	
+UniMOD	137	1217.088	N-linked glycan core	N	
+UniMOD	139	233.2862	5-dimethylaminonaphthalene-1-sulfonyl	K	
+UniMOD	139	233.2862	5-dimethylaminonaphthalene-1-sulfonyl		N-term
+UniMOD	140	-29.018	ISD a-series (C-Term)		C-term
+UniMOD	141	41.0519	amidination of lysines or N-terminal amines with methyl acetimidate	K	
+UniMOD	141	41.0519	amidination of lysines or N-terminal amines with methyl acetimidate		N-term
+UniMOD	142	349.3337	HexNAc1dHex1	N	
+UniMOD	143	406.385	HexNAc2	N	
+UniMOD	144	486.4218	Hex3	N	
+UniMOD	145	495.4749	HexNAc1dHex2	N	
+UniMOD	146	511.4743	Hex1HexNAc1dHex1	N
+UniMOD	147	552.5262	HexNAc2dHex1	N
+UniMOD	148	568.5256	Hex1HexNAc2	N
+UniMOD	149	656.5877	Hex1HexNAc1NeuAc1	N
+UniMOD	150	698.6674	HexNAc2dHex2	N
+UniMOD	151	700.6403	Hex1HexNAc2Pent1	N
+UniMOD	152	714.6668	Hex1HexNAc2dHex1	N
+UniMOD	153	730.6662	Hex2HexNAc2	N
+UniMOD	154	821.7289	Hex3HexNAc1Pent1	N
+UniMOD	155	846.7815	Hex1HexNAc2dHex1Pent1	N
+UniMOD	156	860.808	Hex1HexNAc2dHex2	N
+UniMOD	157	862.7809	Hex2HexNAc2Pent1	N
+UniMOD	158	876.8074	Hex2HexNAc2dHex1	N
+UniMOD	159	892.8068	Hex3HexNAc2	N
+UniMOD	160	947.8423	Hex1HexNAc1NeuAc2	N
+UniMOD	161	923.7806	Hex3HexNAc2P1	N
+UniMOD	162	46.895	Selenium replaces sulphur in Methionine	M
+UniMOD	170	3.0077	glycosylated asparagine 18O labeling	N
+UniMOD	171	159.1144	Shimadzu 13CNBS	W
+UniMOD	172	153.1585	Shimadzu 12CNBS	W
+UniMOD	176	218.3346	Michael addition of BHT quinone methide to Cysteine and Lysine	H
+UniMOD	176	218.3346	Michael addition of BHT quinone methide to Cysteine and Lysine	C
+UniMOD	176	218.3346	Michael addition of BHT quinone methide to Cysteine and Lysine	K
+UniMOD	178	87.1866	phosphorylation to amine thiol	T
+UniMOD	178	87.1866	phosphorylation to amine thiol	S
+UniMOD	179	-15.9994	Serine to Alanine	S
+UniMOD	182	-15.9994	Threonine to a-aminobutyrate	T
+UniMOD	184	8.9339	C13 label	Y
+UniMOD	185	88.9138	C13 label (Phosphotyrosine)	Y
+UniMOD	186	132.1162	Hydroxyphenylglyoxal arginine	R
+UniMOD	187	282.2476	2 Hydroxyphenylglyoxal arginine	R
+UniMOD	188	5.9559	C13 label	F
+UniMOD	188	5.9559	C13 label	L	
+UniMOD	188	5.9559	C13 label	K	
+UniMOD	188	5.9559	C13 label	R	
+UniMOD	193	3.9995	O18 label at both C-terminal oxygens		C-term
+UniMOD	194	170.1674	6-aminoquinolyl-N-hydroxysuccinimidyl carbamate		N-term
+UniMOD	194	170.1674	6-aminoquinolyl-N-hydroxysuccinimidyl carbamate	K	
+UniMOD	195	170.252	APTA-d0	C	
+UniMOD	196	174.2784	APTA d3	C	
+UniMOD	197	184.2786	EAPTA d0	C	
+UniMOD	198	189.3094	EAPTA d5	C	
+UniMOD	199	32.0778	DiMethyl-CHD2		N-term
+UniMOD	199	32.0778	DiMethyl-CHD2	K	
+UniMOD	200	76.1838	EDT	T	
+UniMOD	200	76.1838	EDT	S	
+UniMOD	202	170.252	APTA- d0 with no neutral loss	C	
+UniMOD	203	170.252	APTA-d0 with quaternary amine loss	C	
+UniMOD	205	94.1112	Acrolein addition +94	K
+UniMOD	206	56.0633	Acrolein addition +56	K
+UniMOD	206	56.0633	Acrolein addition +56	H
+UniMOD	206	56.0633	Acrolein addition +56	C
+UniMOD	207	38.048	Acrolein addition +38	K
+UniMOD	208	76.096	Acrolein addition +76	K
+UniMOD	209	112.1265	Acrolein addition +112	K
+UniMOD	211	85.1045	N-ethyl iodoacetamide-d0	Y
+UniMOD	211	85.1045	N-ethyl iodoacetamide-d0	C
+UniMOD	212	90.1353	N-ethyl iodoacetamide-d5	Y
+UniMOD	212	90.1353	N-ethyl iodoacetamide-d5	C
+UniMOD	213	541.3005	ADP  Ribose addition	S
+UniMOD	213	541.3005	ADP  Ribose addition	N
+UniMOD	213	541.3005	ADP  Ribose addition	C
+UniMOD	213	541.3005	ADP  Ribose addition	R
+UniMOD	213	541.3005	ADP  Ribose addition	E
+UniMOD	214	144.1544	Applied Biosystems iTRAQ(TM) multiplexed quantitation chemistry	Y	
+UniMOD	214	144.1544	Applied Biosystems iTRAQ(TM) multiplexed quantitation chemistry		N-term
+UniMOD	214	144.1544	Applied Biosystems iTRAQ(TM) multiplexed quantitation chemistry	K	
+UniMOD	215	0.9848	deglycosylated asparagine	N	
+UniMOD	243	297.1478	label Cysteine with IGBP reagent	C	
+UniMOD	253	70.0898	Crotonaldehyde	K	
+UniMOD	253	70.0898	Crotonaldehyde	H	
+UniMOD	253	70.0898	Crotonaldehyde	C	
+UniMOD	254	26.0373	Acetaldehyde +26	K	
+UniMOD	254	26.0373	Acetaldehyde +26	H	
+UniMOD	255	28.0532	Acetaldehyde +28	K	
+UniMOD	255	28.0532	Acetaldehyde +28	H	
+UniMOD	256	40.0639	Propionaldehyde +40	K	
+UniMOD	256	40.0639	Propionaldehyde +40	H	
+UniMOD	258	1.9998	"O18 Labeling of Serine, Threonine or Tyrosine"	Y	
+UniMOD	258	1.9998	"O18 Labeling of Serine, Threonine or Tyrosine"	T	
+UniMOD	258	1.9998	"O18 Labeling of Serine, Threonine or Tyrosine"	S	
+UniMOD	259	7.9427	C13 and N15 label	K	
+UniMOD	260	96.0455	Thiophosphorylation	Y	
+UniMOD	260	96.0455	Thiophosphorylation	T	
+UniMOD	260	96.0455	Thiophosphorylation	S	
+UniMOD	261	215.2495	4-sulfophenyl isothiocyanate	K	
+UniMOD	261	215.2495	4-sulfophenyl isothiocyanate		N-term
+UniMOD	262	3.0185	Trideuteration	L	
+UniMOD	264	121.2028	phosphorylation to pyridyl thiol	T	
+UniMOD	264	121.2028	phosphorylation to pyridyl thiol	S	
+UniMOD	267	9.9296	C13 and N15 label	R	
+UniMOD	268	5.9567	C13 and N15 label	V	
+UniMOD	269	9.9273	C13 and N15 label	F	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	Y	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	S	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	R	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	P	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne		N-term
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	K	
+UniMOD	270	362.3738	nucleophilic addtion to cytopiloyne	C	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	Y	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	T	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	S	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	R	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O		N-term
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	K	
+UniMOD	271	380.3891	nucleophilic addition to cytopiloyne+H2O	C	
+UniMOD	272	136.1265	sulfonation of N-terminus		N-term
+UniMOD	273	253.2512	covalent modification of lysine by cross-linking reagent	K	
+UniMOD	275	28.9982	S-nitrosylation	C	
+UniMOD	276	183.2276	Aminoethylbenzenesulfonylation		N-term
+UniMOD	276	183.2276	Aminoethylbenzenesulfonylation	K	
+UniMOD	276	183.2276	Aminoethylbenzenesulfonylation	S	
+UniMOD	276	183.2276	Aminoethylbenzenesulfonylation	H	
+UniMOD	276	183.2276	Aminoethylbenzenesulfonylation	Y	
+UniMOD	277	46.0916	Methyl methanethiosulfonate	C	
+UniMOD	278	44.0526	Ethanolation of Cys	C	
+UniMOD	279	15.9994	Cysteine sulfenic acid	C	
+UniMOD	280	28.0532	Ethylation		N-term
+UniMOD	280	28.0532	Ethylation	K	
+UniMOD	280	28.0532	Ethylation	E	
+UniMOD	281	765.5182	Cysteine modified Coenzyme A	C	
+UniMOD	282	14.0266	N-methylation		N-term
+UniMOD	283	28.0532	N-ethylation		N-term
+UniMOD	284	16.0389	Deuterium Methylation of Lysine	K	
+UniMOD	285	155.1744	Light Sulfanilic Acid (SA) C12	E	
+UniMOD	285	155.1744	Light Sulfanilic Acid (SA) C12	D	
+UniMOD	285	155.1744	Light Sulfanilic Acid (SA) C12		C-term
+UniMOD	286	161.1303	Heavy Sulfanilic Acid (SA) C13	E	
+UniMOD	286	161.1303	Heavy Sulfanilic Acid (SA) C13	D	
+UniMOD	286	161.1303	Heavy Sulfanilic Acid (SA) C13		C-term
+UniMOD	288	13.9835	Tryptophan oxidation to oxolactone	W	
+UniMOD	289	356.4835	Biotin polyethyleneoxide amine		C-term
+UniMOD	289	356.4835	Biotin polyethyleneoxide amine	D	
+UniMOD	289	356.4835	Biotin polyethyleneoxide amine	E	
+UniMOD	290	428.6124	Pierce EZ-Link Biotin-HPDP	C	
+UniMOD	291	200.59	Mercury Mercaptan	C	
+UniMOD	292	322.1654	"Cross-link of (Iodo)-uracil MP with W,F,Y"	W	
+UniMOD	292	322.1654	"Cross-link of (Iodo)-uracil MP with W,F,Y"	Y	
+UniMOD	292	322.1654	"Cross-link of (Iodo)-uracil MP with W,F,Y"	F	
+UniMOD	293	145.1796	3-(carbamidomethylthio)propanoyl	K	
+UniMOD	293	145.1796	3-(carbamidomethylthio)propanoyl		N-term
+UniMOD	294	326.4145	biotinoyl-iodoacetyl-ethylenediamine	C	
+UniMOD	295	146.1412	Fucose	T	
+UniMOD	295	146.1412	Fucose	S	
+UniMOD	298	17.0451	deuterated methyl ester	E	
+UniMOD	298	17.0451	deuterated methyl ester	D	
+UniMOD	298	17.0451	deuterated methyl ester		C-term
+UniMOD	299	44.0095	Carboxylation	K	
+UniMOD	299	44.0095	Carboxylation	W	
+UniMOD	299	44.0095	Carboxylation	D	
+UniMOD	300	58.0361	Hydroxylethanone	W	
+UniMOD	301	190.1986	Monobromobimane derivative	C	
+UniMOD	302	170.1641	Menadione derivative	K	
+UniMOD	302	170.1641	Menadione derivative	C	
+UniMOD	303	76.1176	Cysteine mercaptoethanol	C	
+UniMOD	305	1445.3331	Fucosylated biantennary (-2 galactose)	N	
+UniMOD	306	80.0632	Sulfitolysis	C	
+UniMOD	307	1607.4737	Fucosylated biantennary (-1 galactose)	N	
+UniMOD	308	1769.6143	Fucosylated biantennary	N	
+UniMOD	309	1299.1919	Biantennary (-2 galactose)	N
+UniMOD	310	1461.3325	Biantennary (-1 galactose)	N
+UniMOD	311	1623.4731	Biantennary	N
+UniMOD	312	120.1502	Cysteinylation	C
+UniMOD	313	-128.1723	C terminal -K from HC of MAb	K
+UniMOD	314	111.0987	N-methylmaleimide	C
+UniMOD	316	78.1118	"2,5-dimethypyrrole"	K
+UniMOD	317	-18.0153	D-Succinimide	D
+UniMOD	318	62.0694	MDA adduct +62	K
+UniMOD	319	54.0474	MDA adduct +54	K
+UniMOD	320	143.1406	N-ethylmaleimide hydrolysis	C
+UniMOD	321	-17.0073	N-Succinimide	N
+UniMOD	323	713.5626	bis-N-I-sulfonerahodamine	C
+UniMOD	324	87.1435	"dimethyl 3,3'-dithiobispropionimidate"	R
+UniMOD	324	87.1435	"dimethyl 3,3'-dithiobispropionimidate"	Q
+UniMOD	324	87.1435	"dimethyl 3,3'-dithiobispropionimidate"	N
+UniMOD	324	87.1435	"dimethyl 3,3'-dithiobispropionimidate"	K	
+UniMOD	324	87.1435	"dimethyl 3,3'-dithiobispropionimidate"		N-term
+UniMOD	325	573.7485	10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide	T	
+UniMOD	325	573.7485	10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide	Y	
+UniMOD	325	573.7485	10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide	S	
+UniMOD	327	44.1188	S-Ethylcystine from Serine	S	
+UniMOD	329	18.0377	monomethylated arginine	R	
+UniMOD	330	36.0754	dimethylated arginine	R	
+UniMOD	332	525.6658	thiophosphate labeled with biotin-HPDP	Y	
+UniMOD	332	525.6658	thiophosphate labeled with biotin-HPDP	T	
+UniMOD	332	525.6658	thiophosphate labeled with biotin-HPDP	S	
+UniMOD	333	448.5371	6-N-biotinylaminohexyl isopropyl phosphate	S	
+UniMOD	333	448.5371	6-N-biotinylaminohexyl isopropyl phosphate	Y	
+UniMOD	333	448.5371	6-N-biotinylaminohexyl isopropyl phosphate	T	
+UniMOD	334	146.1875	CAMthiopropanoyl of Lys	K	
+UniMOD	335	158.238	reduced 4-Hydroxynonenal	K	
+UniMOD	335	158.238	reduced 4-Hydroxynonenal	H
+UniMOD	335	158.238	reduced 4-Hydroxynonenal	C
+UniMOD	337	13.0418	Michael addition with methylamine	S
+UniMOD	337	13.0418	Michael addition with methylamine	T
+UniMOD	340	78.8961	bromination	F
+UniMOD	340	78.8961	bromination	H
+UniMOD	340	78.8961	bromination	W
+UniMOD	341	-2.0159	threonine oxidation to 2-amino-3-oxo-butanoic acid	T
+UniMOD	342	15.0146	Tyrosine oxidation to 2-aminotyrosine	Y
+UniMOD	343	199.27	oxidized Arginine biotinylated with biotin hydrazide	R
+UniMOD	344	-43.0711	Arginine oxidation to glutamic semialdehyde	R
+UniMOD	345	47.9982	cysteine oxidation to cysteic acid	C
+UniMOD	346	31.9988	phenylalanine oxidation to dihydroxyphenylalanine	F
+UniMOD	347	31.9988	tryptophan oxidation to formylkynurenin	W
+UniMOD	348	-23.0366	histidine oxidation to aspargine	H
+UniMOD	349	-22.0519	histidine oxidation to aspartic acid	H
+UniMOD	350	19.9881	tryptophan oxidation to hydroxykynurenin	W	
+UniMOD	351	3.9887	tryptophan oxidation to kynurenin	W	
+UniMOD	352	-1.0311	Lysine oxidation to aminoadipic semialdehyde	K	
+UniMOD	353	241.31	oxidized Lysine biotinylated with biotin hydrazide	K	
+UniMOD	354	44.9976	Oxidation to nitro	Y	
+UniMOD	354	44.9976	Oxidation to nitro	W	
+UniMOD	357	258.3405	oxidized proline biotinylated with biotin hydrazide	P	
+UniMOD	358	15.9994	Proline oxidation to glutamic semialdehyde	P	
+UniMOD	359	13.9835	proline oxidation to pyroglutamic acid	P	
+UniMOD	360	-30.026	Proline oxidation to pyrrolidinone	P	
+UniMOD	361	240.3252	oxidized Threonine biotinylated with biotin hydrazide	T	
+UniMOD	362	164.1394	Diisopropylphosphate	S	
+UniMOD	362	164.1394	Diisopropylphosphate	Y	
+UniMOD	363	122.0596	monoisopropyl phosphate	Y	
+UniMOD	363	122.0596	monoisopropyl phosphate	S	
+UniMOD	364	111.05	"Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, heavy form"		N-term
+UniMOD	364	111.05	"Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, heavy form"	K	
+UniMOD	365	105.0941	"Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, light form"		N-term
+UniMOD	365	105.0941	"Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, light form"	K	
+UniMOD	366	2.9845	Deamidation in presence of O18	Q	
+UniMOD	366	2.9845	Deamidation in presence of O18	N	
+UniMOD	367	-43.0711	Arginine oxidation to gamma-glutamyl semialdehyde	R	
+UniMOD	368	-34.0809	Dehydroalanine (from Cysteine)	C	
+UniMOD	369	-28.0101	Pyrrolidone from Proline	P	
+UniMOD	371	86.0892	Michael addition of hydroxymethylvinyl ketone to cysteine	C	
+UniMOD	372	-42.04	Ornithine from Arginine	R	
+UniMOD	373	46.895	Selenium replaces sulphur in cysteine	C	
+UniMOD	374	-1.0079	Half of a disulfide bridge	C	
+UniMOD	375	143.2068	Diphthamide	H	
+UniMOD	376	220.3505	hydroxyfarnesyl	C	
+UniMOD	377	576.9334	diacylglycerol	C	
+UniMOD	378	72.0627	carboxyethyl	K	
+UniMOD	379	87.1204	hypusine	K	
+UniMOD	380	266.4204	retinal	K	
+UniMOD	381	14.9683	alpha-amino adipic acid	K	
+UniMOD	382	-33.0961	pyruvic acid from N-term cys	C	
+UniMOD	383	-17.0305	pyruvic acid from N-term ser	S	
+UniMOD	384	0.9848	phenyllactyl from N-term Phe	F	N-term
+UniMOD	385	-17.0305	oxobutanoic acid from N term Thr	T	N-term
+UniMOD	386	100.0728	succinylated N-term Trp	W	N-term
+UniMOD	387	586.678	phycocyanobilin	C	
+UniMOD	388	588.6939	phycoerythrobilin	C	
+UniMOD	389	584.6621	phytochromobilin	C	
+UniMOD	390	616.4873	heme	H	
+UniMOD	390	616.4873	heme	C	
+UniMOD	391	520.2668	molybdopterin	C	
+UniMOD	392	29.9829	quinone	W	
+UniMOD	392	29.9829	quinone	Y	
+UniMOD	393	340.2806	glucosylgalactosyl hydroxylysine	K	
+UniMOD	394	123.0477	glycosylphosphatidylinositol		C-term
+UniMOD	395	881.6335	phosphoribosyl dephospho-coenzyme A	S	
+UniMOD	396	197.1262	glycerylphosphorylethanolamine	E	
+UniMOD	397	469.7849	triiodo	Y	
+UniMOD	398	595.6815	tetraiodo	Y	
+UniMOD	399	-18.0153	Dehydro	S	
+UniMOD	399	-18.0153	Dehydro	T	
+UniMOD	400	-94.1112	Dehydroalanine (from Tyrosine)	Y	
+UniMOD	401	-2.0159	didehydro	S	
+UniMOD	401	-2.0159	didehydro	Y	
+UniMOD	402	-18.0815	oxoalanine	C	
+UniMOD	403	-15.0146	lactic acid from N-term Ser		N-term
+UniMOD	405	329.2059	AMP binding site	T	
+UniMOD	405	329.2059	AMP binding site	K	
+UniMOD	405	329.2059	AMP binding site	Y	
+UniMOD	405	329.2059	AMP binding site	H	
+UniMOD	407	146.1427	hydroxycinnamyl	C	
+UniMOD	408	148.114	glycosyl-L-hydroxyproline	P	
+UniMOD	409	454.3279	flavin mononucleotide	H	
+UniMOD	409	454.3279	flavin mononucleotide	C	
+UniMOD	410	635.1417	S-diphytanylglycerol diether	C	
+UniMOD	411	119.1207	phenyl isocyanate		N-term
+UniMOD	412	124.1515	d5-phenyl isocyanate		N-term
+UniMOD	413	345.2053	phospho-guanosine	K	
+UniMOD	413	345.2053	phospho-guanosine	H	
+UniMOD	414	30.026	hydroxymethyl	N	
+UniMOD	415	1618.9096	L-selenocysteinyl molybdenum bis(molybdopterin guanine dinucleotide)	C	
+UniMOD	416	418.3973	dipyrrolylmethanemethyl	C	
+UniMOD	417	306.166	uridine phosphodiester	Y	
+UniMOD	417	306.166	uridine phosphodiester	H	
+UniMOD	418	31.9988	trihydroxyphenylalanine	Y	
+UniMOD	419	154.0584	glycerophospho	S
+UniMOD	420	16.0656	thiocarboxylic acid	G
+UniMOD	421	32.065	persulfide	C
+UniMOD	422	70.0468	N-pyruvic acid 2-iminyl	V
+UniMOD	422	70.0468	N-pyruvic acid 2-iminyl	C
+UniMOD	422	70.0468	N-pyruvic acid 2-iminyl	K
+UniMOD	423	78.96	selenyl	C
+UniMOD	424	1572.0146	molybdenum bis(molybdopterin guanine dinucleotide)	C
+UniMOD	424	1572.0146	molybdenum bis(molybdopterin guanine dinucleotide)	D
+UniMOD	425	31.9988	dihydroxy	R
+UniMOD	425	31.9988	dihydroxy	P
+UniMOD	425	31.9988	dihydroxy	K
+UniMOD	426	126.1962	octanoyl	S
+UniMOD	426	126.1962	octanoyl	T
+UniMOD	427	176.1241	glucuronosyl	S
+UniMOD	428	283.1724	N-acetylglucosamine-1-phosphoryl	S
+UniMOD	429	242.1205	phosphoglycosyl-D-mannose-1-phosphoryl	S	
+UniMOD	430	-18.0153	C-term blocking imide		C-term
+UniMOD	431	236.3929	palmitoleyl	C	
+UniMOD	432	368.6383	cholesterol ester		C-term
+UniMOD	433	264.4046	"3,4-didehydroretinylidene"	K	
+UniMOD	434	294.3859	"cis-14-hydroxy-10,13-dioxo-7-heptadecenoic ester"	D	
+UniMOD	435	109.1259	4-methyl-delta-1-pyrroline-5-carboxyl	K	
+UniMOD	436	614.4714	hydroxyheme	E	
+UniMOD	437	386.3003	(3-aminopropyl)(L-aspartyl-1-amino)phosphoryl-5-adenosine		C-term
+UniMOD	438	25.0095	cyano	C	
+UniMOD	439	342.876	hydrogenase diiron subcluster	C	
+UniMOD	440	42.04	amidino	C	
+UniMOD	441	238.4088	N-palmitoyl		N-term
+UniMOD	442	438.3285	O3-(riboflavin phosphoryl)	T	
+UniMOD	442	438.3285	O3-(riboflavin phosphoryl)	S	
+UniMOD	443	456.3438	S-(4a-FMN)	C	
+UniMOD	444	922.067	copper sulfido molybdopterin cytosine dinuncleotide	C	
+UniMOD	445	59.0871	"5-hydroxy-N6,N6,N6-trimethyl"	K	
+UniMOD	446	44.0095	N-carboxylation of Met		N-term
+UniMOD	447	-15.9994	reduction	D	
+UniMOD	448	831.6871	microcin E492 siderophore ester from serine		C-term
+UniMOD	449	154.2493	lipid	S	
+UniMOD	449	154.2493	lipid	T	
+UniMOD	450	129.114	monoglutamyl	E	
+UniMOD	450	129.114	monoglutamyl		C-term
+UniMOD	451	258.228	diglutamyl		C-term
+UniMOD	451	258.228	diglutamyl	E	
+UniMOD	452	387.3419	triglutamyl		C-term
+UniMOD	452	387.3419	triglutamyl	E	
+UniMOD	453	516.4559	tetraglutamyl		C-term
+UniMOD	453	516.4559	tetraglutamyl	E	
+UniMOD	454	161.1558	Hexosamine	W	
+UniMOD	454	161.1558	Hexosamine	T	
+UniMOD	454	161.1558	Hexosamine	N	
+UniMOD	454	161.1558	Hexosamine	K	
+UniMOD	455	154.2096	"One end of crosslink attached, one end free"		N-term
+UniMOD	455	154.2096	"One end of crosslink attached, one end free"	K	
+UniMOD	456	122.1677	Both ends of crosslink attached to same peptide		N-term
+UniMOD	456	122.1677	Both ends of crosslink attached to same peptide	K	
+UniMOD	457	175.1855	"naphthalene-2,3-dicarboxaldehyde"		N-term
+UniMOD	457	175.1855	"naphthalene-2,3-dicarboxaldehyde"	K	
+UniMOD	464	221.2054	4-sulfophenyl isothiocyanate (Heavy C13)		N-term
+UniMOD	464	221.2054	4-sulfophenyl isothiocyanate (Heavy C13)	K	
+UniMOD	465	32.0778	N-reductive amination-D		N-term
+UniMOD	472	59.1334	aminoethylcysteine	S	
+UniMOD	472	59.1334	aminoethylcysteine	T	
+UniMOD	475	136.1265	Sulfonation of Lysine	K	
+UniMOD	476	128.1922	4-trimethyllammoniumbutyryl-		N-term
+UniMOD	476	128.1922	4-trimethyllammoniumbutyryl-	K	
+UniMOD	477	137.2476	d9-4-trimethyllammoniumbutyryl-	K	
+UniMOD	477	137.2476	d9-4-trimethyllammoniumbutyryl-		N-term

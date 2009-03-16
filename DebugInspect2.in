@@ -1,0 +1,8 @@
+spectra,/export/Projects/Anthrasis/3hr_infected_macrophage/3_inf_sol_01_itms.ms2
+instrument,ESI-ION-TRAP
+protease,Trypsin
+mod,+57,C,fix
+db,ipi.HUMAN.trie
+db,Common.RS.trie
+TagCount,25
+PMTolerance,3.0

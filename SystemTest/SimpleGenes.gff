@@ -1,0 +1,6 @@
+SimpleGene1	Natalie	exon	240	1113	1	+	0	firstExon
+SimpleGene1	Natalie	exon	1139	1483	1	+	2	secondExon
+SimpleGene1	Natalie	exon	1509	1768	1	+	2	thirdExon
+SimpleGene3	Natalie	exon	78	89	1	-	2	thirdExon
+SimpleGene3	Natalie	exon	95	104	1	-	0	secondExon
+SimpleGene3	Natalie	exon	110	118	1	-	0	firstExon

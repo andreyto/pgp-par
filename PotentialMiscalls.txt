@@ -1,0 +1,718 @@
+WARNING: Protein gi|22124179|ref|NP_667602.1| hypothetical protein y0259 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22124289|ref|NP_667712.1| hypothetical protein y0374 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126579|ref|NP_670002.1| hypothetical protein y2700 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126580|ref|NP_670003.1| hypothetical protein y2701 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126581|ref|NP_670004.1| hypothetical protein y2702 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126582|ref|NP_670005.1| hypothetical protein y2703 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126584|ref|NP_670007.1| hypothetical protein y2705 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22126585|ref|NP_670008.1| hypothetical protein y2706 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127239|ref|NP_670662.1| hypothetical protein y3363 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127240|ref|NP_670663.1| hypothetical protein y3364 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127241|ref|NP_670664.1| hypothetical protein y3365 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127242|ref|NP_670665.1| hypothetical protein y3366 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127244|ref|NP_670667.1| hypothetical protein y3368 [Yersinia pestis KIM] maps to multiple ORFs
+WARNING: Protein gi|22127245|ref|NP_670668.1| hypothetical protein y3369 [Yersinia pestis KIM] maps to multiple ORFs
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein91403
+Chr NC_004088, Start 2985654
+Printing Peptides
+GenomicLocationForPeptide object, GAGGAGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985789, Stop 2985809
+GenomicLocationForPeptide object, GGAGGGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985795, Stop 2985815
+GenomicLocationForPeptide object, GGGGGGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985804, Stop 2985824
+GenomicLocationForPeptide object, GGGGGGM
+found in protein Protein91403
+Chr:NC_004088, Start 2985807, Stop 2985827
+GenomicLocationForPeptide object, GAGGGGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985798, Stop 2985818
+GenomicLocationForPeptide object, AGGGGGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985801, Stop 2985821
+GenomicLocationForPeptide object, AGGAGGG
+found in protein Protein91403
+Chr:NC_004088, Start 2985792, Stop 2985812
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein257847
+Chr NC_004088, Start 783499
+Printing Peptides
+GenomicLocationForPeptide object, AAAAGAA
+found in protein Protein257847
+Chr:NC_004088, Start 783419, Stop 783439
+GenomicLocationForPeptide object, GAAAAAA
+found in protein Protein257847
+Chr:NC_004088, Start 783428, Stop 783448
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein250324
+Chr NC_004088, Start 1038537
+Printing Peptides
+GenomicLocationForPeptide object, SGGGPAG
+found in protein Protein250324
+Chr:NC_004088, Start 1038475, Stop 1038495
+GenomicLocationForPeptide object, GGGPAGG
+found in protein Protein250324
+Chr:NC_004088, Start 1038472, Stop 1038492
+
+
+
+I determined that this peptide is before the start
+GenomicLocationForPeptide object, AMNVIEGVVATPNAR
+found in protein Protein34462
+Chr:NC_004088, Start 1130653, Stop 1130697
+Strand +, StartFrame 1, Stop Frame, 1
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein34462
+Chr NC_004088, Start 1130521
+Protein within ORF gi|161484853|ref|NP_668331.2| riboflavin synthase subunit beta [Yersinia pestis
+GenomicLocationForPeptide object, NVIEGVVATPNARVAIAIARFNNFINDSLLDGAIDALKRIGQVSDDNITVVWVPGAYELPLVANVLAKTNRYDAVIALGTVIRGGTAHFEYVAGEASSGLSSVAMNSDIPVAFGVLTTESIEQAIERAGTKAGNKGAEAALTALEMINVIKAIKG
+found in protein Protein34462
+Chr:NC_004088, Start 1130656, Stop 1131123
+
+
+
+I determined that this peptide is after the stop
+GenomicLocationForPeptide object, LEEVNAELEQPDVWNEPER
+found in protein Protein171078
+Chr:NC_004088, Start 3604245, Stop 3604301
+Strand -, StartFrame 2, Stop Frame, 2
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein171078
+Chr NC_004088, Start 3604379
+Protein within ORF gi|22127149|ref|NP_670572.1| peptide chain release factor 2 [Yersinia pestis KIM
+GenomicLocationForPeptide object, GKERSTLEEIVTTIDQLEQGLEDVSGLLELAVEADDEETFNETIAELEVLDGKLGQLEFRRMFSGEYDRANCYLDLQAGSGGTEAQDWASMLLRMYLRWAESRGFKTEIIEESDGDVAGLKSATVKIIGEYAFGWLRTETGVHRLVRKSPFDSGGRRHTSFSSAFVYPEVDDDIDIEINPADLRIDVYRASGAGGQHVNKTESAVRITHIPTNIVTQCQNDRSQHKNKDQAMKQLKAKLYEFEMQKKNADKQVLEDNKSDIGWGSQIRSYVLDDSRIKDLRTGVETRNTQAVLDGDLDKFIEASLKAGL
+found in protein Protein171078
+Chr:NC_004088, Start 3603306, Stop 3604235
+
+
+
+I determined that this peptide is after the stop
+GenomicLocationForPeptide object, TAGAEGIR
+found in protein Protein260401
+Chr:NC_004088, Start 696400, Stop 696423
+Strand -, StartFrame 1, Stop Frame, 1
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein260401
+Chr NC_004088, Start 696432
+Protein within ORF gi|22124531|ref|NP_667954.1| fumarate reductase flavoprotein subunit [Yersinia p
+GenomicLocationForPeptide object, QTFNADLAIIGAGGAGLRAAIAAAEANPQLKIALISKVYPMRSHTVAAEGGSAAVTQDHDTFDYHFHDTVAGGDWLCEQDVVDHFVHSCPEEMAQLEIWGCPWSRKEDGSVNVRRFGGMKIERTWFAADKTGFHMLHTLFQTSLKYPQIQRFDEHFVLDILVDEGQARGVVAMNMMEGTRVQIRANAVIMATGGAGRVYRYNTNGGIVTGDGMGMAFHHGVPLRDMEFVQYHPTGLPGSGILMTEGCRGEGGILVNKDGYRYLQDYGMGPETPLGEPKNKYMELGPRDKVSQAFWHEWRAGRTVATPRGDVVYLDLRHLGEKKLLERLPFICELAKAYVGVDPVKEPIPVRPTAHYTMGGIETNPQCETRIKGLFAVGECSSVGLHGANRLGSNSLAELVVFGRVAGEQAALRAMESGPANGSALDAQTRDVETRLSNLMKQEGTENWSKIRDEMGLSMEEGCGIYRTPELMQKTVDKLAELKERFKRVKITDHSSVFNTDLLYTIELGYGLDVAECMAHSALNRKESRGAHQRLDEGCTERDDVNFLKHTLAFHTPGGAPRIEYSDVKITKLVPAKRVYGGEATAQDAKDAKDAQDLKDKEQAND
+found in protein Protein260401
+Chr:NC_004088, Start 694552, Stop 696372
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein39834
+Chr NC_004088, Start 1305229
+Printing Peptides
+GenomicLocationForPeptide object, GGGSAGG
+found in protein Protein39834
+Chr:NC_004088, Start 1305292, Stop 1305312
+GenomicLocationForPeptide object, GGSAGGG
+found in protein Protein39834
+Chr:NC_004088, Start 1305295, Stop 1305315
+
+
+
+I determined that this peptide is before the start
+GenomicLocationForPeptide object, CPFAGGSSSAFR
+found in protein Protein81908
+Chr:NC_004088, Start 2671491, Stop 2671526
+Strand +, StartFrame 3, Stop Frame, 3
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein81908
+Chr NC_004088, Start 2671413
+Protein within ORF gi|22126286|ref|NP_669709.1| yersiniabactin thioesterase [Yersinia pestis KIM]
+GenomicLocationForPeptide object, TWPGRDRLRHLEPLRSITQLAALLANELEASVSPDTPLLLAGHSMGAQVAFETCRLLEQRGLAPQGLIISGCHAPHLHSERQLSHRDDADFIAELIDIGGCSPELRENQELMSLFLPLLRADFYATESYHYDSPDVCPPLRTPALLLCGSHDREASWQQVDAWRQWLSHVTGPVVIDGDHFYPIQQARSFFTQIVRHFPHAFSAMTALQKQPSTSER
+found in protein Protein81908
+Chr:NC_004088, Start 2671569, Stop 2672222
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein48360
+Chr NC_004088, Start 1579155
+Printing Peptides
+GenomicLocationForPeptide object, VGGGGAT
+found in protein Protein48360
+Chr:NC_004088, Start 1579422, Stop 1579442
+GenomicLocationForPeptide object, GGGGIVAR
+found in protein Protein48360
+Chr:NC_004088, Start 1579365, Stop 1579388
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein190070
+Chr NC_004088, Start 2985361
+Printing Peptides
+GenomicLocationForPeptide object, AVTTGQTLK
+found in protein Protein190070
+Chr:NC_004088, Start 2985110, Stop 2985136
+GenomicLocationForPeptide object, DGGADIK
+found in protein Protein190070
+Chr:NC_004088, Start 2985305, Stop 2985325
+GenomicLocationForPeptide object, IDDAGQEVEYFNTK
+found in protein Protein190070
+Chr:NC_004088, Start 2985044, Stop 2985085
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein128157
+Chr NC_004088, Start 4191814
+Printing Peptides
+GenomicLocationForPeptide object, SGGAAGA
+found in protein Protein128157
+Chr:NC_004088, Start 4192084, Stop 4192104
+GenomicLocationForPeptide object, AGAGNPA
+found in protein Protein128157
+Chr:NC_004088, Start 4192096, Stop 4192116
+
+
+
+I determined that this peptide is before the start
+GenomicLocationForPeptide object, AEEAGVDLVEISPNAEPPVCR
+found in protein Protein64344
+Chr:NC_004088, Start 2101194, Stop 2101256
+Strand +, StartFrame 3, Stop Frame, 3
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein64344
+Chr NC_004088, Start 2101056
+Protein within ORF gi|22125797|ref|NP_669220.1| protein chain initiation factor IF-3 [Yersinia pest
+GenomicLocationForPeptide object, DYGKFLYEKSKSTKEQKKKQKVIQVKEIKFRPGTDDGDYQVKLRNLIRFLEDGDKAKITLRFRGREMAHQQIGMEVLNRVRKDLCEDSDLAVVESFPTRIEGRQMIMVLAPKKRQ
+found in protein Protein64344
+Chr:NC_004088, Start 2101260, Stop 2101607
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein138941
+Chr NC_004088, Start 4546599
+Printing Peptides
+GenomicLocationForPeptide object, TAGSAGG
+found in protein Protein138941
+Chr:NC_004088, Start 4546704, Stop 4546724
+GenomicLocationForPeptide object, AGSAGGP
+found in protein Protein138941
+Chr:NC_004088, Start 4546707, Stop 4546727
+
+
+
+I determined that this peptide is after the stop
+GenomicLocationForPeptide object, EYPAGEPIKINDMEIA
+found in protein Protein201524
+Chr:NC_004088, Start 2612554, Stop 2612601
+Strand -, StartFrame 1, Stop Frame, 1
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein201524
+Chr NC_004088, Start 2612697
+Protein within ORF gi|22126252|ref|NP_669675.1| periplasmic protein [Yersinia pestis KIM]
+GenomicLocationForPeptide object, EIAAVYLQPIDMEPRGMGLPAAKADIHLEADIHATEGNKNGFGAGEWIPYLTIAYTLVNTDTGDKQEGTFMPMVASDGPHYGANIKMMGVGNYKVTYHISEPSKAGLHRHTDSETGVGRWWKPFDVSYDFKYVGLN
+found in protein Protein201524
+Chr:NC_004088, Start 2612155, Stop 2612565
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein39608
+Chr NC_004088, Start 1295790
+Printing Peptides
+GenomicLocationForPeptide object, GGGVAAG
+found in protein Protein39608
+Chr:NC_004088, Start 1295811, Stop 1295831
+GenomicLocationForPeptide object, GGVAAGG
+found in protein Protein39608
+Chr:NC_004088, Start 1295814, Stop 1295834
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein113859
+Chr NC_004088, Start 3708940
+Printing Peptides
+GenomicLocationForPeptide object, GAGGAGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709075, Stop 3709095
+GenomicLocationForPeptide object, GGAGGGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709081, Stop 3709101
+GenomicLocationForPeptide object, GGGGGGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709090, Stop 3709110
+GenomicLocationForPeptide object, GGGGGGM
+found in protein Protein113859
+Chr:NC_004088, Start 3709093, Stop 3709113
+GenomicLocationForPeptide object, GAGGGGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709084, Stop 3709104
+GenomicLocationForPeptide object, AGGGGGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709087, Stop 3709107
+GenomicLocationForPeptide object, AGGAGGG
+found in protein Protein113859
+Chr:NC_004088, Start 3709078, Stop 3709098
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein261237
+Chr NC_004088, Start 666205
+Printing Peptides
+GenomicLocationForPeptide object, SAGSGGG
+found in protein Protein261237
+Chr:NC_004088, Start 666092, Stop 666112
+GenomicLocationForPeptide object, AGSGGGR
+found in protein Protein261237
+Chr:NC_004088, Start 666089, Stop 666109
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein204181
+Chr NC_004088, Start 2526253
+Printing Peptides
+GenomicLocationForPeptide object, GGAGAGT
+found in protein Protein204181
+Chr:NC_004088, Start 2526221, Stop 2526241
+GenomicLocationForPeptide object, SGGAGAG
+found in protein Protein204181
+Chr:NC_004088, Start 2526224, Stop 2526244
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein190732
+Chr NC_004088, Start 2960761
+Printing Peptides
+GenomicLocationForPeptide object, GAGPAAG
+found in protein Protein190732
+Chr:NC_004088, Start 2960588, Stop 2960608
+GenomicLocationForPeptide object, TGAGPAA
+found in protein Protein190732
+Chr:NC_004088, Start 2960591, Stop 2960611
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein97672
+Chr NC_004088, Start 3188914
+Printing Peptides
+GenomicLocationForPeptide object, ATDALPR
+found in protein Protein97672
+Chr:NC_004088, Start 3189010, Stop 3189030
+GenomicLocationForPeptide object, QATDALPR
+found in protein Protein97672
+Chr:NC_004088, Start 3189007, Stop 3189030
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein63474
+Chr NC_004088, Start 2075589
+Printing Peptides
+GenomicLocationForPeptide object, GGTGAAG
+found in protein Protein63474
+Chr:NC_004088, Start 2075598, Stop 2075618
+GenomicLocationForPeptide object, GGTGAAGK
+found in protein Protein63474
+Chr:NC_004088, Start 2075598, Stop 2075621
+
+
+
+I determined that this peptide is before the start
+GenomicLocationForPeptide object, PNNDIVCHVAHLNAR
+found in protein Protein9325
+Chr:NC_004088, Start 310520, Stop 310564
+Strand +, StartFrame 2, Stop Frame, 2
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein9325
+Chr NC_004088, Start 310382
+Protein within ORF gi|22124209|ref|NP_667632.1| hypothetical protein y0291 [Yersinia pestis KIM]
+GenomicLocationForPeptide object, AHLNARFDDKEGLFEGASQSGTLLILRNISARACQVNAMPVISFEGAVGQQLAVFRKVPRGMRQEPVLSPVTVAAGAEVAVQLRWVASDAFDGNNCVTPEKVVVTLLGGTLRLPFGRQMCAASGDTEFFSQAPVGPATNEVQ
+found in protein Protein9325
+Chr:NC_004088, Start 310544, Stop 310972
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein210033
+Chr NC_004088, Start 2341511
+Printing Peptides
+GenomicLocationForPeptide object, ISSPATL
+found in protein Protein210033
+Chr:NC_004088, Start 2341476, Stop 2341496
+GenomicLocationForPeptide object, ISSPATLN
+found in protein Protein210033
+Chr:NC_004088, Start 2341473, Stop 2341496
+GenomicLocationForPeptide object, SSPATLN
+found in protein Protein210033
+Chr:NC_004088, Start 2341473, Stop 2341493
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein233456
+Chr NC_004088, Start 1588363
+Printing Peptides
+GenomicLocationForPeptide object, LGFSSPATAR
+found in protein Protein233456
+Chr:NC_004088, Start 1588334, Stop 1588363
+GenomicLocationForPeptide object, SSPATAR
+found in protein Protein233456
+Chr:NC_004088, Start 1588334, Stop 1588354
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein88394
+Chr NC_004088, Start 2883466
+Printing Peptides
+GenomicLocationForPeptide object, PASGGAA
+found in protein Protein88394
+Chr:NC_004088, Start 2883589, Stop 2883609
+GenomicLocationForPeptide object, SGGAAGG
+found in protein Protein88394
+Chr:NC_004088, Start 2883595, Stop 2883615
+GenomicLocationForPeptide object, ASGGAAG
+found in protein Protein88394
+Chr:NC_004088, Start 2883592, Stop 2883612
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein179433
+Chr NC_004088, Start 3333355
+Printing Peptides
+GenomicLocationForPeptide object, GGAASGV
+found in protein Protein179433
+Chr:NC_004088, Start 3333272, Stop 3333292
+GenomicLocationForPeptide object, AGGAASG
+found in protein Protein179433
+Chr:NC_004088, Start 3333275, Stop 3333295
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein216239
+Chr NC_004088, Start 2142974
+Printing Peptides
+GenomicLocationForPeptide object, DQLSNDVNAVR
+found in protein Protein216239
+Chr:NC_004088, Start 2142807, Stop 2142839
+GenomicLocationForPeptide object, LDNQAQAYK
+found in protein Protein216239
+Chr:NC_004088, Start 2142732, Stop 2142758
+GenomicLocationForPeptide object, VDQLSNDVNAVR
+found in protein Protein216239
+Chr:NC_004088, Start 2142807, Stop 2142842
+GenomicLocationForPeptide object, IDQLSSDVQTLNAK
+found in protein Protein216239
+Chr:NC_004088, Start 2142843, Stop 2142884
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein255641
+Chr NC_004088, Start 858879
+Printing Peptides
+GenomicLocationForPeptide object, AGAAAGA
+found in protein Protein255641
+Chr:NC_004088, Start 858817, Stop 858837
+GenomicLocationForPeptide object, AAGAAAG
+found in protein Protein255641
+Chr:NC_004088, Start 858820, Stop 858840
+GenomicLocationForPeptide object, AGAGAAP
+found in protein Protein255641
+Chr:NC_004088, Start 858805, Stop 858825
+GenomicLocationForPeptide object, GAAAGAG
+found in protein Protein255641
+Chr:NC_004088, Start 858814, Stop 858834
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein61027
+Chr NC_004088, Start 1999046
+Printing Peptides
+GenomicLocationForPeptide object, GFITPADGSK
+found in protein Protein61027
+Chr:NC_004088, Start 1999151, Stop 1999180
+GenomicLocationForPeptide object, TLAEGQNVQFSIENGAK
+found in protein Protein61027
+Chr:NC_004088, Start 1999226, Stop 1999276
+GenomicLocationForPeptide object, GFGFITPADGSK
+found in protein Protein61027
+Chr:NC_004088, Start 1999145, Stop 1999180
+GenomicLocationForPeptide object, TPADGSK
+found in protein Protein61027
+Chr:NC_004088, Start 1999160, Stop 1999180
+GenomicLocationForPeptide object, GFGFITPAD
+found in protein Protein61027
+Chr:NC_004088, Start 1999145, Stop 1999171
+GenomicLocationForPeptide object, GFGFITPADG
+found in protein Protein61027
+Chr:NC_004088, Start 1999145, Stop 1999174
+GenomicLocationForPeptide object, FITPADGSK
+found in protein Protein61027
+Chr:NC_004088, Start 1999154, Stop 1999180
+GenomicLocationForPeptide object, ITPADGSK
+found in protein Protein61027
+Chr:NC_004088, Start 1999157, Stop 1999180
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein272988
+Chr NC_004088, Start 271675
+Printing Peptides
+GenomicLocationForPeptide object, AGSGAGA
+found in protein Protein272988
+Chr:NC_004088, Start 271589, Stop 271609
+GenomicLocationForPeptide object, GSGAGAA
+found in protein Protein272988
+Chr:NC_004088, Start 271586, Stop 271606
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein262518
+Chr NC_004088, Start 623845
+Printing Peptides
+GenomicLocationForPeptide object, GGAVGAG
+found in protein Protein262518
+Chr:NC_004088, Start 623597, Stop 623617
+GenomicLocationForPeptide object, GAAGSSS
+found in protein Protein262518
+Chr:NC_004088, Start 623549, Stop 623569
+GenomicLocationForPeptide object, GAAGSSST
+found in protein Protein262518
+Chr:NC_004088, Start 623546, Stop 623569
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein130935
+Chr NC_004088, Start 4283108
+Printing Peptides
+GenomicLocationForPeptide object, GSGASGA
+found in protein Protein130935
+Chr:NC_004088, Start 4283168, Stop 4283188
+GenomicLocationForPeptide object, SGASGAA
+found in protein Protein130935
+Chr:NC_004088, Start 4283171, Stop 4283191
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein116944
+Chr NC_004088, Start 3816660
+Printing Peptides
+GenomicLocationForPeptide object, GPPGGGG
+found in protein Protein116944
+Chr:NC_004088, Start 3816792, Stop 3816812
+GenomicLocationForPeptide object, GPPGGGGR
+found in protein Protein116944
+Chr:NC_004088, Start 3816792, Stop 3816815
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein68078
+Chr NC_004088, Start 2220457
+Printing Peptides
+GenomicLocationForPeptide object, GAGAGAG
+found in protein Protein68078
+Chr:NC_004088, Start 2220688, Stop 2220708
+GenomicLocationForPeptide object, GAGAGAG
+found in protein Protein68078
+Chr:NC_004088, Start 2220694, Stop 2220714
+GenomicLocationForPeptide object, GAGAGAG
+found in protein Protein68078
+Chr:NC_004088, Start 2220700, Stop 2220720
+GenomicLocationForPeptide object, AGAGAGA
+found in protein Protein68078
+Chr:NC_004088, Start 2220685, Stop 2220705
+GenomicLocationForPeptide object, AGAGAGA
+found in protein Protein68078
+Chr:NC_004088, Start 2220691, Stop 2220711
+GenomicLocationForPeptide object, AGAGAGA
+found in protein Protein68078
+Chr:NC_004088, Start 2220697, Stop 2220717
+GenomicLocationForPeptide object, AGAGAGA
+found in protein Protein68078
+Chr:NC_004088, Start 2220703, Stop 2220723
+
+
+
+I determined that this peptide is before the start
+GenomicLocationForPeptide object, AAAIILPR
+found in protein Protein107599
+Chr:NC_004088, Start 3510168, Stop 3510191
+Strand +, StartFrame 3, Stop Frame, 3
+
+
+
+############MisPredicted ORF################
+GenomicLocationForORF object Protein107599
+Chr NC_004088, Start 3510132
+Protein within ORF gi|22127064|ref|NP_670487.1| hypothetical protein y3188 [Yersinia pestis KIM]
+GenomicLocationForPeptide object, ILSMIRSIYATNNCSLSGFSIDICNLLSITYPTVNRTSNMLNKMLLQITFASLVTASAIATAATTEPLKMEVYNPGEKSIFPVSSEIISGKNEVVLIDAQFQRNDAEALVKKIQQSGKKLTTIYISQADPDFYFGLDVIAKAFPQAKVIATPQTIEEIKATKDGKMAYWGPILKENAPTAVIIPQPLQGKSFTVDGQQIEVEGLDGPSPEKTFVWIPSLKAVVGGVAVSGNIHLWVADTQTPESRENWLTTLEKIKALKPAIVVPGHFLDNAPQTLESVTFTQNYLTTLNAEIPKAKDSAELIAVMKKHYPELKDESSLELSAKVLKNEMKWPQ
+found in protein Protein107599
+Chr:NC_004088, Start 3510222, Stop 3511226
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein126915
+Chr NC_004088, Start 4148852
+Printing Peptides
+GenomicLocationForPeptide object, IGVLGLNGSGK
+found in protein Protein126915
+Chr:NC_004088, Start 4148969, Stop 4149001
+GenomicLocationForPeptide object, SLSFFPGAK
+found in protein Protein126915
+Chr:NC_004088, Start 4148942, Stop 4148968
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein114856
+Chr NC_004088, Start 3744113
+Printing Peptides
+GenomicLocationForPeptide object, GGGGGGA
+found in protein Protein114856
+Chr:NC_004088, Start 3744161, Stop 3744181
+GenomicLocationForPeptide object, GGGGGAI
+found in protein Protein114856
+Chr:NC_004088, Start 3744164, Stop 3744184
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein272666
+Chr NC_004088, Start 284346
+Printing Peptides
+GenomicLocationForPeptide object, GGGAAGG
+found in protein Protein272666
+Chr:NC_004088, Start 284296, Stop 284316
+GenomicLocationForPeptide object, GGGAAGGR
+found in protein Protein272666
+Chr:NC_004088, Start 284293, Stop 284316
+
+
+
+######UNPREDICTED ORF###########
+GenomicLocationForORF object Protein195108
+Chr NC_004088, Start 2825292
+Printing Peptides
+GenomicLocationForPeptide object, QNVEFEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825109
+GenomicLocationForPeptide object, EIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825094
+GenomicLocationForPeptide object, DVFVHFSAIQGN
+found in protein Protein195108
+Chr:NC_004088, Start 2825134, Stop 2825169
+GenomicLocationForPeptide object, AIQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825148
+GenomicLocationForPeptide object, GFITPADGSK
+found in protein Protein195108
+Chr:NC_004088, Start 2825170, Stop 2825199
+GenomicLocationForPeptide object, FEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825097
+GenomicLocationForPeptide object, GFGFITPADGSK
+found in protein Protein195108
+Chr:NC_004088, Start 2825170, Stop 2825205
+GenomicLocationForPeptide object, FVHFSAIQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825163
+GenomicLocationForPeptide object, TPADGSK
+found in protein Protein195108
+Chr:NC_004088, Start 2825170, Stop 2825190
+GenomicLocationForPeptide object, GFGFITPAD
+found in protein Protein195108
+Chr:NC_004088, Start 2825179, Stop 2825205
+GenomicLocationForPeptide object, TLAEGQNVEFEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825124
+GenomicLocationForPeptide object, AKIKGQVKWFNESK
+found in protein Protein195108
+Chr:NC_004088, Start 2825206, Stop 2825247
+GenomicLocationForPeptide object, GPSAVNVTAI
+found in protein Protein195108
+Chr:NC_004088, Start 2825044, Stop 2825073
+GenomicLocationForPeptide object, NVEFEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825106
+GenomicLocationForPeptide object, IQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825145
+GenomicLocationForPeptide object, GFGFITPADG
+found in protein Protein195108
+Chr:NC_004088, Start 2825176, Stop 2825205
+GenomicLocationForPeptide object, AEGQNVEFEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825118
+GenomicLocationForPeptide object, FITPADGSK
+found in protein Protein195108
+Chr:NC_004088, Start 2825170, Stop 2825196
+GenomicLocationForPeptide object, DVFVHFSAIQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825169
+GenomicLocationForPeptide object, IKGQVKWFNESK
+found in protein Protein195108
+Chr:NC_004088, Start 2825206, Stop 2825241
+GenomicLocationForPeptide object, ITPADGSK
+found in protein Protein195108
+Chr:NC_004088, Start 2825170, Stop 2825193
+GenomicLocationForPeptide object, SAIQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825151
+GenomicLocationForPeptide object, GPSAVNVT
+found in protein Protein195108
+Chr:NC_004088, Start 2825050, Stop 2825073
+GenomicLocationForPeptide object, FSAIQGNGFK
+found in protein Protein195108
+Chr:NC_004088, Start 2825125, Stop 2825154
+GenomicLocationForPeptide object, EFEIQDGQK
+found in protein Protein195108
+Chr:NC_004088, Start 2825074, Stop 2825100
+
+
+

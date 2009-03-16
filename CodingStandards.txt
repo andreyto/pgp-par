@@ -1,0 +1,110 @@
+UCSD proteomics coding standards
+
+The goals of the coding standards are:
+
+    - Prevent bugs.
+    
+    - Make maintenance easier.
+    
+    - Make code easy to read.  
+
+Most coding styles are equivalent in terms of readability, but it's
+important to be consistent within a project.  If each file (or each
+function) has different tab widths, the readers constantly has to
+re-calibrate their eyes, reading is more effort, and bugs are harder
+to find.
+
+If you've been coding for some time, you will probably experience some
+aggravation at changing your style.  This is natural.  You aren't
+required to like these rules.  You're just required to follow them.
+
+First, some notes for any language:
+    - Variables should have clear names.  Single-letter names are
+    never acceptable.
+    
+    - Capitalize the first letter of words in variable names, like:
+    SpectrumIndex
+    
+    - Function names should begin with a verb.  Use a clear action
+    verb like "Sort" or "Remove", not like "Do".
+    
+    - Avoid "magic numbers".  If a number could ever change, or if
+    someone could ever be unsure what it means, then use a constant
+    and document it.  The numbers 1 and 0 can be magic numbers.
+
+    - Don't repeat yourself (DRY).  Avoid copy-pasta code that could
+    be replaced by a general case.
+
+    - Avoid extremely long functions - split loop contents or
+    ancillary code into subfunctions.  If a function's printout is
+    taller than you, it's too long.
+
+    - Avoid extremely long argument lists to functions.  If you need
+    to pass 10 values, consider refactoring, or putting the values
+    into an object.
+    
+    - Comment the code at the level of intent.  In other words:
+    Comment the goals and context of code, the overall job being
+    performed.  Every comment should add value; don't add a comment at
+    the top of a function just for the sake of adding a comment.  
+    
+    - Code should be portable (it must run under Linux or Windows
+    without emulation layers like WINE or Cygwin)
+    
+    - Use spaces, never tabs, in code files.
+    
+    - Binary operators and reserved words receive flanking whitespace, parens do not.
+         Right: if (FileName == NULL)
+         Wrong: if( FileName==NULL )
+    Mega-wrong: if(FileName=NULL)
+    
+    - Each line of code should do one thing.  Avoid "clever" code with side effects.
+
+    - Refrain from building elaborate "code ASCII art".  Example:
+        /****************************************
+                    FunctionNameMostlyCentered
+        ****************************************/
+        function SleepFuriously(int ArgumentA,
+                                int ArgumentB,
+                                int ArgumentC);
+        int        Fred;
+        char*      Barney;
+        SortFunc*  Wilma;
+    What's wrong with prettifying the function like this?
+    - When the function is renamed, either someone will waste time re-indenting all
+      the arguments, or it will end up looking retarded.
+    - For people who don't code in monospaced font, this looks demented.
+    - When a longer variable type is used (e.g. SortFunc renamed to SortFunction),
+      either someone will waste time re-aligning all the variable declarations, or they
+      will end up looking retarded.
+    
+    
+Notes specific to C:
+    - Use single-line comments (//), not block comments.  Your editor
+    can add single-line comments as quickly as multi-line comments; if
+    not, you need a new eidtor.
+    
+    - Curly braces are indented 4 spaces, receieve their own line, and
+    line up (by column) with their sisters.
+    
+    - The pointer dereferencing operator (*) goes next to the data type, like this:
+        char* FileName
+        
+    - Conditional blocks are indicated with curly braces, even if they're single
+      statements.
+    Right:
+        if (condition)
+        {
+            Action();
+        }
+    Wrong:
+        if (condition)
+            Action();
+    Motivating example:
+        if (condition)
+            Action();
+            Action2(); // A naive coder thinks this is conditionally executed.
+
+Notes specific to Python:
+    - Avoid using "from X import Y", especially "from X import *".
+    

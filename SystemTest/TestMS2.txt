@@ -1,0 +1,8 @@
+spectra,SystemTest/Yeast.ms2
+instrument,ESI-ION-TRAP
+protease,Trypsin
+
+#DB,TestDatabase.trie
+
+SequenceFile,SystemTest/YeastSmall.fasta
+mod,+57,C,fix

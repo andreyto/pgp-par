@@ -1,0 +1,9 @@
+svm_type c_svc
+kernel_type rbf
+gamma 1.#INF
+nr_class 0
+total_sv 0
+rho
+label
+nr_sv
+SV

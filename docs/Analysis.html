@@ -1,0 +1,95 @@
+<h1>Inspect: A Proteomics Search Toolkit</h1>
+Copyright 2007, The Regents of the University of California
+<h3>Table of Contents</h1>
+<li><a href="index.html">Overview</a>
+<li><a href="Copyright.html">Copyright information</a>
+<li><a href="Installation.html">Installation</a>
+<li><a href="Database.html">Database</a>
+<li><a href="Searching.html">Searching</a>
+<li><a href="Analysis.html">Analysis</a>
+<li><a href="InspectTutorial.pdf">Basic Tutorial</a>
+<li><a href="InspectAdvancedTutorial.pdf">Advanced Tutorial</a>
+<li><a href="UnrestrictedSearchTutorial.pdf">Unrestricted Search Tutorial</a>
+<hr>
+<h2>Analysis</h2>
+Inspect writes search results to a tab-delimited file.  Up to ten search hits are written for each spectrum,
+but typcially all but the first can be discarded.  The most important fields in the output are
+columns 1 and 2 (the spectrum searched), column 3 (the annotation), and column 13 (the p-value,
+a measure of match confidence).
+<br><br>
+The p-value is computed using the F-score.  The F-score is a weighted sum of two factors.  First is the
+MQScore, or match quality score (in column 6).  Second
+is the delta-score (in column 14), the difference in MQScore between this match and the best alternative.
+Because delta-score is highly dependent on database size and search parameters, Inspect takes the ratio of
+the delta-score to the average delta-score for all top-scoring matches.
+<br><br>
+There are two methods to compute the p-value for a match.  The preferred method is to employ a decoy
+database.  This method requires you to generate shuffled protein records before search using the "ShuffleDB" script
+(see the Database section for details).  Then, run the PValue script to compute the empirical false discovery
+rate for a given f-score cutoff.  This empirical false discovery rate is reported as the match's p-value.  One
+p-value curve is used for singly- and doubly-charged spectra, another for triply-charged spectra.
+<br><br>
+The second method for computing p-values is to fit a mixture model to the empirical distribution of
+F-scores.  The method is based very closely on PeptideProphet.  This method is the one used by the Inspect
+executable, and is also available using the PValue.py script.
+<br><br>
+Sometimes you may wish to use a common p-value distribution for several different results-files.  This is
+appropriate, for example, if the search of a very large sample has been split into many runs.  In this case,
+use the script PValue.py (see below) to compute p-values for all results using a common distribution.
+
+<br><br>
+Below is a list of all the columns and their meaning:
+<li>SpectrumFile - The file searched
+<li>Scan# - The scan number within the file; this value is 0 for .dta files
+<li>Annotation - Peptide annotation, with prefix and suffix and (non-fixed) modifications indicated.
+Example: K.DFSQIDNAP+16EER.E
+<li>Protein - The name of the protein this peptide comes from.  (Protein names are stored to the .index file
+corresponding to the database .trie file)
+<li>Charge - Precursor charge.  If "multicharge" is set, or if no charge is specified in the source file, Inspect
+attempts to guess the charge.
+<li>MQScore	- Match quality score, the main measure of match quality.
+<li>CutScore - Score for each cut point (between amino acids), based upon a Bayesian network modeling
+fragmentation propensities
+<li>IntenseBY - Fraction of high-intensity peaks which are b or y fragments.  For a length-n peptide, the top n*3
+peaks are considered.
+<li>BYPresent - The fraction of b and y fragments which are observed.  Fragments that fall outside the dynamic
+range are not included in this count.
+<li>NTT - Number of tryptic termini (or Unused, if no protease was specified).  Note that the N- and C-terminus of
+a protein are both considered to be valid termini.
+<li>p-value - Probability that a match with this MQScore and DeltaScore is spurious; the lower this number, the
+better the match.  The p-value is calibrated by fitting the score distribution with mixture model; see also
+"PValue.py", below.
+<li>DeltaScore - Difference between the MQScore of this match and the best alternative
+<li>DeltaScoreOther - Difference between the MQScore of this match and the best alternative from a different locus.
+To see the difference between this and the previous column, consider a search that finds similar matches
+of the form "M+16MALGEER" and "MM+16ALGEER".  In such a case, DeltaScore would be very small, but DeltaScoreOther
+might still be large.
+<li>RecordNumber - Index of the protein record in the database
+<li>DBFilePos - Byte-position of this match within the database
+<li>SpecFilePos - Offset, in the input file, of this spectrum; useful for passing to the "Label" script (see below)
+<hr>
+<h2>Post-processing</h2>
+Python scripts for performing various analyses are included in the distribution.
+<b>Run a script with no command-line parameters to print a list of available arguments.</b><br>
+<li>Label.py - Given a spectrum and a peptide annotation, label the spectrum peaks with
+their associated fragments.  Produces a .png image for a spectrum, with associated peptide interpretation.  Requires
+the Python Imaging Library (PIL).  Sample command:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<tt>Label.py Shewanella.mzXML:6200392 R.SNGSIGQNQ+14TPGR.V</tt>
+<li>PValue.py - Given one or more Inspect output files, fit the distribution of scores with a mixture model,
+similar to that used by PeptideProphet.  The F-score used for modeling is a weighted sum of the MQScore, and
+the ratio of the DeltaScoreOther to the average value DeltaScoreOther across the entire search.
+(Note that DeltaScoreOther is highly dependent on database size, and taking the ratio helps correct
+for this database-dependence).  Inspect performs such a model fitting with each run, so running PValue.py is
+generally not required.  However, sometimes it makes sense to fit the same p-value distribution to many
+search output files, and in that case, you use PValue.py to do so.
+<li>Summary.py - Given Inspect output, produce an html-format summary of the results.  The report provides
+a "protein-level" look at the results. This script is also used when
+producing a "second-pass" protein database, containing the proteins identified with high confidence.
+<li>PTMChooser.py - This script examines output from MS-Alignment (Inspect run in "blind" mode), and
+highlights the most plausible evidence for PTMs.  The script iteratively selects the most common
+post-translational modifications, and report the selections.  These selections require manual curation
+and/or validation.
+<li>PTMChooserLM.py - Performs the same task as PTMChooser, but with Low Memory usage.  Useful
+when analyzing millions of annotations at once.
+<hr>
+For further details, consult the code-level documentation.

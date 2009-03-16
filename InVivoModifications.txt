@@ -1,0 +1,9 @@
+mod,80,STY,opt,phosphorylation	#phosphorylation
+mod,42,*,nterminal	#nterminal acetylation
+mod,14,KR	#methylation
+mod,42,K	#acetylation
+mod,203,ST	#GlcNAc
+mod,146,ST	#fucosylation
+mod,210,*,nterminal	#myristolation
+mod,16,P	#hydroxyproline
+mod,28,KR	#dimethylation

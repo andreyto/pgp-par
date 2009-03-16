@@ -1,0 +1,8 @@
+spectra,SystemTest/TestSpectrum.dta
+instrument,ESI-ION-TRAP
+protease,None
+DB,TestDatabase.trie
+
+# This line causes Inspect to run a 'blind' search, where any mass modification
+# up to mass 200Da is allowed.  (Very slow on large databases):
+unrestrictive,1

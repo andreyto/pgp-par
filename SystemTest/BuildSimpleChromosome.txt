@@ -1,0 +1,3 @@
+ReadGFF,SystemTest/SimpleGenes.gff
+GenomeFile,SystemTest/SimpleChromosome.trie
+ChromosomeName,simple

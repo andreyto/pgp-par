@@ -1,0 +1,105 @@
+#Name	Mass	Monisotopic	Residues
+#Acetylation	42.0106	K	
+#Alkylation	14.01564	CKRHDENQ	
+#Amidation	-0.984		
+#S-archaeol	634.6628		
+	
+#Biotin	226.0776	K	
+#Bromination	77.9105	HFW	
+#Carbamylation	43.00581	K	
+#Cholesterol	368.3443		
+#plants	CHDH	294.39	D
+#Citrullination	0.9840276	R	
+#C-Mannosylation	162.052823		
+#Deamidation	0.984	NQ	
+#S-diacylglycerol cysteine	576.51171	
+#Dimethylation	28.0314	CKRHDENQ
+#FAD	783.1415	CH
+#Farnesylation	204.1878	C
+#Formylation	27.9949	
+#Geranyl-geranylation	272.2504	C
+#Gamma-carboxyglutamic acid	43.98983	E
+#O-GlcNAc	203.0794	ST
+#Glucosylation (glycation)	162.0528	NTK
+#Glutathionylation	305.0680814	C
+#Hydroxylation	15.9949	PKDN
+#Lipoyl	188.033	K
+#Myristoylation	210.1984	
+
+#n-Octanoate	126.1044	S
+#Omega-hydroxyceramide glutamate ester	760.73082	E	
+#Palmitoylation	238.2297	STCK	
+#yeast	PALE	236.39	C
+#Phosphatidylethanolamine amidated glycine	773.54443		
+# Generally phosphorylation only affects S, T, and Y.  It *can* affect CDH, but that's relatively rare.
+#Phosphorylation	79.9663	STY
+Phosphorylation	80	STY
+#Phosphorylation	79.9663	STYHCD
+Methylation	14.0157	CKRHDENQ	3
+krmethylation	14.0157	KR	2
+CMethylation	14.0157	C	3
+Biotin	339.16	K
+HelgeProbe	511.6	C
+Oxidation	16	M	2
+#MissingCarb	-57	C
+CSmall	-14	C
+CBig	103.143	C
+DoubleOxidation	32	M
+CysteineMod	57.0518	C
+MCysteineMod	71.067	C
+#Pyridoxal phosphate	229.014	K	
+#Phosphopantetheine	339.078	S	
+#Pyrrolidone carboxylic acid	-17.0266	Q	
+#Sulfation	79.9568	Y	
+#Trimethylation	42.0471	CKRHDENQ	
+Acetylation	42.0106	K
+Deamidation	-17	QC
+#Hydroxylation	15.9949	PKDN
+Hydroxylation	15.9949	PK
+Sulfation	80	Y
+S-Nitrosylation	28.99017	C
+sprobe	766.7	S
+cprobe	511.6	C
+Beta-methylthiolation	45.9877118	C
+1Cysteine sulfenic acid (-SOH)	15.9949146	C	
+2Cysteine sulfinic acid (-SO2H)	31.9898292	C
+OxoHist	16.0	C
+Desmosine	-58	K
+EpsImine	12	K
+Citruline	1	R
+terminal	14.01564	A
+cter	14.01564	A
+nomet	-14.02	A
+nt4	4.0	ACDEFGHIKLMNPQRSTVWY
+nt6	6.0	ACDEFGHIKLMNPQRSTVWY
+nt10	10.0	ACDEFGHIKLMNPQRSTVWY
+lys4	4.0	K
+lys6	6.0	K
+lys10	10.0	K
+#-57ikkb	-57.0	C
+
+#1lens	1.0	CK
+
+##-18ikkb	-18.0	DET
+##1ikkb	1.0	N
+##10ikkb	10.0	A
+##14ikkb	14.0	CK
+##16ikkb	16.0	MW
+##22ikkb	22.0	DE
+##25ikkb	25.0	L
+##28ikkb	28.01	K
+##32ikkb	32.01	MW
+##40ikkb	40.0	P
+##+43k	43.0	K
+##42lens	42.0	A
+##43lens	43.0	A
+##38lens	38.0	A
+##21lens	21.0	A
+cysl	-2	C
+cyst	12	C
+g14	14	G
+dehydration	-18	DES
+sodium	22	DE
+dopa	16	Y
+gtod	58	G
+atov	29	A

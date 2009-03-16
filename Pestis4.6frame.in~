@@ -1,0 +1,10 @@
+spectra,/export/mzxml/YpestisPeriplasm/Group2
+#spectra,../../mzxml/YpestisPeriplasm/A623A/A623A001.mzXML
+instrument,ESI-ION-TRAP
+protease,Trypsin
+mod,+57,C,fix
+db,YPestisKim.6frame.trie
+db,YPestisKim.6frame.SHF.trie
+db,Common.RS.trie
+TagCount,25
+PMTolerance,3.0

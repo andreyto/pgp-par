@@ -1,0 +1,9 @@
+spectra,C:\mzxml\Yeast\Cerevisiae
+instrument,ESI-ION-TRAP
+protease,Trypsin
+mod,+57,C,fix
+mod,80,STY,opt,phosphorylation
+db,S.cerevisiae.RS.trie
+mods,2
+TagCount,50
+PMTolerance,3.0

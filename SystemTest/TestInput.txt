@@ -1,0 +1,26 @@
+# Spectrum file-name.  Multiple 'spectra' lines can be used to search
+# several .dta or .pkl files.  Specify a directory name to search every
+# file in that directory (non-recursive)
+spectra,SystemTest/TestSpectrum.dta
+
+# Instrument type (QTOF or ESI-ION-TRAP)
+instrument,ESI-ION-TRAP
+
+# Protease - nonstandard digests are penalized.  
+# Options are trypsin, chymotrypsin, lysc, aspn, gluc
+protease,None
+
+# Path to the database file (as written out by PrepDB.py)
+DB,TestDatabase.trie
+
+#mod,mass,residues,fix/opt,name
+
+# Specify one modification (the test peptide was actually 
+# VKEAMAPK, not VKEAMGPK, so a +14 mod will work)
+mod,+14,G,opt,user-defined
+
+# Note: MOST searches should include the +57 modification
+# for the protecting group on cysteines.
+mod,+57,C,fix
+
+mods,1

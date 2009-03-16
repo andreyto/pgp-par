@@ -1,0 +1,7 @@
+mod,57,C,fixed	#CAM
+mod,-17,CQ,nterminal	#pyroglutamate, Pyro-cmC
+mod,57,*,nterminal	#CAM
+mod,12,*,nterminal	#chemical adduct
+mod,43,*,nterminal	#carbamylation
+mod,16,MW	#oxidation
+mod,-48,M	#neutral loss on Met or oxM

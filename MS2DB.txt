@@ -1,0 +1,45 @@
+<!--
+  This file specifies, by example, the MSDB xml file format.  This xml format
+  is intended as a cross-platform storage format for peptide records, with
+  the ability to store data such as cross-references and splicing events
+  in a principled way.
+-->
+<Database Name="name"
+  SourceDBFile="name" SourceDB="" SourceDBVersion="">
+
+<Gene Name="Human-readable name" Species="species" ExonCount="1">
+  <Locus chromosome="1" ForwardFlag="1" Start="x" End="y" />
+  <Notes>arbitrary unformatted, human-readable notes!</notes>
+  <Exon Index="0" Start="x" End="y" Prefix="ac" Suffix="tc">
+  <!--
+  Exon index is required.  Genomic Start and End positions are optional
+  -->
+    <ExonSequence Length="x">
+    (Peptide sequence is here, in the body of ExonSequence)
+    </ExonSequence>
+
+    <!-- Use the Modification tag to indicate a residue which can be
+      chemically modified.  Search tools should, if possible, consider these
+      modifications.  Non-site-specific modifications (such as oxidation of methionine)
+      need not be indicated in the database. -->
+    <Modification Constitutive="0" Residue="12" Name="Phosphorylation" Mass="80">
+      <CrossReference Database="HPRD" ID="123"/>
+    </Modification>
+    
+    <!-- Use the Extends tag if this exon extends from an earlier one (i.e.
+      it's all one biological exon, but a shorter spliced version is possible) -->
+    <ExtendsExon Index="0" AA="Y" />
+    <!-- Use the LinkFrom tag to indicate this exon is a splice acceptor to
+     the corresponding splice donor. -->                                                                       
+    <LinkFrom Index="0" Score="3.14" AA="G" />
+  </Exon>
+  <CrossReference Database="IPI" ID="IPI:foo">
+  <!-- A cross reference without a body simply indicates that this Gene shares part
+       of its coding sequence with a known gene.  A cross reference *with* a body
+       indicates the splice pattern by which this gene corresponds to the
+       reference sequence. -->
+       <CRExons Index="0, 1, 2, 3, 4" />
+  </CrossReference>
+  
+</Gene>
+</Database>

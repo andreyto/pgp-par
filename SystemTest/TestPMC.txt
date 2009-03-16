@@ -1,0 +1,7 @@
+spectra,SystemTest/TestSpectra.pkl
+instrument,ESI-ION-TRAP
+protease,None
+DB,TestDatabase.trie
+mod,+57,C,fix
+pmconly,1
+mods,1

@@ -1,0 +1,51 @@
+<h1>Inspect: A Proteomics Search Toolkit</h1>
+Copyright 2007, The Regents of the University of California
+<h3>Table of Contents</h1>
+<li><a href="index.html">Overview</a>
+<li><a href="Copyright.html">Copyright information</a>
+<li><a href="Installation.html">Installation</a>
+<li><a href="Database.html">Database</a>
+<li><a href="Searching.html">Searching</a>
+<li><a href="Analysis.html">Analysis</a>
+<li><a href="InspectTutorial.pdf">Basic Tutorial</a>
+<li><a href="InspectAdvancedTutorial.pdf">Advanced Tutorial</a>
+<li><a href="UnrestrictedSearchTutorial.pdf">Unrestricted Search Tutorial</a>
+
+<hr>
+
+MS2DB is a relatively straightforward file format.  For now, the documentation is limited to
+a  example.
+<br><br>
+<b>TODO:</b> Document all available tags and attributes.
+
+<h3>Abbreviated example</h3>
+<pre>
+&lt;Database&gt;
+&lt;Gene ExonCount="14" Chromosome="chr1" ForwardFlag="1" Name="At1g02100"&gt;
+  &lt;Exon Index="0" Start="389875" End="389943"&gt;
+    &lt;ExonSequence Length="22"&gt;MAESRSNRAAVQATNDDASASK&lt;/ExonSequence&gt;
+  &lt;/Exon&gt;
+  &lt;Exon Index="1" Start="390036" End="390250"&gt;
+    &lt;ExonSequence Length="71"&gt;SCVKKGYMKDDYVHLFVKRPVRRSPIINRGYFSRWAAFRKLMSQFLLSGTSSKKQILSLGAGFDTTYFQLL&lt;/ExonSequence&gt;
+    &lt;LinkFrom Index="0" AA="L" /&gt;
+  &lt;/Exon&gt;
+
+[.......]
+
+  &lt;Exon Index="12" Start="392261" End="392300"&gt;
+    &lt;ExonSequence Length="13"&gt;EHYCVTYAVNDAM&lt;/ExonSequence&gt;
+    &lt;LinkFrom Index="9" /&gt;
+  &lt;/Exon&gt;
+  &lt;Exon Index="13" Start="392373" End="392448"&gt;
+    &lt;ExonSequence Length="25"&gt;GIFGDFGFTREGGGERMSSSASSPX&lt;/ExonSequence&gt;
+    &lt;LinkFrom Index="12" /&gt;
+  &lt;/Exon&gt;
+  &lt;CrossReference Database"Salk" ID="At1g02100.1"&gt;
+    &lt;CRExons Index="0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 13 /&gt;
+  &lt;/CrossReference&gt;
+  &lt;CrossReference Database"Salk" ID="At1g02100.2"&gt;
+    &lt;CRExons Index="0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 /&gt;
+  &lt;/CrossReference&gt;
+&lt;/Gene&gt;
+&lt;/Database&gt;
+</pre>

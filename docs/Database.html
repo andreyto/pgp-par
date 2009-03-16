@@ -1,0 +1,92 @@
+<h1>Inspect: A Proteomics Search Toolkit</h1>
+Copyright 2007, The Regents of the University of California
+<h3>Table of Contents</h1>
+<li><a href="index.html">Overview</a>
+<li><a href="Copyright.html">Copyright information</a>
+<li><a href="Installation.html">Installation</a>
+<li><a href="Database.html">Database</a>
+<li><a href="Searching.html">Searching</a>
+<li><a href="Analysis.html">Analysis</a>
+<li><a href="InspectTutorial.pdf">Basic Tutorial</a>
+<li><a href="InspectAdvancedTutorial.pdf">Advanced Tutorial</a>
+<li><a href="UnrestrictedSearchTutorial.pdf">Unrestricted Search Tutorial</a>
+
+<hr>
+<h1>Overview</h1>
+Inspect requires a database (a file of protein sequences) in order to interpret spectra.  You
+can specify one or more databases in the Inspect input file.  Databases can be stored in one
+of two formats: A .trie file (bare-bones format with sequence data only), or a .ms2db file
+(simple XML format with exon linkage information).  These two formats are discussed below.
+
+<h1>Sequence Databases (FASTA)</h1>
+For efficiency reasons, Inspect processes FASTA files into its own internal format before
+searching.  A database is stored a two files, one with the extension ".trie" (which holds peptide sequences),
+and one with the extension ".index" (which holds protein names and other meta-data).  To prepare
+the database, first copy the protein sequences of interest into a FASTA file in the Database
+subdirectroy.  Then, from the Inspect directory, run the Python script PrepDB.py as follows:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<tt><b>python PrepDB.py FASTA MyStuff.fasta</b></tt><br>
+Replace "MyStuff.fasta" with the name of your FASTA database.  After PrepDB has run, the database
+files MyStuff.trie and MyStuff.index will be ready to search. PrepDB.py also handles
+Swiss-prot ".dat file" format as input.
+<br><br>
+Inspect can perform this processing automatically
+(see the "SequenceFile" option in the <a href="Searching.html">searching</a> documentation).  Running
+PrepDB.py is the preferred method since it creates a database file which can be re-used by many
+searches.
+<br><br>
+<b>Note:</b> The database should include all proteins known to be in the sample, otherwise some spectra
+will receive incorrect (and possibly misleading) annotations.  In particular, most databases should
+include trypsin (used to digest proteins) and human keratins (introduced during sample processing).
+The file "CommonContaminants.fasta", in the Inspect directory, contains several protein sequences you
+can append to your database.
+<br><br>
+<h1>Decoy records (ShuffleDB)</h1>
+Databases including "decoy proteins" (shuffled or reversed sequences) are emerging as the
+gold standard for computing false discovery rates.  Inspect can compute p-values in two
+ways:
+    <li>Compute the empirical false discovery rate by counting the number of hits to
+    invalid proteins.  <b>This is the recommended method.</b>  Given an f-score cutoff,
+    Inspect computes the number shuffled-protein hits above that threshold - these hits
+    are all invalid.  Inspect
+    then estimates the number of invalid hits which happen to fall within valid proteins.
+    This count provides an empirical false discovery rate, which is reported as the
+    "p-value".
+    <li>By fitting the distribution of F-scores as a mixture model, in the manner of
+    PeptideProphet.  This is how the initial p-values output by inspect are computed.
+    Use PValue.py <b>without</b> the "-S" option to compute p-values using this method.
+<br><br>
+To compute empirical false discovery rates:
+<li> Use the script ShuffleDB.py to append decoy records to a database before searching.  Decoy records have the
+flag "XXX" prefixed to their name.
+<li>After searching, use the script PValue.py (including the "-S" option) to carry out this analysis.
+
+<h1>MS2DB Format</h1>
+The MS2DB file format is a simple, extensible XML format for storing proteins.  The main benefits of
+using MS2DB format instead of FASTA files are:
+    <li>Reduced redundancy - Each exon is stored once, and only once
+    <li>Splice information - All isoforms (and sequence variants) corresponding to a locus are grouped
+    as one Gene, which reduces the usual confusion between proteins and records.
+    <li>Site-specific modifications - Known modifications, such as phosphorylation, can be
+    explicitly indicated.  Considering these site-specific modifications is much cheaper than
+    a search that attempts to discover new modifications.
+    <li>Rich annotations - The format has places to store information such as accession numbers from
+    sequence repositories, species name, etc.
+<br><br>
+You can use Inspect to generate a MS2DB file.  As input, you will need:
+<li>One or more files in GFF format.  These files specify the available exons.  The
+Sanger institute hosts a <a href="http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml">webpage documenting GFF file format</a>.
+Note that Inspect will assume two consecutive exons should be linked by an edge if they have the same
+name (first column).
+<li>A genome sequence file, containing the full sequence for one chromosome.  This file should be in .trie format.  See above for how to convert
+from FASTA format to .trie format.
+<br><br>Now, build an Inspect input file specifying the genome file, and one or more GFF files.
+Name the input file whatever you want, something like "BuildChr1.txt" is fine. Here is an example:
+<pre>
+ReadGFF,GFF\Arabidopsis\chr1.gff
+GenomeFile,e:\Arabidopsis\chr1.trie
+ChromosomeName,chr1
+</pre>
+Next, run Inspect, specifying the input file on the command-line.  The output file is the name of
+the file where the MS2DB outut will be written.  Example:<br>
+<tt>inspect -i BuildChr1.txt -o database\chr1.ms2db</tt>
+<br>
