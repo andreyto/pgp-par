@@ -1,6 +1,8 @@
 """These are for functions on protein sequences.  Right now it's only hydropathy, but maybe more will come up
 """
 import BasicStats
+import Global
+import string
 
 class HydrophobicIndex:
     """scores Kyte-Doolittle, grouping a la Lehninger"""
@@ -45,6 +47,9 @@ class HyrdopathyPlot:
             Values = []
             for Jndex in range(Index, Index+BinLen):
                 Letter = Sequence[Jndex]
+                if not Letter in (string.uppercase):
+                    print "I'm barfing on %s"%Sequence
+                    continue
                 Values.append( self.Metric.HI[Letter])
             Mean = BasicStats.GetMean(Values)
             Plot.append(Mean)
@@ -64,3 +69,26 @@ class HyrdopathyPlot:
             else:
                 Counter =0 
         return Found
+
+
+def GetMW(Aminos):
+    Aminos = Aminos.upper()
+    MW = 0
+    for Amino in Aminos:
+        MW += Global.AminoMass.get(Amino, 0)
+    MW += 19
+    return MW
+
+def HasSignalPeptidaseMotif(Aminos):
+    """Looking for the end of the peptide (the prefix to the observed protein) to have
+    AxB.. where A in [ILVAGS] and B in [AGS]
+    """
+    APosition = Aminos[-3]
+    BPosition = Aminos[-1]
+    AcceptableA = ["I","L","V","A","G","S"]
+    AcceptableB = ["A","G","S"]
+    if not APosition in AcceptableA:
+        return 0
+    if not BPosition in AcceptableB:
+        return 0
+    return 1

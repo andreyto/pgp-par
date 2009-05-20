@@ -13,8 +13,7 @@ Additional Options
  -v   Flag to print a more verbose trace of the program progression
      through various methods and whatnot
  -p [float] Pvalue cutoff (Default 0.05)
- -t Tryptic flag.  When set, this excluded fully tryptic peptides from the result.
-     Default includes any peptide
+ -s [FileName] Signal peptide predictions from signalp
 
 """
 
@@ -33,58 +32,153 @@ Initialize()
 class FinderClass(ResultsParser.ResultsParser):
     def __init__(self):
         self.ReferenceResults = None
+        self.PredictedSignalPeptideFile = None
         self.OutputPath = "RenameYourOutput.txt"
         self.DatabasePaths = [] #possibly multiple
         self.AllPeptides = {} # AminoSequence -> sPeptide Object
         self.ProteinsAndFirstObservedAA = {} #proteinID-> list of start position of closest peptide
+        self.FirstPeptideInProtein = {}
         self.SpectrumCount = 0
         self.PValueLimit = 0.05 #pvalues are 0.00 (good) to 1.0 (bad) 
         self.MinPeptidesPerProtein = 2
         self.Verbose = 0
-        self.LimitTryptic = 0
         self.NameToID = {}
         ResultsParser.ResultsParser.__init__(self)
         
     def Main(self):
+        
         
         self.ProteinPicker = SelectProteins.ProteinSelector()
         self.ProteinPicker.LoadMultipleDB(self.DatabasePaths)
         self.ProcessResultsFiles(self.ReferenceResults, self.ParseInspectCallback)
         print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
         self.PutPeptidesOnProteins()
-        #print self.ProteinsAndFirstObservedAA.values()
-        self.PrintSpecificDetails()
-        Histogram = BasicStats.CreateHistogram(self.ProteinsAndFirstObservedAA.values(), 0, 5)
-        Handle = open(self.OutputPath, "wb")
-        BasicStats.PrettyPrintHistogram(Histogram, Handle) 
-        Handle.close()
+        #self.SignalPeptideHunt()
+        #self.NMEHunt()
+        #self.MCaptureHunt()
+        if self.PredictedSignalPeptideFile:
+            self.DebunkSignalP()
         
-    def PrintSpecificDetails(self):
-        """quicky"""
+    def NMEHunt(self):
+        """Now we go through all the peptide sequences, and see which look like NME (M.peptide start)
+        We print off whether these are or are not the first peptide in their respective protein
+        """
+        for Aminos in self.AllPeptides.keys():
+            PeptideObject = self.AllPeptides[Aminos]
+            if not PeptideObject.Prefix == "M":
+                continue
+            #so it looks promising.  Let's see where it lands on the protein, and it it's 
+            #we see if it mapps to the same place as the first reported amino acid in it's protein
+            DBLocations = self.ProteinPicker.FindPeptideLocations(Aminos)
+            for (ProteinID, PeptideStartAA) in DBLocations:
+                ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
+                ThisProteinStart = self.ProteinsAndFirstObservedAA.get(ProteinName, None) #none as the default
+                if not ThisProteinStart:
+                    #this occurs where we did not record the first peptide start for a protein.  This is 
+                    #perfectly reasonable, because it might have too few peptides
+                    continue
+                #so now we know what the first start is.  If we're the same, then we're the start
+                ## if we're not, then were a look alike NME
+                if PeptideStartAA > ThisProteinStart:
+                    #look alike
+                    print "%s\t%s\tInterior NME like"%(ProteinName, PeptideObject.GetFullModdedName())
+                elif PeptideStartAA == ThisProteinStart:
+                    #potential NME for real
+                    if PeptideStartAA == 1:
+                        print "%s\t%s\tTrue NME "%(ProteinName, PeptideObject.GetFullModdedName())
+                    else:
+                        print "%s\t%s\tPotential NME correction\t%s"%(ProteinName, PeptideObject.GetFullModdedName(), PeptideStartAA)
+                else:
+                    print "Snafu mapping %s\t%s\t"%(ProteinName, PeptideObject.GetFullModdedName())
+
+    def MCaptureHunt(self):
+        for Aminos in self.AllPeptides.keys():
+            PeptideObject = self.AllPeptides[Aminos]
+            if not Aminos[0] == "M":
+                continue
+            DBLocations = self.ProteinPicker.FindPeptideLocations(Aminos)
+            for (ProteinID, PeptideStartAA) in DBLocations:
+                ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
+                ThisProteinStart = self.ProteinsAndFirstObservedAA.get(ProteinName, None) #none as the default
+                if not ThisProteinStart:
+                    #this occurs where we did not record the first peptide start for a protein.  This is 
+                    #perfectly reasonable, because it might have too few peptides
+                    continue
+                #so now we know what the first start is.  If we're the same, then we're the start
+                ## if we're not, then were a look alike NME
+                if PeptideStartAA > 0:
+                    #see if it is a tryptic cut
+                    if not PeptideObject.Prefix in ["R", "K"]:
+                        print "%s\t%s\t Interior M-capture like"%(ProteinName, PeptideObject.GetFullModdedName())
+                else :
+                    print "%s\t%s\tTue M-capture "%(ProteinName, PeptideObject.GetFullModdedName())
+
+    def DebunkSignalP(self):
+        """This function takes as input a file with predictions from signal p (list of proteins)
+        and then looks for proteins that we find evidence for in the first 25 amino acids of peptides
+        from our proteomics data
+        """
+        PredictedProteinNames = self.ParseSignalPredictionFile()
+        #now we go through all our protiens and see if their first residue is within the first 25 base pairs
+        ## thus disproving the call, we should really keep track of the position they said, but that's more work
+        ## perhaps for this afternoon
+        for Name in PredictedProteinNames:
+            ThisProteinStart = self.ProteinsAndFirstObservedAA.get(Name, None)
+            if not ThisProteinStart:
+                continue #we've go nothing to comare with
+            if ThisProteinStart < 25:
+                print "You were wrong signalp %s"%Name
+        
+        
+    def ParseSignalPredictionFile(self):
+        """This function parses the signal p prediction file, which is a list of gi numbers.
+        I just have to map those the the proteins in our database, and then return the IDs.
+        gi|22124349|ref|NP_6  length = 439    0.855
+        gi|22124626|ref|NP_6  length = 437    0.876
+        gi|22125364|ref|NP_6  length = 277    0.468
+        gi|22125471|ref|NP_6  length = 258    0.601
+        """
+        Names = []
+        Handle = open(self.PredictedSignalPeptideFile, "rb")
+        for Line in Handle.xreadlines():
+            GiNum = Line.split(" ")[0] #and some other crap that should also match.
+            #print GiNum
+            #now go through our database and find matches to the name
+            for (ID, Name) in self.ProteinPicker.ProteinNames.items():
+                Location = Name.find(GiNum)
+                if not Location == -1: #it's found
+                    #print "I found %s in %s"%(GiNum, Name)
+                    Names.append(Name)
+                    continue
+        return Names
+
+    
+    def SignalPeptideHunt(self):
+        """look at the first observed peptide and see if we have evidence of 
+        signal peptide cleavage"""
         HPlot = ProteinStatistics.HyrdopathyPlot()
-        for (ProteinName, PeptideStart) in self.ProteinsAndFirstObservedAA.items():
+        for ProteinName in self.ProteinsAndFirstObservedAA.keys():
+            PeptideStart = self.ProteinsAndFirstObservedAA[ProteinName]
+            FirstPeptidObject = self.FirstPeptideInProtein[ProteinName]
+            ## we first filter by trypticness.  A signal peptide can't be tryptic,
+            ## or at least we don't have confidence in the invivo cleavage if it appears tryptic
+            if not FirstPeptideObject.Prefix in ["R", "K"]:
+                continue
+            #now we expect signal peptides to fall within a certain length range
             MaxLen = 50
-            if PeptideStart == 0:
-                ID = self.NameToID[ProteinName]
-                BeginningSequence = self.ProteinPicker.ProteinSequences[ID][:5]
-                String = "%s\t%s\t%s"%(ProteinName, "Mcapture", BeginningSequence)
-                print String
-            if PeptideStart > 15 and PeptideStart < MaxLen:
+            MinLen = 15
+            if PeptideStart > MinLen and PeptideStart < MaxLen:
                 ID = self.NameToID[ProteinName]
                 PrefixSequence = self.ProteinPicker.ProteinSequences[ID][:PeptideStart]
                 AfterCut = self.ProteinPicker.ProteinSequences[ID][PeptideStart:PeptideStart+2]
-                #if PrefixSequence[-1] == "M":
-                #    print "%s\t%s\t%s\t%s"%(ProteinName, PeptideStart, PrefixSequence, AfterCut)
-                #continue
                 #now some trickery
                 Plot = HPlot.MakePlot(PrefixSequence)
                 LongerSignal = HPlot.IsConsistentSignal(Plot) #default to 10
                 ShorterSignal = HPlot.IsConsistentSignal(Plot, 0.5, 8)
-                #if ShorterSignal and not FoundSignal:
-                #    print "SHORTER ! %s\t%s\t%s\t%s\t"%(ProteinName, PeptideStart, PrefixSequence, AfterCut)
-                String = "%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideStart, PrefixSequence, AfterCut, ShorterSignal)
+                AxBMotif = ProteinStatistics.HasSignalPeptidaseMotif(PrefixSequence)
+                #I decided to go with the shorter hydrophobic patch length, but I kept the other var in there just incase
+                String = "%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideStart, PrefixSequence, AfterCut, ShorterSignal, AxBMotif)
                 PlotString =""
-                #freaking python, making me cast all of this crap
                 # need to front pad these with zeros
                 PadLen = MaxLen - len(Plot)
                 for i in range(PadLen):
@@ -92,7 +186,7 @@ class FinderClass(ResultsParser.ResultsParser):
                 
                 for Item in Plot:
                     PlotString += "\t%s"%Item
-                #print "%s%s"%(String, PlotString) #plotString has an explicit \t at start
+                print "%s%s"%(String, PlotString) #plotString has an explicit \t at start
                 
 
 
@@ -122,12 +216,9 @@ class FinderClass(ResultsParser.ResultsParser):
         for (ProteinName, Count) in PeptidePerProteinCounter.items():
             if Count < self.MinPeptidesPerProtein:
                 continue
-            #now we see if this passes our tryptic concerns
-            PeptideObject = PeptideObjectInProtein[ProteinName]
-            if self.LimitTryptic and (PeptideObject.Prefix in ["R", "K"]):
-                continue
             #okay, apparently we care about this protein.  Let's print stuff out
             self.ProteinsAndFirstObservedAA[ProteinName] = PeptideStartInProtein[ProteinName]
+            self.FirstPeptideInProtein[ProteinName] = PeptideObjectInProtein[ProteinName]
 
         
     def ParseInspectCallback(self, FilePath):
@@ -167,7 +258,7 @@ class FinderClass(ResultsParser.ResultsParser):
 
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:d:w:vtp:")
+        (Options, Args) = getopt.getopt(Arguments, "r:d:w:vp:s:")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -191,8 +282,13 @@ class FinderClass(ResultsParser.ResultsParser):
                 self.PValueLimit = float(Value)
             if Option == "-v":
                 self.Verbose = 1
-            if Option == "-t":
-                self.LimitTryptic =1
+            if Option == "-s":
+                if not os.path.exists(Value):
+                    print "** Error: couldn't find results file '%s'\n\n"%Value
+                    print UsageInfo
+                    sys.exit(1)
+                self.PredictedSignalPeptideFile = Value
+                    
         if not OptionsSeen.has_key("-r")  or not OptionsSeen.has_key("-w") or not OptionsSeen.has_key("-d"):
             print UsageInfo
             sys.exit(1)

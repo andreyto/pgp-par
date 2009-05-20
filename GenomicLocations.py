@@ -39,7 +39,7 @@ class GenomicLocationForORF(GenomicLocationClass):
         GenomicLocationClass.__init__(self)
         self.ORFName = None
         self.AminoAcidLength = AALen #handy to keep around.
-        self.ParseFastaHeader(FastaLine)
+        self.ParseFastaHeader(FastaLine) ## fills in the self.ORFName, Chromosome, StartFrame, Strand, StartNuc, StopNuc
         self.MisPrecition = None # types include 'MissingProtein' or 'PeptidesBeforeStart' or 'PeptidesAfterStop'
 
     def AmIMispredicted(self, MinPeptides = 2):
@@ -105,7 +105,7 @@ class GenomicLocationForORF(GenomicLocationClass):
                 Peptide.PrintMe()
         if PrintProtein:
             print "Protein within ORF %s"%self.ProteinPredictionName
-            self.ProteinPrediction.PrintMe()
+            #self.ProteinPrediction.PrintMe()
         
     def ParseFastaHeader(self, FastaLine):
         """This takes the fasta line (from sixframefasta.py) and parses out the start and stop

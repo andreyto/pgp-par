@@ -35,6 +35,7 @@ import ResultsParser
 import PeptideMapper
 import GenomicLocations
 import PGORFFilters
+import PGCleavageAnalysis
 import BasicStats
 import GFFIO
 from Utils import *
@@ -63,6 +64,7 @@ class FinderClass(ResultsParser.ResultsParser):
         self.SearchForMispredictions = 1
         self.SearchForCleavage = 1
         self.OutputPeptidesToGFF = 0
+        self.GFFOutputPath = "RenameYourOutput.gff"
         ResultsParser.ResultsParser.__init__(self)
         
     def Main(self):
@@ -107,6 +109,21 @@ class FinderClass(ResultsParser.ResultsParser):
             del self.AllORFs[Name]
         if self.Verbose:
             print "\t%s ORFs left after filtering"%len(self.AllORFs)
+            #for (ORFName, ORF) in self.AllORFs.items():
+            #    ORF.PrintMe(0,1)
+
+    def AnalyzeCleavage(self):
+        """
+        Parameters: None
+        Return: None
+        Description: glorified wrapper for calling the filter function. 
+        """
+        Enzymes = ["Trypsin", ]
+        if self.Verbose:
+            print "ProteogenomicsPostProcessing.py:AnalyzeCleavage"
+        for ORF in self.AllORFs.values():
+            PGCleavageAnalysis.Analysis(ORF, Enzymes)
+
 
 
     def LoadResultsFromGFF(self, GFFFile):
@@ -138,7 +155,7 @@ class FinderClass(ResultsParser.ResultsParser):
         Description: This takes the peptide objects from self.AllLocations and
         makes a GFF File containing all of them.  
         """
-        Handle = open("gfftestfile.gff", "wb")
+        Handle = open(self.GFFOutputPath, "wb")
         GlobalLocationCount = 0
         for Location in self.AllLocations:
             Line = Location.GetGFF3LineNew(GlobalLocationCount)
@@ -271,14 +288,16 @@ class FinderClass(ResultsParser.ResultsParser):
             #This is where it gets a bit tricky. see note in method comment for explanation of the weirdness
             SearchableSequence = ProteinSequence[1:]
             ProteinLocation = self.ORFPeptideMapper.MapMe(SearchableSequence, 1)
-            if len(ProteinLocation) == 0 and self.VerboseWarnings:
-                print "WARNING: protein %s does not map to any ORF"%ProteinName
-                continue
+            if len(ProteinLocation) == 0:
+                if self.VerboseWarnings:
+                    print "WARNING: protein %s does not map to any ORF"%ProteinName
+                continue #always
             if len(ProteinLocation) > 1 and self.VerboseWarnings:
                 print "WARNING: Protein %s maps to multiple ORFs"%ProteinName
             for Location in ProteinLocation: #potentially many
                 Location.AddOneAminoAcidFivePrime()
                 #Location.Aminos = ProteinSequence# replace the full sequence,because it got snipped in the beginning
+            
             self.AllPredictedProteins[ProteinName] = ProteinLocation[0] #explicit assumption that there is only ONE
         
     def ParseInspectCallback(self, FilePath):
@@ -321,7 +340,7 @@ class FinderClass(ResultsParser.ResultsParser):
         Handle.close()
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMGW")
+        (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMG:W")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -366,6 +385,7 @@ class FinderClass(ResultsParser.ResultsParser):
                 self.SearchForCleavage = 0
             if Option == "-G":
                 self.OutputPeptidesToGFF = 1
+                self.GFFOutputPath = Value
             if Option == "-W":
                 self.VerboseWarnings =1
         if not OptionsSeen.has_key("-w") or not OptionsSeen.has_key("-d") or not OptionsSeen.has_key("-o"):
