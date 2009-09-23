@@ -1,8 +1,15 @@
-spectra,/export/Projects/Anthrasis/3hr_infected_macrophage/3_inf_sol_01_itms.ms2
+spectra,/data/spectra/Leptospira.interrogans.L1-130/delme
 instrument,ESI-ION-TRAP
 protease,Trypsin
 mod,+57,C,fix
-db,ipi.HUMAN.trie
+db,/export/Projects/Aspergillus/Database/NC_007194.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007195.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007196.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007197.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007198.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007199.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007200.sixframe.RS.trie
+db,/export/Projects/Aspergillus/Database/NC_007201.sixframe.RS.trie
 db,Common.RS.trie
 TagCount,25
 PMTolerance,3.0

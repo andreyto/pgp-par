@@ -79,8 +79,11 @@ class PeptideMappingClass:
             ##here, so it can be expanded upon without really killing the code
             self.SetStartStop(Location, Aminos, PeptideStartAA, ORFStartNucleotide)
             self.SetFrame(Location, InfoBits[2])
+            if (len(DBLocations) == 1):
+                Location.Unique = 1 #default set to zero in the constructor, so we set to 1 if unique
             #append to list
             ReturnLocations.append(Location)
+            
         return ReturnLocations
             
     def SetFrame(self, Location, FrameString):

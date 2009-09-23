@@ -121,6 +121,11 @@ def PrettyPrintHistogram(Histogram, FileHandle = None):
     Also, the FileHandle object must be an actual handle, not a file
     name that you want me to make a handle out of.
     """
+    #print header
+    if FileHandle:
+        FileHandle.write("Histogram\n")
+    else:
+        print "Histogram\n"
     Keys = Histogram.keys()
     Keys.sort()
     for Key in Keys:
@@ -129,5 +134,51 @@ def PrettyPrintHistogram(Histogram, FileHandle = None):
         else:
             print "%s\t%s"%(Key, Histogram[Key])
         
+def PrettyPrintCDF(CDF, FileHandle = None):
+    """You should call this with a histogram that is created
+    by BasicStats::CreateHistogram.  Other stuff might not work.
+    Also, the FileHandle object must be an actual handle, not a file
+    name that you want me to make a handle out of.
+    """
+    #print header
+    if FileHandle:
+        FileHandle.write("Cumulative Distribution Function\n")
+    else:
+        print "Cumulative Distribution Function\n"
+    Keys = CDF.keys()
+    Keys.sort()
+    for Key in Keys:
+        if FileHandle:
+            FileHandle.write("%s\t%s\n"%(Key, CDF[Key]))
+        else:
+            print "%s\t%s"%(Key, CDF[Key])
 
+def CreateCDF(List, FirstBin, BinSize, Granularity):
+    """This creates a cumulative distribution function of the data
+    List is the list of data
+    First Bin and bin size are the same as CreateHistogram.  Granularity
+    is the level of granularity that you want things reported in, e.g. 5% increments
+    """
+    NumElements = len(List)
+    CDF = {} # bin=> coverage
+    List.sort()
+    CurrAccumulationFraction = 0.0 #0 => 1 by steps = granularity
+    CurrAccumulationCount =0 # 0 -> NumElements
+    Histogram = CreateHistogram(List, FirstBin, BinSize) # I do this just to make counting easier
+    HKeys = Histogram.keys()
+    HKeys.sort() #this key is really the histogram bin
+    for Key in HKeys:
+        Count = Histogram[Key]
+        CurrAccumulationCount += Count
+        #now check to see what fraction I am at with this new data point
+        NewFraction = CurrAccumulationCount/ float (NumElements)
+        NewPoint = 0 #save something?
+        while NewFraction > (CurrAccumulationFraction + Granularity):
+            NewPoint = 1
+            CurrAccumulationFraction += Granularity
+        if NewPoint:
+            CDF[Key] = CurrAccumulationFraction
+    return CDF
+        
+        
     

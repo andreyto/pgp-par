@@ -53,11 +53,11 @@ class FinderClass(ResultsParser.ResultsParser):
         self.ProcessResultsFiles(self.ReferenceResults, self.ParseInspectCallback)
         print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
         self.PutPeptidesOnProteins()
-        #self.SignalPeptideHunt()
+        self.SignalPeptideHunt()
         #self.NMEHunt()
         #self.MCaptureHunt()
-        if self.PredictedSignalPeptideFile:
-            self.DebunkSignalP()
+        #if self.PredictedSignalPeptideFile:
+        #    self.DebunkSignalP()
         
     def NMEHunt(self):
         """Now we go through all the peptide sequences, and see which look like NME (M.peptide start)
@@ -118,37 +118,55 @@ class FinderClass(ResultsParser.ResultsParser):
         and then looks for proteins that we find evidence for in the first 25 amino acids of peptides
         from our proteomics data
         """
-        PredictedProteinNames = self.ParseSignalPredictionFile()
+        SignalPPredictions = self.ParseSignalPredictionFile()
         #now we go through all our protiens and see if their first residue is within the first 25 base pairs
         ## thus disproving the call, we should really keep track of the position they said, but that's more work
         ## perhaps for this afternoon
-        for Name in PredictedProteinNames:
+        for (Name, Probability, PredictedStart) in SignalPPredictions:
             ThisProteinStart = self.ProteinsAndFirstObservedAA.get(Name, None)
             if not ThisProteinStart:
                 continue #we've go nothing to comare with
-            if ThisProteinStart < 25:
-                print "You were wrong signalp %s"%Name
-        
+            if ThisProteinStart < PredictedStart:
+                PredictedMotif = self.GetMotifArea(Name, PredictedStart)
+                print "%s\t%s\t%s\t0\t%s"%(Name, ThisProteinStart, PredictedStart, PredictedMotif)
+            elif ThisProteinStart == PredictedStart:
+                print "%s\t%s\t%s\t1"%(Name, ThisProteinStart,PredictedStart)
+
+
+    def GetMotifArea(self, ProteinName, PlusOneResidue):
+        """This function is to get the sequence surrounding the cleavage site of a protein
+        we want -3, -2, -1, +1, +2  that's five letters
+        """
+        ID = self.NameToID[ProteinName]
+        Sequence = self.ProteinPicker.ProteinSequences[ID]
+        MotifStart = PlusOneResidue -3
+        MotifStop = PlusOneResidue +2
+        MotifArea = Sequence[MotifStart:MotifStop]
+        return MotifArea
         
     def ParseSignalPredictionFile(self):
         """This function parses the signal p prediction file, which is a list of gi numbers.
         I just have to map those the the proteins in our database, and then return the IDs.
-        gi|22124349|ref|NP_6  length = 439    0.855
-        gi|22124626|ref|NP_6  length = 437    0.876
-        gi|22125364|ref|NP_6  length = 277    0.468
-        gi|22125471|ref|NP_6  length = 258    0.601
+        gi|22125314|ref|NP_668737.1|    0.554    30
+        gi|22127555|ref|NP_670978.1|    0.831    21
+        gi|22127683|ref|NP_671106.1|    0.792    20
+        gi|22125472|ref|NP_668895.1|    0.866    28
+        ## warning this number is 1 based, not zero based like we often use.  that's the reason for
+        subtracting zero
         """
         Names = []
         Handle = open(self.PredictedSignalPeptideFile, "rb")
         for Line in Handle.xreadlines():
-            GiNum = Line.split(" ")[0] #and some other crap that should also match.
+            Line = Line.strip()
+            (NameStub, Probability, Residue) = Line.split("\t") #and some other crap that should also match.
+            FirstObservableResidue  = int(Residue) -1
             #print GiNum
             #now go through our database and find matches to the name
             for (ID, Name) in self.ProteinPicker.ProteinNames.items():
-                Location = Name.find(GiNum)
+                Location = Name.find(NameStub)
                 if not Location == -1: #it's found
                     #print "I found %s in %s"%(GiNum, Name)
-                    Names.append(Name)
+                    Names.append((Name, Probability, FirstObservableResidue)) #swap in Name (not NameStub) for dictionary referencing later
                     continue
         return Names
 
@@ -159,10 +177,10 @@ class FinderClass(ResultsParser.ResultsParser):
         HPlot = ProteinStatistics.HyrdopathyPlot()
         for ProteinName in self.ProteinsAndFirstObservedAA.keys():
             PeptideStart = self.ProteinsAndFirstObservedAA[ProteinName]
-            FirstPeptidObject = self.FirstPeptideInProtein[ProteinName]
+            FirstPeptideObject = self.FirstPeptideInProtein[ProteinName]
             ## we first filter by trypticness.  A signal peptide can't be tryptic,
             ## or at least we don't have confidence in the invivo cleavage if it appears tryptic
-            if not FirstPeptideObject.Prefix in ["R", "K"]:
+            if FirstPeptideObject.Prefix in ["R", "K"]:
                 continue
             #now we expect signal peptides to fall within a certain length range
             MaxLen = 50
@@ -305,3 +323,4 @@ if __name__ == "__main__":
     Gumshoe = FinderClass()
     Gumshoe.ParseCommandLine(sys.argv[1:])
     Gumshoe.Main()
+    

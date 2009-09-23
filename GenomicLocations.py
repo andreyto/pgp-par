@@ -157,6 +157,8 @@ class GenomicLocationForPeptide(GenomicLocationClass):
         self.ProteinName = "UNDEFINED"
         self.Aminos = "UNDEFINED"
         self.Score = -1 # this is meant to be the pvalue of a peptide, or other meaningful score.
+        self.SpectrumCount =0 #can set this if you want
+        self.Unique = 0# whether the aminos in this peptide are found elsewhere in the database
         GenomicLocationClass.__init__(self)
         
     def GetFivePrimeNucelotide(self):
@@ -174,10 +176,11 @@ class GenomicLocationForPeptide(GenomicLocationClass):
         
     def PrintMe(self, Verbose = 0):
         print "GenomicLocationForPeptide object, %s"%self.Aminos
-        print "found in protein %s"%self.ProteinName
-        print "Chr:%s, Start %s, Stop %s"%(self.Chromosome, self.StartNucleotide, self.StopNucleotide)
+        print "  found in protein %s (unique=%s)"%(self.ProteinName, self.Unique)
+        print "  Chr:%s, Start %s, Stop %s"%(self.Chromosome, self.StartNucleotide, self.StopNucleotide)
         if Verbose:
-            print "Strand %s, StartFrame %s, Stop Frame, %s"%(self.Strand, self.StartFrame, self.StopFrame)
+            print "  Strand %s, StartFrame %s, Stop Frame, %s"%(self.Strand, self.StartFrame, self.StopFrame)
+        print "\n";
             
     def GetGFF3Line(self, PValue, GlobalPeptideCount):
         """output the GFF3 line for this peptide"""

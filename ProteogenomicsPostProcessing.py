@@ -22,7 +22,7 @@ Additional Parameters
  -p [float] Pvalue cutoff (Default 0.05)
  -M    Flag to skip looking for mis-predicted proteins
  -C    Flag to skip cleavage analysis
- -G    Flag to write out the peptides in GFF format
+ -G [FileName] write out the peptide mappings in GFF format
  -W    Flag to print out warnings (as opposed to the verbose program progress)
 
 """
@@ -81,6 +81,7 @@ class FinderClass(ResultsParser.ResultsParser):
         self.CreateORFs()
     
         ## Now start the analyses
+        #self.FindOverlappingDubiousGeneCalls()
         self.FilterORFs()
         if self.OutputPeptidesToGFF:
             self.WritePeptideGFFFile()
@@ -88,6 +89,47 @@ class FinderClass(ResultsParser.ResultsParser):
             self.FindMiscalls()
         if self.SearchForCleavage:
            self.AnalyzeCleavage()
+
+    
+    def FindOverlappingDubiousGeneCalls(self):
+        """Parameters: none
+        Return: none
+        Description: There are genomic regions for which two gene calls overlap. 
+        For some badly predicted genomes, the overlap is substantial (like >50 bp).
+        I believe that most of these are bad gene calls, and I want to filter them 
+        out.  This method calls the PRORFFilters method FindOverlappingDubiousGeneCalls
+        which does that.  First we have to build the right dictionary,  so we do that here
+        """
+        ProteinDictionary = {} #proteinname->(start, stop)
+        MaxOverlap = 50 #the base pairs
+        for ORF in self.AllORFs.values():
+            if not ORF.ProteinPrediction:
+                continue #don't work with those lacking any protein.
+            #print "%s"%ORF.ProteinPredictionName
+            #ORF.ProteinPrediction.PrintMe()
+            #print "\n"
+            Name = ORF.ProteinPredictionName
+            Start = ORF.ProteinPrediction.StartNucleotide 
+            #'Start' is the small number. ALWAYS.  5' refers to something genic, but start is always just the small number
+            Stop = ORF.ProteinPrediction.StopNucleotide
+            #these coords don't yet take the stop codon into account, which NCBI does
+            if ORF.Strand == "+":
+                Stop += 3
+            else:
+                Start -= 3
+            ProteinDictionary[Name] = (Start, Stop)
+        OverlappingList = PGORFFilters.FindOverlappingDubiousGeneCalls(ProteinDictionary, MaxOverlap)
+        #now go through and see whether we have peptide evidence for some overlappers
+        for ORF in self.AllORFs.values():
+            if not ORF.ProteinPrediction:
+                continue #don't work with those lacking any protein.
+            if len(ORF.PeptideLocationList) < 1:
+                continue
+            #ORF has both a protein and peptides, good.
+            Name = ORF.ProteinPredictionName
+            if Name in OverlappingList:
+                print "%s is on the overlapping list, and has peptide representation"%Name
+
 
     def FilterORFs(self):
         """
@@ -107,8 +149,8 @@ class FinderClass(ResultsParser.ResultsParser):
         #can't delete from a list during the iteration.  so now we clean up
         for Name in DeleteMeList:
             del self.AllORFs[Name]
+        print "\t%s ORFs left after filtering"%len(self.AllORFs)
         if self.Verbose:
-            print "\t%s ORFs left after filtering"%len(self.AllORFs)
             #for (ORFName, ORF) in self.AllORFs.items():
             #    ORF.PrintMe(0,1)
 
@@ -184,7 +226,7 @@ class FinderClass(ResultsParser.ResultsParser):
         """This function is to make ORF objects (GenomeLocationForORFs)
         We should put peptides and predictedProteins in here. 
         """
-        DebugString = "Protein158425"
+        DebugString = "Protein9325"
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:CreateORFs"
         Count = 0
@@ -193,7 +235,6 @@ class FinderClass(ResultsParser.ResultsParser):
             FastaLine = self.ORFPeptideMapper.ProteinPicker.ProteinNames[ID]
             #if FastaLine.find(DebugString) == -1:
             #    continue
-            #print "I created the protein for %s"%FastaLine
             if not self.IsThisORFObserved(FastaLine):
                 continue
             ORFSequence = self.ORFPeptideMapper.ProteinPicker.ProteinSequences[ID]

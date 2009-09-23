@@ -1,4 +1,4 @@
-UsageInfo = """ GetMajorProtein.py
+UsageInfo = """ GelProteinAnalysis.py
 This program is designed for processing the results of 2D gels, in that
 it looks for the main protein found in each mzXML file, assuming that 
 each mzXML file corresponds to a single protein.
@@ -22,8 +22,9 @@ Initialize()
 
 
 class QuickyProteinObject:
-    def __init__(self, Name):
+    def __init__(self, Name, Sequence):
         self.Name = Name
+        self.Sequence = Sequence
         self.Peptides = {} #key = (aminos, filename) value = spectrumcount
     def SpectraForFile(self, TargetFileName):
         """For a given filename, we count the spectra found
@@ -79,8 +80,88 @@ class AbacusClass(ResultsParser.ResultsParser):
         
         self.FlagStickyProteins()
         self.PrintDominantProteins()
-        self.FindPairs()
-        self.PrintProteinPairs()
+        #self.FindPairs()
+        #self.PrintProteinPairs()
+        #self.FindMultiSpotProteins()
+        
+    def FindMultiSpotProteins(self):
+        """For this method, we are trying to find proteins which appear in multiple spots on a gel
+        THus we leverage the naming conventions for gels.  First pass is just to print them out so that I can 
+        see them, and then perhaps do somehting fancier like looking for separate parts of the protein in 
+        separate spots.
+        """
+        for (ProteinID, ProteinObject) in self.ProteinObjects.items():
+            #get all my spots, not a good container for this yet, but we'll make due
+            MyGels = {}
+            print "\n"
+            for Key in ProteinObject.Peptides.keys():
+                (Aminos, File) = Key
+                GelName = self.GetGelName(File)
+                SpotName = self.GetSpotName(File)
+                if not MyGels.has_key(GelName):
+                    MyGels[GelName] = []
+                SpotsInGel = MyGels[GelName]
+                if not SpotName in SpotsInGel:
+                    MyGels[GelName].append(SpotName)
+            #now go through and find out if a gel has multiple files
+            for Gel in MyGels.keys():
+                if len(MyGels[Gel]) > 1:
+                    self.DetermineMultiSpotOverlap(ProteinObject, Gel)
+                    
+                    
+    def DetermineMultiSpotOverlap(self, ProteinObject, Gel):
+        """Now I have a protein, and the name of a gel that has multiple spots.
+        I want to see if there is good overlap in the peptides from these spots
+        """
+        PeptidesBySpot = {} # spot=>list of aminos
+        for Key in ProteinObject.Peptides.keys():
+            (Aminos, File) = Key
+            IteratorGelName = self.GetGelName(File)
+            if not IteratorGelName == Gel:
+                continue # wrong gel
+            ## file is like /export/Projects/YPestis/6framesearch/test/A412A031.rescore.txt
+            Spot = self.GetSpotName(File)
+            if not PeptidesBySpot.has_key(Spot):
+                PeptidesBySpot[Spot] = []
+            PeptidesBySpot[Spot].append(Aminos)
+        ##now go through and get the bounds of these aminos on the protein
+        CoverageBySpot = {}
+        for (Spot, PeptideList) in PeptidesBySpot.items():
+            for Peptide in PeptideList:
+                Start = ProteinObject.Sequence.find(Peptide)
+                Stop = Start + len(Peptide)
+                if not CoverageBySpot.has_key(Spot):
+                    CoverageBySpot[Spot] = (Start, Stop)
+                else:
+                    (CurrStart, CurrStop) = CoverageBySpot[Spot]
+                    if Start < CurrStart:
+                        CurrStart = Start
+                    if Stop > CurrStop:
+                        CurrStop = Stop
+                    #now reset
+                    CoverageBySpot[Spot] = (CurrStart, CurrStop)
+        #now perhaps print it all out.  then look by eye?
+        #print ProteinObject.Name
+        #print CoverageBySpot
+        #do I have spots that have zero overlap?
+        AllSpots = CoverageBySpot.keys()
+        for Index in range (len(AllSpots)):
+            for Jndex in range( Index, len(AllSpots)):
+                Spot_I = AllSpots[Index]
+                Spot_J = AllSpots[Jndex]
+                (Start_I, Stop_I) = CoverageBySpot[Spot_I]
+                (Start_J, Stop_J) = CoverageBySpot[Spot_J]
+                #mutually exclusive ?
+                Exclusive = 1
+                RangeJ = range (Start_J, Stop_J + 1)
+                RangeI = range (Start_I, Stop_I + 1)
+                for IterI in RangeI:
+                    if IterI in RangeJ:
+                        Exclusive = 0
+                        break
+                if Exclusive:
+                    print ProteinObject.Name
+                    print CoverageBySpot
         
     def FlagStickyProteins(self):
         """Parameters: none
@@ -124,6 +205,7 @@ class AbacusClass(ResultsParser.ResultsParser):
             (Spot, ProteinID) = Tuple
             self.Spots[Spot].remove(ProteinID)
             #now the proteinObject
+            self.ProteinObjects[ProteinID].RemoveSpotFromMe(Spot)
         
     def ParseFile(self, FileName):
         """This is a wrapper for the Assess ProteinComponents
@@ -167,7 +249,8 @@ class AbacusClass(ResultsParser.ResultsParser):
                 # just remember that for printing out and stuff
                 if not self.ProteinObjects.has_key(ProteinID):
                     ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
-                    self.ProteinObjects[ProteinID] = QuickyProteinObject(ProteinName)
+                    ProteinSequence = self.ProteinPicker.ProteinSequences[ProteinID]
+                    self.ProteinObjects[ProteinID] = QuickyProteinObject(ProteinName, ProteinSequence)
                 # now put in the data points
                 Key = (Aminos, FileName)
                 if not self.ProteinObjects[ProteinID].Peptides.has_key(Key):
@@ -314,6 +397,17 @@ class AbacusClass(ResultsParser.ResultsParser):
         GelName = Spot[:-3]
         #print "%s, %s"%(FileName, GelName)
         return GelName
+
+    def GetSpotName(self, String):
+        """Parameters: string of the filename
+        Return: Spot Name
+        Description: a function that only works if you name gels like me
+        /export/Projects/YPestis/6framesearch/test/A412A031.rescore.txt
+        """
+        FileName = os.path.split(String)[-1]
+        #now we get the spot from the multiple extensions
+        Spot = FileName.split(".")[0]  # get rid of all the multiple extensions
+        return Spot
 
     def CheckContaminants(self, ProteinName):
         """For a protein name, check to see if its a common contaminant
