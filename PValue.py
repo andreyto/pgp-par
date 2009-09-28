@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This script, based on PeptideProphet, computes the estimated probability that
 a match is correct.  This probability is derived upon an F-Score.  The F-Score

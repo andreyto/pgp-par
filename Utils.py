@@ -6,7 +6,6 @@ import Global
 import os
 import sys
 import string
-import types
 
 if hasattr(os, "sysconf"):
     IS_WINDOWS = 0
@@ -82,7 +81,7 @@ def LoadPTMods():
     Line format is tab-delimited, like this: "Alkylation	14.01564	CKRHDENQ"
     (This is rarely used in practice, but is useful for search results that are annotated with names instead of masses)
     """
-    File = open("PTMods.txt","r")
+    File = open(checkConfigPath("PTMods.txt"),"r")
     for FileLine in File.xreadlines():
         FileLine = FileLine.strip()
         if (not FileLine) or FileLine[0]=="#":
@@ -195,7 +194,7 @@ class UnmodifiedPeptide:
             Found =0
             for MyPeptide in self.Peptides:
                 if MyPeptide.GetModdedName() == NewPeptide.GetModdedName():
-                    Found ==1
+                    Found = 1
                     break
             if not Found:
                 self.Peptides.append(NewPeptide)
@@ -311,7 +310,7 @@ def LoadModifications():
     
 def LoadModificationsFromFile(FileName, ModificationList, ChemistryType):
     try:
-        File = open(FileName,"rb")
+        File = open(checkConfigPath(FileName),"rb")
     except:
         #print "File '%s' not found - not loading mods"%FileName
         return
@@ -595,7 +594,7 @@ def LoadAminoAcids():
     Read in the masses of all amino acids.
     Populate dictionaries AminoMass, AminoMassRight and list AminoMasses
     """
-    File = open("AminoAcidMasses.txt","r")
+    File = open(checkConfigPath("AminoAcidMasses.txt"),"r")
     for FileLine in File.xreadlines():
         # Line is whitespace-delimited.  Pieces are:
         # Long, short, abbrev, left-mass, right-mass
@@ -854,7 +853,7 @@ def GetMass(Str):
 
 def GetIsotopePatterns():
     Global.IsotopeWeights = {}
-    File = open("IsotopePatterns.txt", "r")
+    File = open(checkConfigPath("IsotopePatterns.txt"), "r")
     for FileLine in File.xreadlines():
         Bits = FileLine.split("\t")
         if len(Bits) < 2:
@@ -891,3 +890,12 @@ def MakeDirectory(Dir):
     except:
         raise
     
+def checkConfigPath(path):
+    if os.path.exists(path):
+        return path
+
+    alt = os.path.join(sys.path[0],path)
+    if os.path.exists(alt):
+        return alt
+    
+    raise IOError("Can't open %s or %s" % (path,alt))
