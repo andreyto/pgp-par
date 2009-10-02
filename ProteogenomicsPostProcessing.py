@@ -151,8 +151,8 @@ class FinderClass(ResultsParser.ResultsParser):
             del self.AllORFs[Name]
         print "\t%s ORFs left after filtering"%len(self.AllORFs)
         if self.Verbose:
-            #for (ORFName, ORF) in self.AllORFs.items():
-            #    ORF.PrintMe(0,1)
+            for (ORFName, ORF) in self.AllORFs.items():
+                ORF.PrintMe(0,1)
 
     def AnalyzeCleavage(self):
         """
