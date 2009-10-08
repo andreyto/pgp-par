@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+
 '''
 Created on Oct 8, 2009
 
 @author: eli
+
+Some unit tests for the database setup code.
 '''
 import unittest
 import filecmp
