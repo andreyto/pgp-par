@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Shuffle all the records in a database.  Useful for generating a database of all bogus records,
 to get an idea of the rate at which matches of a given quality are generated when there's

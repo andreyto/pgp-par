@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Translate a protein database to a good format for trie-based searching.
 The source database should be in either FASTA format or in swiss-prot format.

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 UsageInfo = """ SixFrameFasta.py
 This program takes a fasta of genome sequence, and turns out the six
 frame protein sequence in fasta format. > Protein.Chr.startnucleutide.frame
