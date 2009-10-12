@@ -5,6 +5,8 @@ A generic sequence class for passing sequences around.
 Also support classes for doing sequence IO.
 '''
 
+import re
+
 class Sequence():
     '''
     A generic sequence class
@@ -68,9 +70,13 @@ class FastaReader(FlatFileReader):
                     seq.seq = ''.join(seqList)
                     yield seq
 
-                space = line.index(' ')
-                seq = Sequence( line[1:space] )
-                seq.desc = line[space+1:]
+                defline = re.split('\s+',line[1:],1)
+                seq = Sequence( defline[0] )
+                if len(defline) == 1:
+                    seq.desc = ''
+                else:
+                    seq.desc = defline[1]
+
                 seqList = []
             else:
                 seqList.append(line)

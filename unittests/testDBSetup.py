@@ -18,12 +18,13 @@ class Test(unittest.TestCase):
 
     IN = 'NC_004837.fa'
     OUT = 'test.fa'
+    SIX = 'NC_004837.6frame.fa'
 
     def test6Frame(self):
         translate = SixFrameFasta.AbacusClass()
         translate.ParseCommandLine(["-r",Test.IN,"-w",Test.OUT,"-c","Plasmid1"])
         translate.Main()       
-        self.assert_(filecmp.cmp(Test.OUT,"NC_004837.6frame.fa"))
+        self.assert_(filecmp.cmp(Test.OUT,Test.SIX))
         os.remove(Test.OUT)
         os.remove("Temp.RT.fasta")
 
@@ -34,6 +35,14 @@ class Test(unittest.TestCase):
             self.assertEqual('TGTAACGAACGGTG',seq.seq[0:14])
             self.assertEqual('TACCCCGACCCCTG',seq.seq[-14:])
             self.assertEqual('Yersinia pestis KIM plasmid pPCP1, complete sequence',seq.desc)
+
+    def testFastaMultiReader(self):
+        reader = bioseq.FastaReader(Test.SIX)
+        i = 0
+        for seq in reader:
+            i += 1
+
+        self.assertEqual( 596, i )
 
     def testFastaOut(self):
         reader = bioseq.FastaReader(Test.IN)
