@@ -91,18 +91,14 @@ class AbacusClass(ProteinTranslationClass):
         self.InputFile = None
         self.OutputFile = "RenameYourOutput.txt"
         self.ChromosomeName = "Chr1" #you should rename this
-        self.Frame1String = ""
-        self.Frame2String = ""
-        self.Frame3String = ""
+        self.FrameStrings = ['','','']
         self.ProteinCount = 0
-        self.Frame1Start = 1 #start nucleotide. 1 based
-        self.Frame2Start = 2
-        self.Frame3Start = 3
+        self.FrameStarts = [1,2,3] #start nucleotide. 1 based
         self.MinProteinLength = 7 # if it's a small ORF, don't bother printing it out
         self.TempRTFileName = "Temp.RT.fasta"
         self.TotalDNAIndex = 0 #start at base 0, increment whenever you consume a letter (including the first time, which then starts us at base1)
         ProteinTranslationClass.__init__(self)
-        
+
     def Main(self):
         self.OutHandle = open(self.OutputFile, "wb")
         self.TranslateChromosome(self.InputFile)
@@ -220,13 +216,9 @@ class AbacusClass(ProteinTranslationClass):
         StartInFrame = 1
         MaxLength = 200# number of dna letters in the buffer before we send out
         #set here before we loop through any dna.  Don't reset while looping.  then you would kill all genes overlapping a buffer
-        self.Frame1String = ""  
-        self.Frame2String = "" 
-        self.Frame3String = "" 
+        self.FrameStrings = ['','','']
         #put these here?
-        self.Frame1Start = self.TotalDNAIndex + 2
-        self.Frame2Start = self.TotalDNAIndex + 1
-        self.Frame3Start = self.TotalDNAIndex
+        self.FrameStarts = [ self.TotalDNAIndex + 2, self.TotalDNAIndex + 1, self.TotalDNAIndex ]
         
         self.TotalDNAIndex += 3
         
@@ -254,18 +246,11 @@ class AbacusClass(ProteinTranslationClass):
         #now at the end of the file, we send in the last buffer
         LastTranslatedFrame = self.TranslateDNAOnReverse(Buffer, StartInFrame)
         # now after the last buffer's been processed, if there are some framebuffers that have yet to be written out, let's do that too
-        if len(self.Frame1String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 1, self.Frame1Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame1String))
-            self.ProteinCount += 1
-        if len(self.Frame2String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 2, self.Frame2Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame2String))
-            self.ProteinCount += 1
-        if len(self.Frame3String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 3, self.Frame3Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame3String))
-            self.ProteinCount += 1
+        for i in 0,1,2:
+            if len(self.FrameStrings[i]) >= self.MinProteinLength:
+                FastaLine = self.fastaLine(i+1, '-')
+                self.OutHandle.write("%s\n%s\n"%(FastaLine, self.FrameStrings[i]))
+                self.ProteinCount += 1
 
         Handle.close()
 
@@ -289,45 +274,27 @@ class AbacusClass(ProteinTranslationClass):
                 #translate in frame 1
                 #print Index, self.TotalDNAIndex, Codon, AminoAcid, (CurrentFrame % 3)
                 if WriteToFile:
-                    if len(self.Frame1String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 1, self.Frame1Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame1String))
-                        self.ProteinCount += 1
-                    #now reset, even if we don't print it out, we still reset
-                    self.Frame1String = ""
-                    self.Frame1Start = self.TotalDNAIndex - 3 # the next ORF from this frame will start at +3
+                    self.writeFrame( 1, '-' )
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame1String += AminoAcid
+                    self.FrameStrings[0] += AminoAcid
             elif CurrentFrame %3 == 2:
                 #translate in frame 2
                 if WriteToFile:
-                    if len(self.Frame2String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 2, self.Frame2Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame2String))
-                        self.ProteinCount += 1
-                    #now reset
-                    self.Frame2String = ""
-                    self.Frame2Start = self.TotalDNAIndex - 3 # the next ORF from this frame will start at +3
+                    self.writeFrame( 2, '-' )
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame2String += AminoAcid
+                    self.FrameStrings[1] += AminoAcid
             elif CurrentFrame %3 == 0:
                 #translate in frame 3
                 if WriteToFile:
-                    if len(self.Frame3String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand-"%(self.ProteinCount, self.ChromosomeName, 3, self.Frame3Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame3String))
-                        self.ProteinCount += 1
-                    #now reset
-                    self.Frame3String = ""
-                    self.Frame3Start = self.TotalDNAIndex - 3 # the next ORF from this frame will start at +3
+                    self.writeFrame( 3, '-' )
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame3String += AminoAcid
+                    self.FrameStrings[2] += AminoAcid
             CurrentFrame += 1
         #now we want to return the last translated frame.  Since we increment at the end of the loop
         # we need to subtract one to get back to the frame that last worked
@@ -363,18 +330,11 @@ class AbacusClass(ProteinTranslationClass):
         #now at the end of the file, we send in the last buffer
         LastTranslatedFrame = self.TranslateDNA(Buffer, StartInFrame)
         #after this last buffer's been sent, output any latent ORFs
-        if len(self.Frame1String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 1, self.Frame1Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame1String))
-            self.ProteinCount += 1
-        if len(self.Frame2String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 2, self.Frame2Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame2String))
-            self.ProteinCount += 1
-        if len(self.Frame3String) >= self.MinProteinLength:
-            FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 3, self.Frame3Start)
-            self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame3String))
-            self.ProteinCount += 1
+        for i in 0,1,2:
+            if len(self.FrameStrings[i]) >= self.MinProteinLength:
+                self.OutHandle.write("%s\n%s\n"%(self.fastaLine(i+1,'+'), self.FrameStrings[i]))
+                self.ProteinCount += 1
+
         #print "I consumed %d letters of DNA"%self.TotalDNAIndex
         Handle.close()
 
@@ -397,45 +357,27 @@ class AbacusClass(ProteinTranslationClass):
                 #translate in frame 1
                 #print Index, self.TotalDNAIndex, Codon, AminoAcid, (CurrentFrame % 3)
                 if WriteToFile:
-                    if len(self.Frame1String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 1, self.Frame1Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame1String))
-                        self.ProteinCount += 1
-                    #now reset, even if we don't print it out, we still reset
-                    self.Frame1String = ""
-                    self.Frame1Start = self.TotalDNAIndex + 3 # the next ORF from this frame will start at +3
+                    self.writeFrame(1,'+')
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame1String += AminoAcid
+                    self.FrameStrings[0] += AminoAcid
             elif CurrentFrame %3 == 2:
                 #translate in frame 2
                 if WriteToFile:
-                    if len(self.Frame2String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 2, self.Frame2Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame2String))
-                        self.ProteinCount += 1
-                    #now reset
-                    self.Frame2String = ""
-                    self.Frame2Start = self.TotalDNAIndex + 3 # the next ORF from this frame will start at +3
+                    self.writeFrame(2,'+')
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame2String += AminoAcid
+                    self.FrameStrings[1] += AminoAcid
             elif CurrentFrame %3 == 0:
                 #translate in frame 3
                 if WriteToFile:
-                    if len(self.Frame3String) >= self.MinProteinLength:
-                        FastaLine = ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand+"%(self.ProteinCount, self.ChromosomeName, 3, self.Frame3Start)
-                        self.OutHandle.write("%s\n%s\n"%(FastaLine, self.Frame3String))
-                        self.ProteinCount += 1
-                    #now reset
-                    self.Frame3String = ""
-                    self.Frame3Start = self.TotalDNAIndex + 3 # the next ORF from this frame will start at +3
+                    self.writeFrame(3,'+')
                     WriteToFile = 0 #I'm done writing, reset
                 else:                     
                     #simply add on
-                    self.Frame3String += AminoAcid
+                    self.FrameStrings[2] += AminoAcid
             CurrentFrame += 1
         #now we want to return the last translated frame.  Since we increment at the end of the loop
         # we need to subtract one to get back to the frame that last worked
@@ -462,7 +404,28 @@ class AbacusClass(ProteinTranslationClass):
         if not OptionsSeen.has_key("-r") or not OptionsSeen.has_key("-w"):
             print UsageInfo
             sys.exit(1)
-            
+
+    def fastaLine(self,frame,strand):
+        return ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand%s" % ( self.ProteinCount,
+                self.ChromosomeName, frame, self.FrameStarts[frame-1], strand )
+
+    def writeFrame(self,frame,strand):
+        idx = frame - 1
+        trans = self.FrameStrings[idx]
+        if len(trans) >= self.MinProteinLength:
+            fastaLine = self.fastaLine( frame, strand )
+            self.OutHandle.write("%s\n%s\n" % (fastaLine, trans))
+            self.ProteinCount += 1
+        #now reset, even if we don't print it out, we still reset
+        
+        self.FrameStrings[idx] = ""
+        if strand == '+':
+            self.FrameStarts[idx] = self.TotalDNAIndex + 3 # the next ORF from this frame will start at +3
+        elif strand == '-':
+            self.FrameStarts[idx] = self.TotalDNAIndex - 3 # the next ORF from this frame will start at -3
+        else:
+            raise ValueError("Invalid strand %s" % strand)
+
 
 if __name__ == "__main__":
     try:
