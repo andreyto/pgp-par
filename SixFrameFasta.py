@@ -14,6 +14,7 @@ import os
 import getopt
 import sys
 
+import bioseq
 
 class ProteinTranslationClass:
     def __init__(self):
@@ -169,31 +170,26 @@ class AbacusClass(ProteinTranslationClass):
         #string.replace (A, t), etc.
         #string.upper()
         """
-        Handle = open(FileName, "rb")
-        TempHandle = open(self.TempRTFileName, "wb")
-        ChromosomeSequence = ""
-        for Line in Handle.xreadlines():
-            Line = Line.strip()
-            if Line[0] == ">": # fasta header                
-                continue
-            ChromosomeSequence += Line
-        Handle.close()
+        chromReader = bioseq.FastaReader(FileName)
+        chromRevOut = bioseq.FastaOut(self.TempRTFileName)
+
+        chromosome = bioseq.Sequence("ReversedChromosome")
+
+        # For a multi fasta it will just concatenate all the seqs together
+        for fastaEntry in chromReader:
+            chromosome.seq += fastaEntry.seq
+
         #now Reverse and then transcribe
-        ChromosomeSequenceInArray = list(ChromosomeSequence)
+        ChromosomeSequenceInArray = list(chromosome.seq)
         ChromosomeSequenceInArray.reverse()
         Reversed = "".join(ChromosomeSequenceInArray)
         Reversed = Reversed.replace("A", "t")
         Reversed = Reversed.replace("T", "a")
         Reversed = Reversed.replace("C", "g")
         Reversed = Reversed.replace("G", "c")
-        ReverseTranscribed = Reversed.upper()
-        ## to make this a bit prettyier, and easier to parse on the other side, I'm going to put in \n every 70 chars as I write to file
-        TempHandle.write(">ReversedChromosome\n")
-        for Index in range(0, len(ReverseTranscribed), 70):
-            ToPrint = ReverseTranscribed[Index:Index+70]
-            TempHandle.write("%s\n"%ToPrint)
-        
-        TempHandle.close()
+        chromosome.seq = Reversed.upper()
+
+        chromRevOut.write( chromosome )
 
         
     def TranslateChromosomeOnReverse(self, FileName ):

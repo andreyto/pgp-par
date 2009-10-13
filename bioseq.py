@@ -37,6 +37,9 @@ class FlatFileReader():
         else:
             raise TypeError
 
+    def __del__(self):
+        self.io.close()
+
 class FlatFileWriter():
     '''
     A parent class for all the classes that write flat files to
@@ -52,8 +55,15 @@ class FlatFileWriter():
         else:
             raise TypeError
         
+    def __del__(self):
+        self.io.close()
+
     def close(self):
         self.io.close()
+
+    def writeMulti(self,seqList):
+        for i in seqList:
+            self.write(i)
 
 class FastaReader(FlatFileReader):
     '''
@@ -98,9 +108,6 @@ class FastaOut(FlatFileWriter):
         
     def write(self,seq):
         self.io.write(">%s %s\n" % (seq.acc,seq.desc))
-        i = 0
-        l = len(seq.seq)
-        while i < l:
+        for i in xrange(0, len(seq.seq), self.linesize):
             self.io.write("%s\n" % seq.seq[i:i+self.linesize])
-            i += self.linesize
-            
+
