@@ -32,7 +32,7 @@ class FlatFileReader():
             self.io = infile
 
         elif type(infile) is str:
-            self.name = str
+            self.name = infile
             self.io = open( infile, 'r')
         else:
             raise TypeError
@@ -45,13 +45,13 @@ class FlatFileWriter():
     A parent class for all the classes that write flat files to
     inherit from.
     '''        
-    def __init__(self,infile):
-        if type(infile) is file:
-            self.io = infile
+    def __init__(self,outfile):
+        if type(outfile) is file:
+            self.io = outfile
 
-        elif type(infile) is str:
-            self.name = str
-            self.io = open( infile, 'w')
+        elif type(outfile) is str:
+            self.name = outfile
+            self.io = open( outfile, 'w')
         else:
             raise TypeError
         
@@ -60,6 +60,9 @@ class FlatFileWriter():
 
     def close(self):
         self.io.close()
+
+    def write(self,seq):
+        pass
 
     def writeMulti(self,seqList):
         for i in seqList:
@@ -107,7 +110,11 @@ class FastaOut(FlatFileWriter):
         self.linesize = 60
         
     def write(self,seq):
-        self.io.write(">%s %s\n" % (seq.acc,seq.desc))
+        if seq.desc:
+            self.io.write(">%s %s\n" % (seq.acc,seq.desc))
+        else:
+            self.io.write(">%s\n" % seq.acc )
+
         for i in xrange(0, len(seq.seq), self.linesize):
             self.io.write("%s\n" % seq.seq[i:i+self.linesize])
 

@@ -91,6 +91,7 @@ class AbacusClass(ProteinTranslationClass):
     def __init__(self):
         self.InputFile = None
         self.OutputFile = "RenameYourOutput.txt"
+        self.OutHandle = None
         self.ChromosomeName = "Chr1" #you should rename this
         self.FrameStrings = ['','','']
         self.ProteinCount = 0
@@ -101,7 +102,8 @@ class AbacusClass(ProteinTranslationClass):
         ProteinTranslationClass.__init__(self)
 
     def Main(self):
-        self.OutHandle = open(self.OutputFile, "wb")
+        self.OutHandle = bioseq.FastaOut( self.OutputFile )
+        self.OutHandle.linesize = 100000
         self.TranslateChromosome(self.InputFile)
         self.ReverseTranscribeChromosome(self.InputFile)
         self.TranslateChromosomeOnReverse(self.TempRTFileName)
@@ -218,11 +220,7 @@ class AbacusClass(ProteinTranslationClass):
         self.translateStrand( Handle, '-', MaxLength )
 
         # now after the last buffer's been processed, if there are some framebuffers that have yet to be written out, let's do that too
-        for i in 0,1,2:
-            if len(self.FrameStrings[i]) >= self.MinProteinLength:
-                FastaLine = self.fastaLine(i+1, '-')
-                self.OutHandle.write("%s\n%s\n"%(FastaLine, self.FrameStrings[i]))
-                self.ProteinCount += 1
+        self.outputFramesOnStrand('-')
 
         Handle.close()
 
@@ -304,13 +302,24 @@ class AbacusClass(ProteinTranslationClass):
         self.translateStrand( Handle, '+', MaxLength )
 
         #after this last buffer's been sent, output any latent ORFs
-        for i in 0,1,2:
-            if len(self.FrameStrings[i]) >= self.MinProteinLength:
-                self.OutHandle.write("%s\n%s\n"%(self.fastaLine(i+1,'+'), self.FrameStrings[i]))
-                self.ProteinCount += 1
+        self.outputFramesOnStrand('+')
 
         #print "I consumed %d letters of DNA"%self.TotalDNAIndex
         Handle.close()
+
+    def outputFrame( self, strand='', frame=''):
+        ''' Takes a frame number (1,2,3) and a strand ('+','-')
+        and outputs the current translations for that frame.
+        '''
+        if len( self.FrameStrings[ frame-1 ] ) >= self.MinProteinLength:
+            translation = bioseq.Sequence( self.fastaLine( frame, strand ) )
+            translation.seq = self.FrameStrings[ frame-1 ]
+            self.OutHandle.write( translation )
+            self.ProteinCount += 1
+
+    def outputFramesOnStrand(self,strand):
+        for i in 0,1,2:
+            self.outputFrame( strand, i+1 )
 
     def TranslateDNA(self, Buffer, StartInFrame):
         """Given some buffer, and the frame that I should start recording in, I translate the DNA
@@ -368,18 +377,14 @@ class AbacusClass(ProteinTranslationClass):
             sys.exit(1)
 
     def fastaLine(self,frame,strand):
-        return ">Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand%s" % ( self.ProteinCount,
+        return "Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand%s" % ( self.ProteinCount,
                 self.ChromosomeName, frame, self.FrameStarts[frame-1], strand )
 
     def writeFrame(self,frame,strand):
         idx = frame - 1
-        trans = self.FrameStrings[idx]
-        if len(trans) >= self.MinProteinLength:
-            fastaLine = self.fastaLine( frame, strand )
-            self.OutHandle.write("%s\n%s\n" % (fastaLine, trans))
-            self.ProteinCount += 1
+        self.outputFrame( strand, frame )
+
         #now reset, even if we don't print it out, we still reset
-        
         self.FrameStrings[idx] = ""
         if strand == '+':
             self.FrameStarts[idx] = self.TotalDNAIndex + 3 # the next ORF from this frame will start at +3
