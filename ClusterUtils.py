@@ -6,79 +6,63 @@ import getpass
 import os
 
 
-# Temp: wait only a short while, to shake bugs out of the process:
-ONE_HOUR = 60 # * 60
+class ClusterEnv:
+    # Temp: wait only a short while, to shake bugs out of the process:
+    ONE_HOUR = 60 # * 60
 
-# Blind block size is 1000 spectra now, not 10000:  
-BLIND_BLOCK_SIZE = 1000
+    # Blind block size is 1000 spectra now, not 10000:  
+    BLIND_BLOCK_SIZE = 1000
 
-USER_NAME = getpass.getuser()
-if USER_NAME[:4] == "fwg.":
-    USER_NAME = USER_NAME[4:]
-    
-if os.path.exists("/nas3/%s"%USER_NAME):
-    System = "nbcr"
-else:
-    System = "fwgrid"
-    
-if System == "nbcr":
-    HomeDir = "/home/%s"%USER_NAME
-    CopyFlagDir = "/nas3/%s/CopyFlags"%USER_NAME
-    MZXMLDir = "/nas3/%s/mzxml"%USER_NAME
-    DoneDir = "/nas3/%s/Done"%USER_NAME
-    InspectDir = "/nas3/%s/Inspect"%USER_NAME
-    GenomeZipPath = "/nas3/%s/IPIIPI.zip"%USER_NAME
-    ResultsXDir = "/nas3/%s/ResultsX"%USER_NAME
-    OutputDir = "/nas3/%s/output"%USER_NAME
-    JobDir = "/nas3/%s/jobs"%USER_NAME
-    ScratchDir = "/nas3/%s"%USER_NAME
-    MAX_SIMULTANEOUS_COPIES = 3
-    MAXIMUM_JOBS = 63
-else:
-    HomeDir = "/home/%s"%USER_NAME
-    CopyFlagDir = "/scratch/%s/CopyFlags"%USER_NAME
-    MZXMLDir = "/scratch/%s/mzxml"%USER_NAME
-    DoneDir = "/scratch/%s/Done"%USER_NAME
-    InspectDir = "/scratch/%s/Inspect"%USER_NAME
-    GenomeZipPath = "/scratch/%s/IPIIPI.zip"%USER_NAME
-    ResultsXDir = "/scratch/%s/ResultsX"%USER_NAME
-    OutputDir = "/scratch/%s/output"%USER_NAME
-    JobDir = "/scratch/%s/jobs"%USER_NAME
-    ScratchDir = "/scratch/%s"%USER_NAME
-    MAX_SIMULTANEOUS_COPIES = 5
-    MAXIMUM_JOBS = 63
-
-class JobClass:
-    """
-    A Job represents a single search that should be launched.
-    (NOT YET IMPLEMENTED)
-    """
     def __init__(self):
-        pass
+        self.USER_NAME = getpass.getuser()
+        self.HomeDir = "/home/%s"%self.USER_NAME
+        self.CopyFlagDir = "/scratch/%s/CopyFlags"%self.USER_NAME
+        self.MZXMLDir = "/scratch/%s/mzxml"%self.USER_NAME
+        self.DoneDir = "/scratch/%s/Done"%self.USER_NAME
+        self.InspectDir = "/scratch/%s/Inspect"%self.USER_NAME
+        self.GenomeZipPath = "/scratch/%s/IPIIPI.zip"%self.USER_NAME
+        self.ResultsXDir = "/scratch/%s/ResultsX"%self.USER_NAME
+        self.OutputDir = "/scratch/%s/output"%self.USER_NAME
+        self.JobDir = "/scratch/%s/jobs"%self.USER_NAME
+        self.ScratchDir = "/scratch/%s"%self.USER_NAME
+        self.MAX_SIMULTANEOUS_COPIES = 5
+        self.MAXIMUM_JOBS = 63
 
-def MakeDirectory(Dir):
-    try:
-        os.makedirs(Dir)
-    except:
-        pass
+    def MakeDirectory(self,Dir):
+        try:
+            os.makedirs(Dir)
+        except:
+            pass
 
-def MakeGridDirectories():
-    """
-    Create some directories for input files, results, etc.
-    """
-    Dir = os.path.join(ScratchDir, USER_NAME)
-    MakeDirectory(Dir)
-    SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX"]
-    for SubDirName in SubDirNames:
-        SubDir = os.path.join(Dir, SubDirName)
-        MakeDirectory(SubDir)
+    def MakeGridDirectories(self):
+        """
+        Create some directories for input files, results, etc.
+        """
+        self.MakeDirectory(self.ScratchDir)
+        SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX"]
+        for SubDirName in SubDirNames:
+            SubDir = os.path.join(self.ScratchDir, SubDirName)
+            self.MakeDirectory(SubDir)
 
-def GetRunningJobCount():
-    TempFilePath = "TempJobCount.txt"
-    Command = "qstat | grep -c %s > %s"%(USER_NAME, TempFilePath)
-    #print Command
-    os.system(Command)
-    File = open(TempFilePath, "rb")
-    FileLine = File.readline()
-    File.close()
-    return int(FileLine)
+class JCVIGridEnv(ClusterEnv):
+    def __init__(self):
+        ClusterEnv.__init__(self)
+        self.ScratchDir = "/usr/local/projects/PGP/run/%s/" % self.USER_NAME
+        self.CopyFlagDir   = self.ScratchDir + "CopyFlags"
+        self.MZXMLDir      = self.ScratchDir + "mzxml"
+        self.DoneDir       = self.ScratchDir + "Done"
+        self.InspectDir    = self.ScratchDir + "Inspect"
+        self.GenomeZipPath = self.ScratchDir + "IPIIPI.zip"
+        self.ResultsXDir   = self.ScratchDir + "ResultsX"
+        self.OutputDir     = self.ScratchDir + "output"
+        self.JobDir        = self.ScratchDir + "jobs"
+
+    def GetRunningJobCount(self):
+        TempFilePath = "TempJobCount.txt"
+        Command = "qstat | grep -c %s > %s"%(self.USER_NAME, TempFilePath)
+        #print Command
+        os.system(Command)
+        File = open(TempFilePath, "rb")
+        FileLine = File.readline()
+        File.close()
+        return int(FileLine)

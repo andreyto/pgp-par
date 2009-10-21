@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Count the number of level-2 scans with 10+ peaks from an mgf or mzxml file.
 Iterate over a directory tree and produce sums for each file, and totals by directory.
@@ -133,7 +134,7 @@ class ScanCounter:
         ScanNumbers = MZXMLScanNumbers.keys()
         ScanNumbers.sort()
         FileScanCount = len(ScanNumbers)
-        MinScanNumber = ScanNumbers[0]
+#        MinScanNumber = ScanNumbers[0]
         MaxScanNumber = ScanNumbers[-1]
         return (FileScanCount, MaxScanNumber)
         #return (MinScanNumber, MaxScanNumber, FileScanCount)

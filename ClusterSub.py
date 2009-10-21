@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Generate job scripts that'll search .mzxml files.  The individual searches
 will be run by ClusterRunInspect.py.  This script assumes the existence of some
@@ -15,10 +16,10 @@ $SCRATCH/USER_NAME/ResultsX - Directory for results-files to be copied into.
 import os
 import sys
 import getopt
-import getpass
-import traceback
+import shutil
+
 from CountScans import CountScanBits
-from ClusterUtils import *
+import ClusterUtils
 
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
@@ -63,6 +64,10 @@ class JobClass:
         self.SubJobs = None
         self.SpectrumFileName = None
         self.BlockNumber = None
+        self.File = None
+        self.FileName = None
+        self.TotalScans = None
+
     def FlagRunningJob(self, Name, File):
         """
         Traverse the job tree (recursively).  Write out flags to indicate that
@@ -83,7 +88,7 @@ class JobClass:
         return FileNameList
       
 class ScriptMongler:
-    def __init__(self):
+    def __init__(self,gridEnv):
         self.CheckDoneFlags = 1
         self.MZXMLListFile = None
         self.DBPath = None 
@@ -92,27 +97,28 @@ class ScriptMongler:
         self.PTMLimit = 0 
         self.ScanCounts = {} # stub -> number of scans
         self.IncludeCommonDB = 0
+        self.gridEnv = gridEnv
+        self.scanCountFile = None
     def LoadScanCounts(self):
         """
         Parse $SCRATCH/ScanCount.txt, to learn
         how many scans there are in each mzxml file.
         """
-        FilePath = os.path.join(ScratchDir, "ScanCount.txt")
-        File = open(FilePath, "rb")
-        for FileLine in File.xreadlines():
-            Bits = FileLine.split("\t")
+        scanfile = open(self.scanCountFile, "r")
+        for fileLine in scanfile.xreadlines():
+            Bits = fileLine.split("\t")
             print "LoadScanCounts:", Bits
             try:
                 ScanCount = int(Bits[CountScanBits.MaxScan]) 
             except:
                 continue
             self.ScanCounts[Bits[CountScanBits.Stub]] = ScanCount
-        File.close()
+        scanfile.close()
     def GetJobCommand(self, Job):
         """
         Returns (as a string) the command to execute to handle this MAIN JOB.
         """
-        Str = "python %s/ClusterRunInspect.py"%ScratchDir
+        Str = "python %s/ClusterRunInspect.py"%self.gridEnv.ScratchDir
         Str += " -d %s"%self.DBPath
         if self.IncludeCommonDB:
             Str += " -c %s"%self.CommonDBPath
@@ -122,14 +128,14 @@ class ScriptMongler:
         Str += " -p %s"%self.PTMLimit
         if Job.SubJobs:
             SpectrumStr = ""
-            for SubJob in JobSubJobs:
+            for SubJob in Job.SubJobs:
                 SpectrumStr += " %s"%SubJob.SpectrumFileName
             Str += " -x %s"%SpectrumStr
         else:
             Str += " -x %s"%Job.SpectrumFileName
             if self.BlindSearchFlag:
-                FirstScanNumber = Job.BlockNumber * BLIND_BLOCK_SIZE
-                Str += " -f %s -l %s"%(FirstScanNumber, FirstScanNumber + BLIND_BLOCK_SIZE)
+                FirstScanNumber = Job.BlockNumber * self.gridEnv.BLIND_BLOCK_SIZE
+                Str += " -f %s -l %s"%(FirstScanNumber, FirstScanNumber + self.gridEnv.BLIND_BLOCK_SIZE)
         Str += " &\n"
         return Str
     def GetAlreadySearchedDict(self):
@@ -139,10 +145,10 @@ class ScriptMongler:
         """
         self.AlreadySearchedDict = {}
         if self.CheckDoneFlags:
-            for DoneFileName in os.listdir(DoneDir):
-                DoneFile = open(os.path.join(DoneDir, DoneFileName), "rb")
-                for FileLine in DoneFile.xreadlines():
-                    Bits = FileLine.strip().split("\t")
+            for DoneFileName in os.listdir(self.gridEnv.DoneDir):
+                DoneFile = open(os.path.join(self.gridEnv.DoneDir, DoneFileName), "rb")
+                for fileLine in DoneFile.xreadlines():
+                    Bits = fileLine.strip().split("\t")
                     try:
                         BlockNumber = int(Bits[2])
                     except:
@@ -163,16 +169,22 @@ class ScriptMongler:
         # of mzXML file names.  
         if self.MZXMLListFile:
             SpectrumFileNameList = []
-            File = open(self.MZXMLListFile)
-            for FileLine in File.xreadlines():
-                FileLine = FileLine.strip()
-                if not FileLine or FileLine[0] == '#':
+            mzfile = open(self.MZXMLListFile)
+            for fileLine in mzfile.xreadlines():
+                fileLine = fileLine.strip()
+                if not fileLine or fileLine[0] == '#':
                     continue
-                SpectrumFileNameList.append(FileLine)
-            File.close()
+                basename = os.path.basename(fileLine)
+                destFile = os.path.join( self.gridEnv.MZXMLDir, basename)
+                if not os.path.exists( destFile ):
+                    shutil.copy( fileLine, destFile )
+
+                SpectrumFileNameList.append(basename)
+
+            mzfile.close()
         else:
             # List all files from MZXMLDir with a valid extension:
-            TempList = os.listdir(MZXMLDir)
+            TempList = os.listdir(self.gridEnv.MZXMLDir)
             SpectrumFileNameList = []
             for Name in TempList:
                 (Stub, Extension) = os.path.splitext(Name)
@@ -186,7 +198,6 @@ class ScriptMongler:
         still need searching.  Return a list of JOB objects.  
         """
         print "Mongler invoked: Blind flag %s"%self.BlindSearchFlag
-        PendingJobList = [] # our return value is a list of job scripts.
         # Sanity-check our arguments:
         if not self.DBPath:
             print "** Error: Please specify a database path!"
@@ -225,7 +236,7 @@ class ScriptMongler:
             if not CurrentMasterJob:
                 CurrentMasterJob = JobClass()
                 CurrentMasterJob.FileName = "j%s.%s.sh"%(Stub, BlockNumber)
-                JobScriptPath = os.path.join(JobDir, CurrentMasterJob.FileName)
+                JobScriptPath = os.path.join(self.gridEnv.JobDir, CurrentMasterJob.FileName)
                 CurrentMasterJob.File = open(JobScriptPath, "wb")
                 CurrentMasterJob.SubJobs = []
                 CurrentMasterJob.File.write(BaseJobScript)
@@ -277,8 +288,8 @@ class ScriptMongler:
                 print "CS: File %s has UNKNOWN scan-count, guess %s"%(Stub, ScanCount)
             else:
                 print "CS: File %s has %s scans"%(Stub, ScanCount)
-            for FirstScanNumber in range(0, ScanCount, BLIND_BLOCK_SIZE):
-                BlockNumber = FirstScanNumber / BLIND_BLOCK_SIZE
+            for FirstScanNumber in range(0, ScanCount, self.gridEnv.BLIND_BLOCK_SIZE):
+                BlockNumber = FirstScanNumber / self.gridEnv.BLIND_BLOCK_SIZE
                 JobKey = (SpectrumFileName, BlockNumber)
                 if self.AlreadySearchedDict.has_key(JobKey):
                     print "SKIP already searched:", JobKey
@@ -287,7 +298,7 @@ class ScriptMongler:
                 if not CurrentMasterJob:
                     CurrentMasterJob = JobClass()
                     CurrentMasterJob.FileName = "j%s.%s.sh"%(Stub, BlockNumber)
-                    JobScriptPath = os.path.join(JobDir, CurrentMasterJob.FileName)
+                    JobScriptPath = os.path.join(self.gridEnv.JobDir, CurrentMasterJob.FileName)
                     CurrentMasterJob.File = open(JobScriptPath, "wb")
                     CurrentMasterJob.SubJobs = []
                     CurrentMasterJob.File.write(BaseJobScript)
@@ -317,8 +328,12 @@ class ScriptMongler:
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:c:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:c:s:")
         OptionsSeen = {}
+        if len(Options) == 0:
+            print UsageInfo
+            sys.exit(1)
+
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
             if Option == "-d":
@@ -351,6 +366,20 @@ class ScriptMongler:
             elif Option == "-p":
                 # -p PTM count
                 self.PTMLimit = int(Value)
+            elif Option == "-s":
+                # -s ScanCount.txt file
+                self.scanCountFile = Value
+                destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
+                if not os.path.exists( destScanCountPath ):
+                    shutil.copy( Value, destScanCountPath )
+            else:
+                print UsageInfo
+                sys.exit(1)
+                
+        if not self.scanCountFile:
+            print UsageInfo
+            sys.exit(1)
+
         self.LoadScanCounts()
         # If blind search was requested, but PTM limit is zero, then set it to 1
         if self.BlindSearchFlag and self.PTMLimit == 0:
@@ -359,9 +388,13 @@ class ScriptMongler:
         
 UsageInfo = """
 ClusterSub.py - Prepare scripts to search mzXML files over a grid.
-Options:
+
+Required Parameters:
  -d [DatabaseFile] - Give the full path to a database .zip file.  File named Foo.zip should
    contain Foo.trie and Foo.index (as produced by PrepDB.py)
+ -s [FilePath] path to the ScanCount.txt file created by CountScans.py
+
+Options:
  -c [CommonDBFile] - Give the full path to a database.zip file as above.  This is an
      additional database, expected to be the common contaminants.
  -a Search ALL mzxml files in the mzxml directory, ignore flags in the "done" directory
@@ -373,8 +406,9 @@ See the comments in this script for more details.
 """
 
 if __name__ == "__main__":
-    MakeGridDirectories()
+    gridEnv = ClusterUtils.JCVIGridEnv()
+    gridEnv.MakeGridDirectories()
     # Parse command-line options; see UsageInfo for explanations
-    Mongler = ScriptMongler()
+    Mongler = ScriptMongler(gridEnv)
     Mongler.ParseCommandLine()
     Mongler.BuildJobs()

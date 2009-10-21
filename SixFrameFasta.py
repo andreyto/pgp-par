@@ -307,6 +307,10 @@ class AbacusClass(ProteinTranslationClass):
         #print "I consumed %d letters of DNA"%self.TotalDNAIndex
         Handle.close()
 
+    def fastaLine(self,frame,strand):
+        return "Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand%s" % ( self.ProteinCount,
+                self.ChromosomeName, frame, self.FrameStarts[frame-1], strand )
+
     def outputFrame( self, strand='', frame=''):
         ''' Takes a frame number (1,2,3) and a strand ('+','-')
         and outputs the current translations for that frame.
@@ -375,10 +379,6 @@ class AbacusClass(ProteinTranslationClass):
         if not OptionsSeen.has_key("-r") or not OptionsSeen.has_key("-w"):
             print UsageInfo
             sys.exit(1)
-
-    def fastaLine(self,frame,strand):
-        return "Protein%s.Chr:%s.Frame%s.StartNuc%s.Strand%s" % ( self.ProteinCount,
-                self.ChromosomeName, frame, self.FrameStarts[frame-1], strand )
 
     def writeFrame(self,frame,strand):
         idx = frame - 1
