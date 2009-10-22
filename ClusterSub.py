@@ -24,15 +24,6 @@ import ClusterUtils
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
 
-# Use "-pe mpi 2" to request two processors.
-BaseJobScript = """#!/bin/bash
-#
-#$ -cwd
-#$ -j y
-#$ -S /bin/bash
-#$ -pe mpi 2
-#
-"""
 class JobClass:
     """
     A job corresponds to a single shell-script to be submitted to the grid engine.
@@ -99,6 +90,33 @@ class ScriptMongler:
         self.IncludeCommonDB = 0
         self.gridEnv = gridEnv
         self.scanCountFile = None
+        # Count of the number of master jobs, to be used as job array index
+        self.master_job_count = 0
+
+    def createMainJob(self, CurrentMasterJob, SpectrumFileName, BlockNumber):
+        MainJob = JobClass()
+        MainJob.SpectrumFileName = SpectrumFileName
+        MainJob.BlockNumber = BlockNumber
+        CurrentMasterJob.SubJobs.append(MainJob)
+
+    def createMasterJob(self, BlockNumber):
+        self.master_job_count += 1
+        CurrentMasterJob = JobClass()
+        CurrentMasterJob.FileName = "%s.in" % self.master_job_count
+        JobScriptPath = os.path.join(self.gridEnv.JobDir, CurrentMasterJob.FileName)
+        CurrentMasterJob.File = open(JobScriptPath, "w")
+        CurrentMasterJob.SubJobs = []
+        return CurrentMasterJob
+
+
+    def closeMasterJob(self, PendingJobList, CurrentMasterJob):
+        command = self.BuildInspectInputFile(CurrentMasterJob)
+        CurrentMasterJob.File.write(command)
+        CurrentMasterJob.File.close()
+        PendingJobList.append(CurrentMasterJob)
+        CurrentMasterJob = None
+        return CurrentMasterJob
+
     def LoadScanCounts(self):
         """
         Parse $SCRATCH/ScanCount.txt, to learn
@@ -114,30 +132,40 @@ class ScriptMongler:
                 continue
             self.ScanCounts[Bits[CountScanBits.Stub]] = ScanCount
         scanfile.close()
-    def GetJobCommand(self, Job):
+
+    def BuildInspectInputFile(self,Job):
         """
-        Returns (as a string) the command to execute to handle this MAIN JOB.
+        Create the body of an inspect input file specifying the spectra, mods, etc.
+        Returns a string containing the desired contents of the file.
         """
-        Str = "python %s/ClusterRunInspect.py"%self.gridEnv.ScratchDir
-        Str += " -d %s"%self.DBPath
-        if self.IncludeCommonDB:
-            Str += " -c %s"%self.CommonDBPath
-        ## TEMP!
-        if self.BlindSearchFlag:
-            Str +=" -b"
-        Str += " -p %s"%self.PTMLimit
-        if Job.SubJobs:
-            SpectrumStr = ""
-            for SubJob in Job.SubJobs:
-                SpectrumStr += " %s"%SubJob.SpectrumFileName
-            Str += " -x %s"%SpectrumStr
-        else:
-            Str += " -x %s"%Job.SpectrumFileName
+        SpectraStr = ""
+        for SpectrumFileName in Job.GetSpectrumFileNames():
+            ScratchMZXMLPath = os.path.join(self.gridEnv.MZXMLDir, SpectrumFileName)
             if self.BlindSearchFlag:
-                FirstScanNumber = Job.BlockNumber * self.gridEnv.BLIND_BLOCK_SIZE
-                Str += " -f %s -l %s"%(FirstScanNumber, FirstScanNumber + self.gridEnv.BLIND_BLOCK_SIZE)
-        Str += " &\n"
-        return Str
+                firstScanNumber = Job.BlockNumber * self.gridEnv.BLIND_BLOCK_SIZE
+                lastScanNumber  = firstScanNumber + self.gridEnv.BLIND_BLOCK_SIZE
+                SpectraStr += "spectra,%s,%s,%s\n"%(ScratchMZXMLPath, firstScanNumber, lastScanNumber)
+            else:
+                SpectraStr += "spectra,%s\n"%(ScratchMZXMLPath)
+        Script = """
+instrument,ESI-ION-TRAP
+protease,Trypsin
+mod,+57,C,fix
+tagcount,25
+PMTolerance,3.0
+""" 
+        Script += "\n"
+        Script += SpectraStr
+        Script += "\n"
+        Script += "mods,%s\n"%self.PTMLimit 
+        if self.BlindSearchFlag:
+            Script += "blind,1\n"
+        Script += "db,%s\n"%self.DBPath
+
+        if self.IncludeCommonDB:
+            Script += "db,%s\n"%self.CommonDBPath
+        return Script
+
     def GetAlreadySearchedDict(self):
         """
         Return a dictionary of jobs which have already been searched.
@@ -211,64 +239,41 @@ class ScriptMongler:
         else:
             JobList = self.BuildJobsStandardSearch(SpectrumFileNames)
         ########
-        for Job in JobList:
-            print "qsub %s"%Job.FileName
+        print "qsub -P %s -cwd -j y -o '$TASK_ID.log' -n inspect -t 1-%i" % (
+            self.gridEnv.projectCode, len(JobList) )
         ########
         return JobList
     def BuildJobsStandardSearch(self, SpectrumFileNames):
         PendingJobList = []
         CurrentMasterJob = None
         for SpectrumFileName in SpectrumFileNames:
-            (Stub, Extension) = os.path.splitext(SpectrumFileName)
-            ScanCount = self.ScanCounts.get(Stub, None)
+            (prefix, Extension) = os.path.splitext(SpectrumFileName)
+            ScanCount = self.ScanCounts.get(prefix, None)
             if not ScanCount:
                 # If we don't know the number of scans, let's assume it's few enough
                 # to handle in a single job.
                 ScanCount = 100
-                print "CS: File %s has UNKNOWN scan-count, guess %s"%(Stub, ScanCount)
+                print "CS: File %s has UNKNOWN scan-count, guess %s"%(prefix, ScanCount)
             else:
-                print "CS: File %s has %s scans"%(Stub, ScanCount)
+                print "CS: File %s has %s scans"%(prefix, ScanCount)
             BlockNumber = 0
             JobKey = (SpectrumFileName, BlockNumber)
             if self.AlreadySearchedDict.has_key(JobKey):
                 print "SKIP already searched:", JobKey
                 continue
             if not CurrentMasterJob:
-                CurrentMasterJob = JobClass()
-                CurrentMasterJob.FileName = "j%s.%s.sh"%(Stub, BlockNumber)
-                JobScriptPath = os.path.join(self.gridEnv.JobDir, CurrentMasterJob.FileName)
-                CurrentMasterJob.File = open(JobScriptPath, "wb")
-                CurrentMasterJob.SubJobs = []
-                CurrentMasterJob.File.write(BaseJobScript)
+                CurrentMasterJob = self.createMasterJob(BlockNumber)
                 CurrentMasterJob.TotalScans = 0
             # Add a MAIN JOB, to search this file:
-            MainJob = JobClass()
-            MainJob.SpectrumFileName = SpectrumFileName
-            MainJob.BlockNumber = BlockNumber
-            CurrentMasterJob.SubJobs.append(MainJob)
-            Command = self.GetJobCommand(MainJob)
+            self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
             CurrentMasterJob.TotalScans += ScanCount
-            CurrentMasterJob.File.write(Command)
             # If the Master job now has two Main jobs, then finish it off:
             if len(CurrentMasterJob.SubJobs) > 1:
-                CurrentMasterJob.File.write("wait\n")
-                CurrentMasterJob.File.close()
-                PendingJobList.append(CurrentMasterJob)
-                CurrentMasterJob = None
-##            # If the Master job now has many scans, then finish it off:
-##            if CurrentMasterJob.TotalScans >= 10000:
-##                CurrentMasterJob.File.write("wait\n")
-##                CurrentMasterJob.File.close()
-##                PendingJobList.append(CurrentMasterJob)
-##                CurrentMasterJob = None
+                CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         # The loop over spectrum files and blocks is now complete.
         # If we're in the middle of handling a Master job, then finish it off.
-        # (Copypasta from inside loop)
         if CurrentMasterJob:
-            CurrentMasterJob.File.write("wait\n")
-            CurrentMasterJob.File.close()
-            PendingJobList.append(CurrentMasterJob)
-            CurrentMasterJob = None
+            CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         return PendingJobList
     def BuildJobsBlindSearch(self, SpectrumFileNames):
         """
@@ -296,33 +301,17 @@ class ScriptMongler:
                     continue
                 # Create a new MASTER JOB, if necessary:
                 if not CurrentMasterJob:
-                    CurrentMasterJob = JobClass()
-                    CurrentMasterJob.FileName = "j%s.%s.sh"%(Stub, BlockNumber)
-                    JobScriptPath = os.path.join(self.gridEnv.JobDir, CurrentMasterJob.FileName)
-                    CurrentMasterJob.File = open(JobScriptPath, "wb")
-                    CurrentMasterJob.SubJobs = []
-                    CurrentMasterJob.File.write(BaseJobScript)
+                    CurrentMasterJob = self.createMasterJob(BlockNumber)
+
                 # Add a MAIN JOB, to search this file:
-                MainJob = JobClass()
-                MainJob.SpectrumFileName = SpectrumFileName
-                MainJob.BlockNumber = BlockNumber
-                CurrentMasterJob.SubJobs.append(MainJob)
-                Command = self.GetJobCommand(MainJob)
-                CurrentMasterJob.File.write(Command)
+                self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
                 # If the Master job now has two Main jobs, then finish it off:
                 if len(CurrentMasterJob.SubJobs) > 1:
-                    CurrentMasterJob.File.write("wait\n")
-                    CurrentMasterJob.File.close()
-                    PendingJobList.append(CurrentMasterJob)
-                    CurrentMasterJob = None
+                    CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         # The loop over spectrum files and blocks is now complete.
         # If we're in the middle of handling a Master job, then finish it off.
-        # (Copypasta from inside loop)
         if CurrentMasterJob:
-            CurrentMasterJob.File.write("wait\n")
-            CurrentMasterJob.File.close()
-            PendingJobList.append(CurrentMasterJob)
-            CurrentMasterJob = None
+            CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         return PendingJobList
     def ParseCommandLine(self):
         """

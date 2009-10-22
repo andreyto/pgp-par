@@ -23,21 +23,14 @@ import traceback
 import time
 import getopt
 import getpass
-from ClusterUtils import *
 
-InspectInputScript = """
-instrument,ESI-ION-TRAP
-protease,Trypsin
-mod,+57,C,fix
-tagcount,25
-PMTolerance,3.0
-""" 
+import ClusterUtils
 
 # wait no longer than this for other jobs to finish copying:
 MAX_WAIT_TIME = 3600
 
 class JobRunner:
-    def __init__(self):
+    def __init__(self,gridEnv):
         self.Stub = "XX"
         self.UniqueStub = "XXXXX"
         self.ScratchDir = None
@@ -51,19 +44,20 @@ class JobRunner:
         self.PTMLimit = 0
         self.IncludeCommonDB =0
         self.CommonDBPath = None 
+        self.gridEnv = gridEnv
     def CopyFilePolitely(self, SourcePath, DestinationPath):
         """
         Copy a file, respecting the limit on how many files may be
         copied at once.
         """
         # FlagFilePath must be UNIQUE!  Our stub is NOT unique!
-        FlagFilePath = os.path.join(CopyFlagDir, self.UniqueStub)
+        FlagFilePath = os.path.join(self.gridEnv.CopyFlagDir, self.UniqueStub)
         if os.path.exists(FlagFilePath):
             os.remove(FlagFilePath) # stomp old dead stuff
         StartTime = time.clock()
         while (1):
-            FileNames = os.listdir(CopyFlagDir)
-            if len(FileNames) >= MAX_SIMULTANEOUS_COPIES:
+            FileNames = os.listdir(self.gridEnv.CopyFlagDir)
+            if len(FileNames) >= self.gridEnv.MAX_SIMULTANEOUS_COPIES:
                 # Copying operations are in progress already.
                 if time.clock() - StartTime > MAX_WAIT_TIME:
                     print "** Tired of waiting to copy files; bail out!"
@@ -105,14 +99,7 @@ class JobRunner:
         TempFileName = "%s.temp"%self.UniqueStub
         if os.path.exists(TempFileName):
             os.remove(TempFileName)
-        if System == "fwgrid":
-            Command = "mktemp -d /state/partition1/%s.XXXXXX > %s"%(USER_NAME, TempFileName)
-        else:
-            Command = "mktemp -d /state/partition1/scratch/%s.XXXXXX > %s"%(USER_NAME, TempFileName)
-        print Command
-        os.system(Command)
-        if not os.path.exists(TempFileName):
-            return None
+
         File = open(TempFileName, "rb")
         TempDirectory = File.read().strip()
         File.close()
@@ -135,13 +122,13 @@ class JobRunner:
             TypeString = "done"
         else:
             TypeString = "running"
-        FlagPath = os.path.join(DoneDir, "%s.%s"%(self.UniqueStub, TypeString))
+        FlagPath = os.path.join(self.gridEnv.DoneDir, "%s.%s"%(self.UniqueStub, TypeString))
         print ">>>Flag job:", FlagPath
         # Flag these mzxml files as "in progress":
         RunningFile = open(FlagPath, "wb")
         for SpectrumFileName in self.SpectrumFileNames:
             if self.FirstScanNumber:
-                BlockNumber = self.FirstScanNumber / BLIND_BLOCK_SIZE
+                BlockNumber = self.FirstScanNumber / self.gridEnv.BLIND_BLOCK_SIZE
             else:
                 BlockNumber = 0
             RunningFile.write("%s\t%s\t%s\t\n"%(self.UniqueStub, SpectrumFileName, BlockNumber))
@@ -157,7 +144,7 @@ class JobRunner:
         DBStub = os.path.splitext(DBFileName)[0]        
         # Copy over the MZXML files, for searching:
         for SpectrumFileName in self.SpectrumFileNames:
-            MZXMLPath = os.path.join(MZXMLDir, SpectrumFileName)
+            MZXMLPath = os.path.join(self.gridEnv.MZXMLDir, SpectrumFileName)
             ScratchMZXMLPath = os.path.join(self.ScratchDir, SpectrumFileName)
             self.CopyFilePolitely(MZXMLPath, ScratchMZXMLPath)
             if not os.path.exists(ScratchMZXMLPath):
@@ -200,48 +187,7 @@ class JobRunner:
                     print "** Warning: Database file '%s' not found!"%self.UnzippedCommonDBPath            
             
         
-    def BuildInspectInputFile(self):
-        """
-        Write an inspect input file specifying the spectra, mods, etc.
-        Return the path to the input file.
-        """
-        InspectInputPath = os.path.join(self.ScratchDir, "Inspect.in")
-        InspectInputFile = open(InspectInputPath, "wb")
-        SpectraStr = ""
-        for SpectrumFileName in self.SpectrumFileNames:
-            ScratchMZXMLPath = os.path.join(self.ScratchDir, SpectrumFileName)
-            if self.FirstScanNumber != None:
-                SpectraStr += "spectra,%s,%s,%s\n"%(ScratchMZXMLPath, self.FirstScanNumber, self.LastScanNumber)
-            else:
-                SpectraStr += "spectra,%s\n"%(ScratchMZXMLPath)
-        Script = InspectInputScript
-        Script += "\n"
-        Script += SpectraStr
-        Script += "\n"
-        if self.BlindSearchFlag:
-            Script += "mods,%s\n"%self.PTMLimit 
-            Script += "blind,1\n"
-            Script += "db,%s\n"%self.UnzippedDBPath
-        elif self.SpliceSearchFlag:
-            Script += "mods,%s\n"%self.PTMLimit
-            Script += "splicedb,%s\n"%self.UnzippedDBPath
-        else:
-            Script += "mods,%s\n"%self.PTMLimit
-            Script += "db,%s\n"%self.UnzippedDBPath
-        if self.IncludeCommonDB:
-            Script += "db,%s\n"%self.UnzippedCommonDBPath
-        InspectInputFile.write(Script)
-        InspectInputFile.close()
-        print "=============================="
-        print Script
-        print "=============================="
-        print "Input file written to %s"%InspectInputPath
-        sys.stdout.flush()
-        return InspectInputPath
     def Main(self):
-        if len(sys.argv)<2:
-            print "** Error: Specify an .mzxml file path"
-            return
         SpectrumFileName = self.SpectrumFileNames[0]
         self.Stub = os.path.splitext(SpectrumFileName)[0]
         if self.BlockNumber != None:
@@ -253,26 +199,18 @@ class JobRunner:
         os.system(Command)
         sys.stdout.flush()    
         # Build scratch directory:
-        self.ScratchDir = self.GetScratchDirectory()
-        if not self.ScratchDir:
-            print "** Error: Unable to mktemp directory."
-            return
         self.RunningFlagPath = self.FlagJob(0)
-        self.CopyFilesToNode()
+#        self.CopyFilesToNode()
         InspectInputPath = self.BuildInspectInputFile()
-        OutputPath = os.path.join(self.ScratchDir, OutputFileName)
+        OutputPath = os.path.join(self.gridEnv.ResultsXDir, OutputFileName)
         InspectStdout = os.path.join(self.ScratchDir, "%s.out"%self.UniqueStub)
         ##################################################################
         # Run inspect:
-        Command = "%s/inspect -i %s -o %s -r %s > %s"%(InspectDir, InspectInputPath, OutputPath, InspectDir, InspectStdout)
+        Command = "%s/inspect -i %s -o %s -r %s > %s" % ( self.gridEnv.InspectDir,
+                InspectInputPath, OutputPath, self.gridEnv.InspectDir, InspectStdout)
         print Command
         sys.stdout.flush()
         os.system(Command)
-        # Copy the file back from scratch:
-        FinalOutputPath = os.path.join(ResultsXDir, OutputFileName)
-        self.CopyFilePolitely(OutputPath, FinalOutputPath)
-        FinalInspectStdout = os.path.join(OutputDir, "%s.out"%self.UniqueStub)
-        self.CopyFilePolitely(InspectStdout, FinalInspectStdout)
         #######################################
         # And, flag these XML files as done:
         try:
@@ -310,7 +248,7 @@ class JobRunner:
             elif Option == "-f":
                 # FIRST scan number:
                 self.FirstScanNumber = int(Value)
-                self.BlockNumber = self.FirstScanNumber / BLIND_BLOCK_SIZE
+                self.BlockNumber = self.FirstScanNumber / self.gridEnv.BLIND_BLOCK_SIZE
             elif Option == "-l":
                 # LAST scan number:
                 self.LastScanNumber = int(Value)
@@ -324,9 +262,21 @@ class JobRunner:
                     sys.exit(1)
                 self.IncludeCommonDB = 1
                 self.CommonDBPath = Value
+                
+        if not(self.DBPath and self.SpectrumFileNames):
+            print UsageInfo
+            sys.exit(1) 
+
+UsageInfo = """ClusterRunInspect.py <args>
+-b [0|1] blind search flag
+-d [dbPath] Path to database file to search
+-x [mzXMLPath] Path to a mzXML file to search against
+-p [int] Maximum PTM count
+"""
         
 if __name__ == "__main__":
-    Runner = JobRunner()
+    gridEnv = ClusterUtils.JCVIGridEnv()
+    Runner = JobRunner(gridEnv)
     Runner.ParseCommandLine()
     try:
         Runner.Main()

@@ -40,15 +40,6 @@ def Sum(List):
         Total += Entry
     return Total
 
-def GetMedian(List):
-    SortedList = List[:]
-    SortedList.sort()
-    Len = len(SortedList)
-    if Len % 2 == 1:
-        return SortedList[Len / 2]
-    Score = (SortedList[Len / 2] + SortedList[(Len / 2) - 1]) / 2.0
-    return Score
-
 def GetMean(List):
     if not len(List):
         return None

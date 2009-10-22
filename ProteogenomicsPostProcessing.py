@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 UsageInfo = """ProteogenomicsPostProcessing.py
 Given a set of annotation for some spectra, a genome, and a proteome
 we perform a variety of proteogenomic analyses. 

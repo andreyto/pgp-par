@@ -56,6 +56,7 @@ class JCVIGridEnv(ClusterEnv):
         self.ResultsXDir   = self.ScratchDir + "ResultsX"
         self.OutputDir     = self.ScratchDir + "output"
         self.JobDir        = self.ScratchDir + "jobs"
+        self.projectCode   = '0438'
 
     def GetRunningJobCount(self):
         TempFilePath = "TempJobCount.txt"
