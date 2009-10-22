@@ -239,8 +239,8 @@ PMTolerance,3.0
         else:
             JobList = self.BuildJobsStandardSearch(SpectrumFileNames)
         ########
-        print "qsub -P %s -cwd -j y -o '$TASK_ID.log' -n inspect -t 1-%i" % (
-            self.gridEnv.projectCode, len(JobList) )
+        print "qsub -P %s -cwd -j y -o '$TASK_ID.log' -n inspect -t 1-%i %s/sgeInspect.sh" % (
+            self.gridEnv.projectCode, len(JobList), sys.path[0] )
         ########
         return JobList
     def BuildJobsStandardSearch(self, SpectrumFileNames):
