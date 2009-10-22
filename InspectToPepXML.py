@@ -301,16 +301,16 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
            elif Line.lower().startswith("protease,"):
                self.protease = Line[len("protease,"):].strip()
            elif Line.lower().startswith("db,"):
+               
                search_db = Line[len("db,"):].strip()
+               
                search_db_ext = os.path.splitext(search_db)[1]
                SplitValues = os.path.splitext(search_db)
-               #print SplitValues
                # Find the Fasta format of the .trie file used
                if search_db_ext not in ["fa", "fasta"]:
                    search_db_root = os.path.splitext(search_db)[0]
                    search_db_file_list = set(
                            glob.glob("%s.*" % search_db_root))
-                   #print search_db_file_list
                    ext_list = [os.path.splitext(f)[1]
                            for f in search_db_file_list]
                    try: ext_list.remove(".index")
@@ -319,9 +319,9 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
                    except: pass
                    if len(ext_list) == 1:
                        search_db = search_db_root + ext_list[0]
-                   elif "fasta" in ext_list:
+                   elif ".fasta" in ext_list:
                        search_db = search_db_root + ".fasta"
-                   elif "fa" in ext_list:
+                   elif ".fa" in ext_list:
                        search_db = search_db_root + ".fa"
                    else:
                        print >> sys.stderr, \
