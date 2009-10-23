@@ -160,7 +160,9 @@ PMTolerance,3.0
         Script += "mods,%s\n"%self.PTMLimit 
         if self.BlindSearchFlag:
             Script += "blind,1\n"
-        Script += "db,%s\n"%self.DBPath
+
+        for db in self.DBPath:
+            Script += "db,%s\n" % db
 
         if self.IncludeCommonDB:
             Script += "db,%s\n"%self.CommonDBPath
@@ -239,7 +241,7 @@ PMTolerance,3.0
         else:
             JobList = self.BuildJobsStandardSearch(SpectrumFileNames)
         ########
-        print "qsub -P %s -cwd -j y -o '$TASK_ID.log' -n inspect -t 1-%i %s/sgeInspect.sh" % (
+        print "qsub -P %s -cwd -j y -o 'output/$TASK_ID.log' -t 1-%i %s/sgeInspect.sh" % (
             self.gridEnv.projectCode, len(JobList), sys.path[0] )
         ########
         return JobList
@@ -331,7 +333,10 @@ PMTolerance,3.0
                     print "** Error: couldn't find database archive '%s'\n\n"%Value
                     print UsageInfo
                     sys.exit(1)
-                self.DBPath = Value
+                if self.DBPath:
+                    self.DBPath.append( Value )
+                else:
+                    self.DBPath = [Value]
             elif Option == "-c":
                 if not os.path.exists(Value):
                     print "** Error: couldn't find database archive '%s'\n\n"%Value
