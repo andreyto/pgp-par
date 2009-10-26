@@ -2178,7 +2178,7 @@ int ScanFileWithTrie(SearchInfo* Info)
     {
         return 0;
     }
-    Buffer = (char*)calloc(sizeof(char), SCAN_BUFFER_SIZE);
+    Buffer = (char*)calloc(SCAN_BUFFER_SIZE, sizeof(char));
     Node = Info->Root;
     // We'll scan in chunks of the file, and scan across them.  We try to always keep a buffer of 50 characters
     // before and after the current position, so that we can look forward and back to get masses.  (When we match

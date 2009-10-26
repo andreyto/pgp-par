@@ -932,7 +932,7 @@ void ParseSpectraFromMZXML(char* FileName, InputFileNode* InputFile, int FirstSc
         }
 
         // Parse this block o' text:
-        XMLParseResult = XML_Parse(Cursor->Parser, Cursor->XMLBuffer, BytesRead, DoneFlag);
+        XMLParseResult = XML_ParseBuffer(Cursor->Parser, BytesRead, DoneFlag);
         if (!XMLParseResult)
         {
             printf("XML Parse error - file position ~%d\n", XML_GetCurrentByteIndex(Cursor->Parser));
@@ -996,7 +996,7 @@ int SpectrumLoadMZXML(MSSpectrum* Spectrum, FILE* MZXMLFile)
         }
 
         // Parse this block o' text:
-        XMLParseResult = XML_Parse(Cursor->Parser, Cursor->XMLBuffer, BytesRead, DoneFlag);
+        XMLParseResult = XML_ParseBuffer(Cursor->Parser, BytesRead, DoneFlag);
         if (!XMLParseResult)
         {
             Cursor->ErrorFlag = 1;
