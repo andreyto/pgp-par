@@ -336,6 +336,7 @@ void ProcessResultsFile(PValueInfo* Info, char* FilePath, int Action)
 {
     FILE* File;
     PValueParseInfo ParseInfo;
+    memset(&ParseInfo, 0, sizeof(ParseInfo));
     //
     Info->ParseInfo = &ParseInfo;
     File = fopen(FilePath, "rb");
