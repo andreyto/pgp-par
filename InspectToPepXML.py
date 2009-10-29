@@ -6,18 +6,26 @@ to PepXML format.  Written by Samuel Payne, Venter Institute,
 and Terry Farrah, Institute for Systems Biology  October 2008
 
 Required Parameters
--i [Filename] - InsPecT search results file (input)
+-i [Filename] - InsPecT results file from search against mzXML (input)
 -o [Filename] - Converted file in PepXML (output)
 
 Optional Parameters
 -p [Filename] - InsPecT input (parameter) file
                   default: inspect.params
--m [Dirname] - Dir containing .mgf or .mzXML spectrum file
+-m [Dirname] - Dir containing .mzXML spectrum file
                   default: current working directory
 -d N   - write at most N hits per assumed charge
 
 Assumes InsPecT results file is TSV containing header line and
  one record per peptide prediction sorted by scan #, then by rank.
+User must manually edit PepXML file and insert correct information
+  near top of file for precursor and fragment mass types --
+  either average or monoisotopic.
+If database file mentioned in parameter file is not in fasta
+  format (.fasta or .fa), you must create a fasta format file of
+  the same base name in the same dir. Use TrieToFASTA.py.
+This script, InspectToPepXML.py, must reside in the same directory
+  as the rest of the InsPecT code.
 """
 
 import sys
@@ -141,14 +149,20 @@ class InspectOutputRecordClass:
             MissedCleavages = self.Peptide[:-1].count("K") + \
                self.Peptide[:-1].count("R") - \
                (self.Peptide[:-1].count("KP") + self.Peptide[:-1].count("RP"))
-        else: MissedCleavages = "UNKNOWN"
+        elif enzyme.lower() == "none":
+            MissedCleavages = 0
+        else: MissedCleavages = -1
         # Break up Protein into accession # and description
         first_space = self.Protein.find(' ')
-        ProteinDescr = self.Protein[first_space+1:]
-        ProteinDescr = ProteinDescr.replace(">","&gt;")
-        ProteinDescr = ProteinDescr.replace("<","&lt;")
-        ProteinDescr = ProteinDescr.replace("&","&amp;")
-        Protein = self.Protein[:first_space]
+        if first_space >= 0:
+          Protein = self.Protein[:first_space]
+          ProteinDescr = self.Protein[first_space+1:]
+          ProteinDescr = ProteinDescr.replace(">","&gt;")
+          ProteinDescr = ProteinDescr.replace("<","&lt;")
+          ProteinDescr = ProteinDescr.replace("&","&amp;")
+        else:
+          Protein = self.Protein
+          ProteinDescr = Protein
         Hit = '<search_hit\n' + \
               '    hit_rank="%s"\n' % (rank) + \
               '    peptide="%s"\n' % (self.Peptide) + \
@@ -175,14 +189,17 @@ class InspectOutputRecordClass:
            aa = mod[0]
            pos = mod[1]
            mod_mass = mod[2]
-           ModMassDict[pos] = float(mod_mass) + Global.AminoMass[aa]
+           if pos in ModMassDict:
+             ModMassDict[pos] += float(mod_mass)
+           else:
+             ModMassDict[pos] = float(mod_mass) + Global.AminoMass[aa]
         for i in range(len(self.Peptide)):
            aa = self.Peptide[i]
            pos = i + 1
            if aa in Global.FixedMods:
                mod_mass = Global.FixedMods[aa]
                if pos in ModMassDict:
-                   ModMassDict[pos] += mod_mass
+                   ModMassDict[pos] += float(mod_mass)
                else:
                    ModMassDict[pos] = float(mod_mass) + \
                                             Global.AminoMass[aa]
@@ -275,6 +292,7 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
         self.mod_weight = []
         self.mod_aa = []
         self.mod_type = []
+        self.mod_name = []
         # reset Global.FixedMods to empty; Global.py initializes it to
         # {"C":57.0518}, but this is a hack we don't want
         Global.FixedMods = {}
@@ -288,35 +306,44 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
            elif Line.lower().startswith("mod,"):
                tokens = Line.split(",")
                this_mod_weight =  float(tokens[1])
-               this_mod_aa = tokens[2].strip()
-               this_mod_type = tokens[3].strip()
-               self.mod_weight = self.mod_weight + [this_mod_weight]
-               self.mod_aa = self.mod_aa + [this_mod_aa]
-               self.mod_type = self.mod_type + [this_mod_type]
-               if this_mod_type == "fix":
-                   Global.FixedMods[this_mod_aa] = this_mod_weight
-               nmods_in_params = nmods_in_params + 1
+               this_mod_aa_string = tokens[2].strip()
+               if this_mod_aa_string == "*":
+                 this_mod_aa_string = "ACDEFGHIKLMNPQRSTVWY"
+               this_mod_type = "opt"
+               if len(tokens) > 3:
+                   this_mod_type = tokens[3].strip()
+               if len(tokens) > 4:
+                   this_mod_name = tokens[4].strip()
+               else: this_mod_name = None
+               for this_mod_aa in this_mod_aa_string:
+                   self.mod_weight = self.mod_weight + [this_mod_weight]
+                   self.mod_aa = self.mod_aa + [this_mod_aa]
+                   self.mod_type = self.mod_type + [this_mod_type]
+                   if this_mod_type == "fix":
+                       Global.FixedMods[this_mod_aa] = this_mod_weight
+                   self.mod_name = self.mod_name + [this_mod_name]
+                   nmods_in_params = nmods_in_params + 1
            elif Line.lower().startswith("instrument,"):
                self.instrument = Line[len("instrument,"):].strip()
            elif Line.lower().startswith("protease,"):
                self.protease = Line[len("protease,"):].strip()
            elif Line.lower().startswith("db,"):
-               
                search_db = Line[len("db,"):].strip()
-               
                search_db_ext = os.path.splitext(search_db)[1]
-               SplitValues = os.path.splitext(search_db)
                # Find the Fasta format of the .trie file used
-               if search_db_ext not in ["fa", "fasta"]:
+               if search_db_ext not in [".fa", ".fasta"]:
                    search_db_root = os.path.splitext(search_db)[0]
                    search_db_file_list = set(
                            glob.glob("%s.*" % search_db_root))
+                   #print search_db_file_list
                    ext_list = [os.path.splitext(f)[1]
                            for f in search_db_file_list]
+                   #print ext_list
                    try: ext_list.remove(".index")
                    except: pass
                    try: ext_list.remove(".trie")
                    except: pass
+                   #print ext_list
                    if len(ext_list) == 1:
                        search_db = search_db_root + ext_list[0]
                    elif ".fasta" in ext_list:
@@ -402,13 +429,24 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
                 # get info about spectrum from spectrum file
                 # (not fully implemented for .mgf files)
                 if self.SpectrumFileType == ".mgf":
-                    (MgfSpectrumTitle, MgfPepMass) = \
-                        self.GetSpectrumInfoFromMGF(SpectrumFilePath,
-                        FileOffset)
-                    PrecursorNeutralMass = float(MgfPepMass)
+                    print "Sorry, can't handle Inspect searches on MGF files."
+                    print "Please perform your search on an mzXML file."
+                    sys.exit(1)
+                    #(MgfSpectrumTitle, MgfPepMass) = \
+                    #   self.GetSpectrumInfoFromMGF(SpectrumFilePath,
+                    #   this_rec.FileOffset)
+                    #PrecursorNeutralMass = float(MgfPepMass)
                 elif self.SpectrumFileType == ".mzXML":
+                  if not retentionTimeDict.has_key(this_scan.ScanNumber):
+                    print "WARNING: RT for scan %s not found in spectrum file; using RT of -1"
+                    this_scan.RetentionTime = "-1.0"
+                  else:
                     this_scan.RetentionTime = \
                           retentionTimeDict[this_scan.ScanNumber]
+                  if not precursorMzDict.has_key(this_scan.ScanNumber):
+                    print "WARNING: m/z for scan %s not found in spectrum file; using m/z of -1"
+                    this_scan.PrecursorMz = "-1.0"
+                  else:
                     this_scan.PrecursorMz = \
                            precursorMzDict[this_scan.ScanNumber]
 
@@ -424,12 +462,13 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
             # process peptide string --TMF
             # I think there is already code to do this in Utils.py
             # Sam, you may want to replace my code with a call to that.
-            def ExtractAAModifications(peptide):
-              '''Given peptide like TVAM+16GGK, extract the numbers.
+            def ExtractAAModifications(search, peptide):
+              '''Given peptide like TVAM+16GGKYphosLV, extract the numbers
+                 and other modification symbols.
 
-                 Return (a) the peptide without the numbers, and
+                 Return (a) the peptide without the mods, and
                  (b) a list of (aa, aa-pos, number) tuples -- 
-                 aa/aa-pos describe the aa preceding the number.
+                 aa/aa-pos describe the aa posessing the mod.
               '''
               i = 0
               mod_list = []
@@ -445,12 +484,38 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
                 aa = peptide[i-1]
                 added_mod = peptide[i:j]
                 added_mod_pos = len(stripped_peptide) #counting starts at 1
-                mod_list = mod_list + [(aa, added_mod_pos, added_mod)]
+                # modifications with names in the param file
+                # will be represented by their names embedded in the
+                # peptide. Look up their weights.
+                for k in range(nmods_in_params):
+                  if search.mod_name[k]:
+                     truncated_name = search.mod_name[k][:4]
+                     this_weight = int(search.mod_weight[k])
+                     if this_weight > 0:
+                       weight_string = "+" + str(this_weight)
+                     added_mod = added_mod.replace(truncated_name,
+                         weight_string)
+                # added_mod could be a concatenation of several mods,
+                #  as in AEQDNLGKSVM-5+16IPTK;
+                # store each one as a separate mod.
+                this_mod = ""
+                for i in range(len(added_mod)):
+                  c = added_mod[i]
+                  if (c == "+" or c == "-"):
+                    # store the previous mod
+                    if len(this_mod) > 0:
+                      mod_list = mod_list + [(aa, added_mod_pos, this_mod)]
+                    # start a new mod
+                    this_mod = c
+                  else:
+                    this_mod = this_mod + c
+                # store the last mod
+                mod_list = mod_list + [(aa, added_mod_pos, this_mod)]
                 i = j
               return (stripped_peptide, mod_list)
 
             (this_rec.Peptide, this_rec.OptModList) = \
-                 ExtractAAModifications(Peptide)
+                 ExtractAAModifications(self, Peptide)
 
             # done processing peptide string
    
@@ -549,7 +614,8 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
         PepXMLHandle.write('<parameter name="FILE" value=""/>\n')
         PepXMLHandle.write('<parameter name="FORMAT" value=""/>\n')
         PepXMLHandle.write('<parameter name="FORMVER" value=""/>\n')
-        PepXMLHandle.write('<parameter name="INSTRUMENT" value="ESI-QUAD-TOF"/>\n')
+        PepXMLHandle.write('<parameter name="INSTRUMENT" value="%s"/>\n' % \
+          self.instrument)
         PepXMLHandle.write('<parameter name="ITOL" value=""/>\n')
         PepXMLHandle.write('<parameter name="ITOLU" value="Da"/>\n')
         PepXMLHandle.write('<parameter name="MASS" value="Monoisotopic"/>\n')
@@ -579,7 +645,7 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
         File.seek(FileOffset)
         Title = None
         MatchTitle = re.compile('^TITLE=([^\n]*)')
-        MatchMass = re.compile('^PEPMASS=([^\n]*)')
+        MatchMass = re.compile('^PEPMASS=([^\n])\s*')
         # read one line at a time
         for Line in File:
             Match = MatchTitle.match(Line)
