@@ -177,8 +177,6 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     int OffsetIndex;
     int FeatureIndex;
     int Charge;
-    int BestScoreIndex = 0;
-    int BestRunnerUpIndex = -1;
     float PMRadius;
     float AverageConvolution;
     PMCInfo* Info;
@@ -190,8 +188,6 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     Spectrum = SpectrumInfo->Spectrum;
 
     // Set the spectrum's mass:
-    printf("MZ %d, MZ * Charge %d, HM * Charge-1 %d\n", Spectrum->MZ,
-            Spectrum->MZ * SpectrumInfo->Charge,  HYDROGEN_MASS * (SpectrumInfo->Charge - 1));
     Spectrum->ParentMass = Spectrum->MZ * SpectrumInfo->Charge - HYDROGEN_MASS * (SpectrumInfo->Charge - 1); // base mass
     Charge = min(3, SpectrumInfo->Charge);
 
@@ -199,27 +195,20 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     // Build PMCInfo structs for allowed masses.  We're always allowed a +1 or -1 isotope.
     // And we're allowed to move around by 0.1Da until our mass error (in PPM) becomes too large.
     PMRadius = (float)Spectrum->ParentMass;
-    printf("ParentMass %d as float %f\n",Spectrum->ParentMass, PMRadius);
     PMRadius *= GlobalOptions->ParentMassPPM / (float)ONE_MILLION;
-    printf("PMRadius %f, ParentMass - %d + %d\n",PMRadius,
-        (int)(Spectrum->ParentMass - PMRadius), (int)(Spectrum->ParentMass + PMRadius));
-
-    printf("PMRadius %f, ParentMass - %d + %d\n",PMRadius,
-        Spectrum->ParentMass - (int)(Spectrum->ParentMass - PMRadius),
-        (int)(Spectrum->ParentMass + PMRadius) - Spectrum->ParentMass);
 
     AddPMCNodes(SpectrumInfo, Spectrum->ParentMass,
-        (int)(Spectrum->ParentMass - PMRadius), (int)(Spectrum->ParentMass + PMRadius));
+        rint(Spectrum->ParentMass - PMRadius), rint(Spectrum->ParentMass + PMRadius));
 
     // We're always allowed a +1 and -1 shift:
     if (PMRadius < DALTON)
     {
         AddPMCNodes(SpectrumInfo, Spectrum->ParentMass - DALTON,
-            (int)(Spectrum->ParentMass - DALTON - PMRadius),
-            (int)min(Spectrum->ParentMass - DALTON + PMRadius, Spectrum->ParentMass - PMRadius));
+            rint(Spectrum->ParentMass - DALTON - PMRadius),
+            rint(min(Spectrum->ParentMass - DALTON + PMRadius, Spectrum->ParentMass - PMRadius)));
         AddPMCNodes(SpectrumInfo, Spectrum->ParentMass + DALTON,
-            (int)max(Spectrum->ParentMass + DALTON - PMRadius, Spectrum->ParentMass + PMRadius),
-            (int)(Spectrum->ParentMass + DALTON + PMRadius));
+            rint(max(Spectrum->ParentMass + DALTON - PMRadius, Spectrum->ParentMass + PMRadius)),
+            rint(Spectrum->ParentMass + DALTON + PMRadius));
     }
     // Ok, PMCInfo nodes have now been created.
     // Perform self-conovolution, at various parent masses.  This populates Info->Convolve, Info->Convolve2.
@@ -320,10 +309,10 @@ void CharacterizePhosphatePeaks(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo, in
     MSSpectrum* Spectrum;
     int PeakIndex = -1;
     int MZ; // Of this PMCInfo guess at parent mass, not what is listed in the file.
-    int Epsilon = (int)(0.5 * DALTON);
+    int Epsilon = rint(0.5 * DALTON);
     int SavedPeakIndex = -1;
     int Difference;
-    int Skew;
+    int Skew = 0;
     float Intensity = 0;
     float TotalIntensity = 0;
     int ExpectedPeakMass;
@@ -653,14 +642,14 @@ void ConvolveMassCorrectedSpectrum(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo)
     // Offsets consists of some masses where we expect LARGE self-convolution, followed by others where we expect SMALL
     // self-convolution:
     int Offsets[SELF_CONVOLVE_OFFSETS] = {-18 * DALTON, -17 * DALTON, 0 * DALTON, 1 * DALTON,
-        -1 * DALTON, (int)(0.5 * DALTON), (int)(-16.5 * DALTON)};
-    int Offsets2[SELF_CONVOLVE2_OFFSETS] = {(int)(0.4 * DALTON), (int)(1.2 * DALTON), (int)(-17.5 * DALTON),
+        -1 * DALTON, rint(0.5 * DALTON), rint(-16.5 * DALTON)};
+    int Offsets2[SELF_CONVOLVE2_OFFSETS] = {rint(0.4 * DALTON), rint(1.2 * DALTON), rint(-17.5 * DALTON),
         -1 * DALTON, 4 * DALTON};
 
 	if(GlobalOptions->PhosphorylationFlag)
 	{//for phos searches, these offsets produce much better results.
-		Offsets2[0] = (int)(0.2 * DALTON);
-		Offsets2[2] = (int)(-18.0 * DALTON);
+		Offsets2[0] = rint(0.2 * DALTON);
+		Offsets2[2] = rint(-18.0 * DALTON);
 	}
 
     //
