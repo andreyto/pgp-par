@@ -348,6 +348,15 @@ void CharacterizePhosphatePeaks(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo, in
 }
 
 
+void DebugPrintPMCSpectrumInfo(PMCSpectrumInfo* SpectrumInfo) {
+    PMCInfo* Info;
+    for (Info = SpectrumInfo->Head; Info; Info = Info->Next)
+    {
+        printf("Charge %d ParentMass %d SVMScore %f\n",
+                Info->Charge, Info->ParentMass, Info->SVMScore );
+    }
+}
+
 // Carry out parent mass correction on this spectrum.
 void PerformPMC(PMCSpectrumInfo* SpectrumInfo)
 {
@@ -417,6 +426,7 @@ void PerformPMC(PMCSpectrumInfo* SpectrumInfo)
 #endif
         }
     }
+    DebugPrintPMCSpectrumInfo(SpectrumInfo);
     // Remember the best one:
     for (Info = SpectrumInfo->Head; Info; Info = Info->Next)
     {
