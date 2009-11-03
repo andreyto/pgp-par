@@ -286,7 +286,7 @@ void MZXMLFinishPeaks(MZXMLParseCursor* Cursor, MSSpectrum* Spectrum)
     for (PeakIndex = 0; PeakIndex < PeakCount; PeakIndex++)
     {
         Value = Cursor->Peaks[PeakIndex * 2];
-        Spectrum->Peaks[PeakIndex].Mass = (int)(Value * MASS_SCALE + 0.5);
+        Spectrum->Peaks[PeakIndex].Mass = rint(Value * MASS_SCALE);
         Value = Cursor->Peaks[PeakIndex * 2 + 1];
         Spectrum->Peaks[PeakIndex].Intensity = Value;
     }
@@ -334,7 +334,7 @@ void MZXMLEndElement(void* UserData, const char* Tag)
     {
         if (Spectrum)
         {
-            Spectrum->MZ = (int)(MASS_SCALE * atof(Cursor->PrecursorMZBuffer));
+            Spectrum->MZ = rint(MASS_SCALE * atof(Cursor->PrecursorMZBuffer));
         }
     }
 
@@ -351,8 +351,6 @@ void MZXMLStartPeaks(MZXMLParseCursor* Cursor, const char** Attributes)
 {
     const char* Name;
     const char* Value;
-    int ScanNumber = -1;
-    int PeakCount = 0;
     int AttributeIndex;
     //
     if (Cursor->ErrorFlag)
@@ -394,7 +392,6 @@ void MZXMLStartPeaks(MZXMLParseCursor* Cursor, const char** Attributes)
 void MZXMLStartElement(void* UserData, const char* Tag, const char** Attributes)
 {
     MZXMLParseCursor* Cursor;
-    int ExpectedTag = 0;
     //
     Cursor = (MZXMLParseCursor*)UserData;
     if (Cursor->ErrorFlag)
@@ -450,7 +447,7 @@ void MZDataGetPrecursorMZ(MZDataParseCursor* Cursor, const char** Attributes)
     const char* Value;
     int AttributeIndex;
     int MassChargeRatioFlag = 0;
-    float FloatValue;
+    double FloatValue = 0;
     for (AttributeIndex = 0; Attributes[AttributeIndex]; AttributeIndex += 2)
     {
         Name = Attributes[AttributeIndex];
@@ -465,12 +462,12 @@ void MZDataGetPrecursorMZ(MZDataParseCursor* Cursor, const char** Attributes)
         }
         if (!strcmp(Name, "value"))
         {
-            FloatValue = (float)atof(Value);
+            FloatValue = atof(Value);
         }
     }
     if (MassChargeRatioFlag)
     {
-        Cursor->PrecursorMZ = (int)(MASS_SCALE * FloatValue);
+        Cursor->PrecursorMZ = rint(MASS_SCALE * FloatValue);
     }
 }
 
@@ -531,7 +528,6 @@ void MZDataGetPeakCount(MZDataParseCursor* Cursor, const char** Attributes)
 void MZDataStartElement(void* UserData, const char* Tag, const char** Attributes)
 {
     MZDataParseCursor* Cursor;
-    int ExpectedTag = 0;
     //
     Cursor = (MZDataParseCursor*)UserData;
     if (Cursor->ErrorFlag)
@@ -619,7 +615,7 @@ void MZDataCompleteSpectrum(MZDataParseCursor* Cursor, MSSpectrum* Spectrum)
 
     for (PeakIndex = 0; PeakIndex < Cursor->PeakCount; PeakIndex++)
     {
-        Spectrum->Peaks[PeakIndex].Mass = (int)(Cursor->MZBuffer[PeakIndex] * MASS_SCALE + 0.5);
+        Spectrum->Peaks[PeakIndex].Mass = rint(Cursor->MZBuffer[PeakIndex] * MASS_SCALE);
         Spectrum->Peaks[PeakIndex].Intensity = Cursor->IntensityBuffer[PeakIndex];
     }
     if (Spectrum->Peaks[0].Mass < -1 || Spectrum->Peaks[0].Mass > (GlobalOptions->DynamicRangeMax + GlobalOptions->Epsilon))
