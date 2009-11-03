@@ -348,12 +348,27 @@ void CharacterizePhosphatePeaks(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo, in
 }
 
 
-void DebugPrintPMCSpectrumInfo(PMCSpectrumInfo* SpectrumInfo) {
+typedef enum {
+    DebugLevelLOW,
+    DebugLevelHIGH
+} DebugLevel;
+
+void DebugPrintPMCSpectrumInfo(PMCSpectrumInfo* SpectrumInfo, DebugLevel debugLevel) {
     PMCInfo* Info;
     for (Info = SpectrumInfo->Head; Info; Info = Info->Next)
     {
         printf("Charge %d ParentMass %d SVMScore %f\n",
                 Info->Charge, Info->ParentMass, Info->SVMScore );
+
+        if ( debugLevel == DebugLevelHIGH ) {
+            int i;
+            for(i = 0; i < 64; i++) {
+                printf("%f ",Info->Features[i]);
+                if ((i+1) % 8 == 0)
+                    printf("\n");
+            }
+            printf("\n");
+        }
     }
 }
 
@@ -426,7 +441,7 @@ void PerformPMC(PMCSpectrumInfo* SpectrumInfo)
 #endif
         }
     }
-    DebugPrintPMCSpectrumInfo(SpectrumInfo);
+    DebugPrintPMCSpectrumInfo(SpectrumInfo,DebugLevelHIGH);
     // Remember the best one:
     for (Info = SpectrumInfo->Head; Info; Info = Info->Next)
     {
