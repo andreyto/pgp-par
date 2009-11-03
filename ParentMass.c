@@ -1,30 +1,30 @@
 //Copyright 2007, The Regents of the University of California
 //All Rights Reserved
 //
-//Permission to use, copy, modify and distribute any part of this 
-//program for educational, research and non-profit purposes, without fee, 
-//and without a written agreement is hereby granted, provided that the 
-//above copyright notice, this paragraph and the following three paragraphs 
+//Permission to use, copy, modify and distribute any part of this
+//program for educational, research and non-profit purposes, without fee,
+//and without a written agreement is hereby granted, provided that the
+//above copyright notice, this paragraph and the following three paragraphs
 //appear in all copies.
 //
-//Those desiring to incorporate this work into commercial 
-//products or use for commercial purposes should contact the Technology 
-//Transfer & Intellectual Property Services, University of California, 
-//San Diego, 9500 Gilman Drive, Mail Code 0910, La Jolla, CA 92093-0910, 
+//Those desiring to incorporate this work into commercial
+//products or use for commercial purposes should contact the Technology
+//Transfer & Intellectual Property Services, University of California,
+//San Diego, 9500 Gilman Drive, Mail Code 0910, La Jolla, CA 92093-0910,
 //Ph: (858) 534-5815, FAX: (858) 534-7345, E-MAIL:invent@ucsd.edu.
 //
-//IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY 
-//FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, 
-//INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN 
-//IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY 
+//IN NO EVENT SHALL THE UNIVERSITY OF CALIFORNIA BE LIABLE TO ANY PARTY
+//FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES,
+//INCLUDING LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE, EVEN
+//IF THE UNIVERSITY OF CALIFORNIA HAS BEEN ADVISED OF THE POSSIBILITY
 //OF SUCH DAMAGE.
 //
-//THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE UNIVERSITY 
-//OF CALIFORNIA HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, 
-//ENHANCEMENTS, OR MODIFICATIONS.  THE UNIVERSITY OF CALIFORNIA MAKES NO 
-//REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND, EITHER IMPLIED OR 
-//EXPRESS, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
-//MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR THAT THE USE OF 
+//THE SOFTWARE PROVIDED HEREIN IS ON AN "AS IS" BASIS, AND THE UNIVERSITY
+//OF CALIFORNIA HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES,
+//ENHANCEMENTS, OR MODIFICATIONS.  THE UNIVERSITY OF CALIFORNIA MAKES NO
+//REPRESENTATIONS AND EXTENDS NO WARRANTIES OF ANY KIND, EITHER IMPLIED OR
+//EXPRESS, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+//MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR THAT THE USE OF
 //THE SOFTWARE WILL NOT INFRINGE ANY PATENT, TRADEMARK OR OTHER RIGHTS.
 
 // ParentMass.c: Routines for parent mass correction.  The precursor mass, as supplied,
@@ -81,7 +81,7 @@ SVMModel* PMCCharge3SVM;
 // Functions:
 void CharacterizePhosphatePeaks(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo, int Offset, int FeatureIndex);
 
-// Free PMCSpectrumInfo, which is only kept around during 
+// Free PMCSpectrumInfo, which is only kept around during
 // parent mass and charge state correction.
 void FreePMCSpectrumInfo(PMCSpectrumInfo* SpectrumInfo)
 {
@@ -194,18 +194,18 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     Charge = min(3, SpectrumInfo->Charge);
 
     ////////////////////////////////////////////////////////////
-    // Build PMCInfo structs for allowed masses.  We're always allowed a +1 or -1 isotope. 
+    // Build PMCInfo structs for allowed masses.  We're always allowed a +1 or -1 isotope.
     // And we're allowed to move around by 0.1Da until our mass error (in PPM) becomes too large.
     PMRadius = (float)Spectrum->ParentMass;
     PMRadius *= GlobalOptions->ParentMassPPM / (float)ONE_MILLION;
-    AddPMCNodes(SpectrumInfo, Spectrum->ParentMass, 
+    AddPMCNodes(SpectrumInfo, Spectrum->ParentMass,
         (int)(Spectrum->ParentMass - PMRadius), (int)(Spectrum->ParentMass + PMRadius));
 
     // We're always allowed a +1 and -1 shift:
     if (PMRadius < DALTON)
     {
         AddPMCNodes(SpectrumInfo, Spectrum->ParentMass - DALTON,
-            (int)(Spectrum->ParentMass - DALTON - PMRadius), 
+            (int)(Spectrum->ParentMass - DALTON - PMRadius),
             (int)min(Spectrum->ParentMass - DALTON + PMRadius, Spectrum->ParentMass - PMRadius));
         AddPMCNodes(SpectrumInfo, Spectrum->ParentMass + DALTON,
             (int)max(Spectrum->ParentMass + DALTON - PMRadius, Spectrum->ParentMass + PMRadius),
@@ -251,8 +251,11 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
             AverageConvolution += Info->Convolve[OffsetIndex];
             MaxConvolution = max(MaxConvolution, Info->Convolve[OffsetIndex]);
         }
+        printf("ParentMass.c::ComputePMCFeatures. Iteration on PM %d\n", Info->ParentMass);
+        printf("Average convolution (summation) %f\n", AverageConvolution);
         AverageConvolution /= (float)SELF_CONVOLVE_OFFSETS;
         AverageConvolution = max(EPSILON, AverageConvolution);
+        printf("Average convolution (final) %f\n", AverageConvolution);
         MaxConvolution = max(EPSILON, MaxConvolution);
         for (OffsetIndex = 0; OffsetIndex < SELF_CONVOLVE_OFFSETS; OffsetIndex++)
         {
@@ -264,7 +267,7 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
         }
         // Convolutions of singly- and doubly-charged peaks.
         // (These features aren't computed for charge 1!)
-        if (SpectrumInfo->Charge > 1) 
+        if (SpectrumInfo->Charge > 1)
         {
             ////////////////////////////////////////////////////////////////
             // Convolution2 features:
@@ -342,7 +345,7 @@ void CharacterizePhosphatePeaks(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo, in
 	else
 	{//nothing found, save zeros
         Info->IntensePeakIndex[FeatureIndex] = 0;
-        Info->IntensePeakIntensity[FeatureIndex] = 0; 
+        Info->IntensePeakIntensity[FeatureIndex] = 0;
 		Info->IntensePeakSkew[FeatureIndex] = 0;
 	}
 }
@@ -376,7 +379,7 @@ void DebugPrintPMCSpectrumInfo(PMCSpectrumInfo* SpectrumInfo, DebugLevel debugLe
 void PerformPMC(PMCSpectrumInfo* SpectrumInfo)
 {
     PMCInfo* Info;
-    
+
     //
 #ifdef PMC_USE_SVM
     LoadPMCSVM(0);
@@ -534,7 +537,7 @@ float SpectrumGetSelfConvolution(MSSpectrum* Spectrum, PMCSpectrumInfo* Spectrum
 {
     SelfConvolutionNode* Node;
     SelfConvolutionNode* OldNode;
-    
+
     int PeakIndex;
     int OtherMass;
     int Bin;
@@ -628,8 +631,8 @@ float SpectrumGetSelfConvolution(MSSpectrum* Spectrum, PMCSpectrumInfo* Spectrum
 }
 
 
-// ConvolveMassCorrectedSpectrum computes self-convolution for the given charge 
-// and parent mass.  
+// ConvolveMassCorrectedSpectrum computes self-convolution for the given charge
+// and parent mass.
 void ConvolveMassCorrectedSpectrum(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo)
 {
     MSSpectrum* Spectrum;
@@ -643,7 +646,7 @@ void ConvolveMassCorrectedSpectrum(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo)
         -1 * DALTON, (int)(0.5 * DALTON), (int)(-16.5 * DALTON)};
     int Offsets2[SELF_CONVOLVE2_OFFSETS] = {(int)(0.4 * DALTON), (int)(1.2 * DALTON), (int)(-17.5 * DALTON),
         -1 * DALTON, 4 * DALTON};
-	
+
 	if(GlobalOptions->PhosphorylationFlag)
 	{//for phos searches, these offsets produce much better results.
 		Offsets2[0] = (int)(0.2 * DALTON);
@@ -690,8 +693,8 @@ void ConvolveMassCorrectedSpectrum(PMCInfo* Info, PMCSpectrumInfo* SpectrumInfo)
         //    printf(">>Convolve[%d] = %.4f\n", OffsetIndex, Convolution);
         //}
     }
-    
-    if (Spectrum->Charge > 1)//I compute these values for phos charge 2, but don't use them for the PMC model.  
+
+    if (Spectrum->Charge > 1)//I compute these values for phos charge 2, but don't use them for the PMC model.
     {                        //they do go into the ChargeCorrection model, so they are still calculated.
         // Compute convolution of charge-1 and charge-2 peaks:
         for (OffsetIndex = 0; OffsetIndex < SELF_CONVOLVE2_OFFSETS; OffsetIndex++)
