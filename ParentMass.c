@@ -190,6 +190,8 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     Spectrum = SpectrumInfo->Spectrum;
 
     // Set the spectrum's mass:
+    printf("MZ %d, MZ * Charge %d, HM * Charge-1 %d\n", Spectrum->MZ,
+            Spectrum->MZ * SpectrumInfo->Charge,  HYDROGEN_MASS * (SpectrumInfo->Charge - 1));
     Spectrum->ParentMass = Spectrum->MZ * SpectrumInfo->Charge - HYDROGEN_MASS * (SpectrumInfo->Charge - 1); // base mass
     Charge = min(3, SpectrumInfo->Charge);
 
@@ -197,7 +199,15 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
     // Build PMCInfo structs for allowed masses.  We're always allowed a +1 or -1 isotope.
     // And we're allowed to move around by 0.1Da until our mass error (in PPM) becomes too large.
     PMRadius = (float)Spectrum->ParentMass;
+    printf("ParentMass %d as float %f\n",Spectrum->ParentMass, PMRadius);
     PMRadius *= GlobalOptions->ParentMassPPM / (float)ONE_MILLION;
+    printf("PMRadius %f, ParentMass - %d + %d\n",PMRadius,
+        (int)(Spectrum->ParentMass - PMRadius), (int)(Spectrum->ParentMass + PMRadius));
+
+    printf("PMRadius %f, ParentMass - %d + %d\n",PMRadius,
+        Spectrum->ParentMass - (int)(Spectrum->ParentMass - PMRadius),
+        (int)(Spectrum->ParentMass + PMRadius) - Spectrum->ParentMass);
+
     AddPMCNodes(SpectrumInfo, Spectrum->ParentMass,
         (int)(Spectrum->ParentMass - PMRadius), (int)(Spectrum->ParentMass + PMRadius));
 
