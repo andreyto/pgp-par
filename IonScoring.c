@@ -109,7 +109,7 @@ void AddPRMBayesianNode(PRMBayesianModel* Model, char* Name, int NodeType, int N
     Node = (PRMBayesianNode*)calloc(1, sizeof(PRMBayesianNode));
     Node->Type = NodeType;
     strncpy(Node->Name, Name, 256);
-    Node->MassOffset = (int)(NodeMassOffset * DALTON);
+    Node->MassOffset = rint(NodeMassOffset * DALTON);
     Node->Flag = NodeFlag;
     Node->Index = Model->NodeCount;
     Node->FragmentType = FragmentType;
@@ -296,7 +296,7 @@ int ComputeSpectrumIntensityThresholds(PRMBayesianModel* Model, MSSpectrum* Spec
         ThresholdCount = 4;
         Spectrum->IntensityThresholds = (float*)calloc(5, sizeof(float));
         StrongPeakIntensity = -1;
-        CutoffRank = (int)(Spectrum->ParentMass / (50 * DALTON));
+        CutoffRank = rint(Spectrum->ParentMass / (50 * DALTON));
         WeakRank = max(CutoffRank, Spectrum->PeakCount - 200);
         for (PeakIndex = 0; PeakIndex < Spectrum->PeakCount; PeakIndex++)
         {
@@ -339,7 +339,7 @@ int ComputeSpectrumIntensityThresholds(PRMBayesianModel* Model, MSSpectrum* Spec
         ThresholdCount = 3;
         Spectrum->IntensityThresholds = (float*)calloc(5, sizeof(float));
         StrongPeakIntensity = -1;
-        CutoffRank = (int)(Spectrum->ParentMass / (50 * DALTON));
+        CutoffRank = rint(Spectrum->ParentMass / (50 * DALTON));
         WeakRank = max(CutoffRank, Spectrum->PeakCount - 200);
         for (PeakIndex = 0; PeakIndex < Spectrum->PeakCount; PeakIndex++)
         {
@@ -415,8 +415,6 @@ int ComputeSpectrumIntensityThresholds(PRMBayesianModel* Model, MSSpectrum* Spec
 // intensity, comput binned intensity levels.  
 void PrepareSpectrumForIonScoring(PRMBayesianModel* Model, MSSpectrum* Spectrum, int ForceRefresh)
 {
-    int WeakPeakCount = 0;
-    float TotalIntensity = 0;
     int ThresholdCount;
     int PeakIndex;
     int IntensityLevel;
@@ -1529,7 +1527,7 @@ void SetSpectrumPRMScores(MSSpectrum* Spectrum, SpectrumTweak* Tweak)
     {
         fScore = GetIonPRMFeatures(Spectrum, Tweak, Model, PRM * PRM_BIN_SIZE, 0);
         //GetPRMFeatures(Spectrum, Tweak, Model, PRM * PRM_BIN_SIZE, 0);
-        Tweak->PRMScores[PRM] = (int)(fScore * 1000);
+        Tweak->PRMScores[PRM] = rint(fScore * 1000);
     }
     //DebugPrintPRMScores(Spectrum, Tweak);
 }
@@ -1628,7 +1626,6 @@ int ComputeMQScoreFeatures(MSSpectrum* Spectrum, Peptide* Match, float* MQFeatur
     PRMBayesianModel* Model;
     int PeptideLength;
     float CutScores[256];
-    int PRM = 0;  
     int AminoIndex;
     int PRMCount;
     float ScoreTotal;

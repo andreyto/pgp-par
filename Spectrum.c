@@ -426,7 +426,7 @@ int GuessSpectralCharge(MSSpectrum* Spectrum)
     for (Charge = 1; Charge < 10; Charge++)
     {
         ParentMass = (Spectrum->MZ * Charge) - (HYDROGEN_MASS * (Charge - 1));
-        Diff = abs(ParentMass - (int)(MeanMass*2));
+        Diff = abs(ParentMass - rint(MeanMass*2));
         if (Diff < BestDiff)
         {
             BestDiff = Diff;
@@ -499,13 +499,13 @@ int SpectrumHandleMS2ColonLine(int LineNumber, int FilePos, char* LineBuffer, vo
 			Spectrum->Charge = Charge;
 			Spectrum->FileCharge[Charge] = 1;
 			Spectrum->FileChargeFlag = 1;
-            Spectrum->ParentMass = (int)(ParentMass - HYDROGEN_MASS + 0.5); 
-            Spectrum->MZ = (int)((ParentMass + (Spectrum->Charge - 1)*HYDROGEN_MASS) / (float)Spectrum->Charge + 0.5);
+            Spectrum->ParentMass = rint(ParentMass - HYDROGEN_MASS); 
+            Spectrum->MZ = rint((ParentMass + (Spectrum->Charge - 1)*HYDROGEN_MASS) / (float)Spectrum->Charge);
         }
         else
         {
-            Spectrum->ParentMass = (int)(ParentMass + 0.5);
-            Spectrum->MZ = (int)(ParentMass + 0.5);
+            Spectrum->ParentMass = rint(ParentMass);
+            Spectrum->MZ = rint(ParentMass);
         }
         return 1;
     }
@@ -536,7 +536,6 @@ int SpectrumLoadMGFCallback(int LineNumber, int FilePos, char* LineBuffer, void*
     char* EQWordA;
     int Result;
 	int Charge;
-	char* AndWord;
     //
     Spectrum = (MSSpectrum*)UserData;
 
@@ -731,7 +730,6 @@ int GuessSpectrumFormatFromHeader(char* FilePath, MSSpectrum* Spectrum)
 int SpectrumLoadFromFile(MSSpectrum* Spectrum, FILE* DTAFile)
 {    
     int ReturnCode = 1;
-    int MS2ChargeLineSeen = 0;
     //
 
     // handle XML formats separately from line-based foramts:
@@ -957,7 +955,7 @@ void ComputeSpectrumIntensityCutoffs(MSSpectrum* Spectrum)
     int WeakPeakCount = 0;
     //
     TotalIntensity = 0;
-    CutoffRank = (int)(Spectrum->ParentMass / (100 * DALTON));
+    CutoffRank = rint(Spectrum->ParentMass / (100 * DALTON));
     for (PeakIndex = 0; PeakIndex < Spectrum->PeakCount; PeakIndex++)
     {
         if (Spectrum->Peaks[PeakIndex].IntensityRank >= CutoffRank)

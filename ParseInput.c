@@ -34,6 +34,8 @@
 #include <time.h>
 #include <string.h>
 #include <locale.h>
+#include <ctype.h>
+
 #include "Trie.h"
 #include "Utils.h"
 #include "Spectrum.h"
@@ -346,7 +348,7 @@ int ParseSpectraFromPKLFileCallback(int LineNumber, int FilePos, char* LineBuffe
     {
         return 1;
     }
-    IntValue = (int)atoi(StrC);
+    IntValue = atoi(StrC);
     if (Info->ScanNumber >= Info->FirstScan && (Info->LastScan < 0 || Info->ScanNumber <= Info->LastScan))
     {
         AddSpectrumToList(Info->InputFile, FilePos, Info->ScanNumber);
@@ -779,7 +781,7 @@ int ParseInputDB(char* CommandValue)
 
 int ParseInputPMTolerance(char* CommandValue)
 {
-    GlobalOptions->ParentMassEpsilon = (int)(atof(CommandValue) * MASS_SCALE);
+    GlobalOptions->ParentMassEpsilon = rint(atof(CommandValue) * MASS_SCALE);
     return 1;
 }
 
@@ -830,7 +832,7 @@ int ParseInputTagLength(char* CommandValue)
 int ParseInputIonTolerance(char* CommandValue)
 {
     //if (!CompareStrings(CommandName, "IonTolerance") || !CompareStrings(CommandName, "Ion_Tolerance"))
-    GlobalOptions->Epsilon = (int)(atof(CommandValue) * MASS_SCALE);
+    GlobalOptions->Epsilon = rint(atof(CommandValue) * MASS_SCALE);
     return 1;
 }
 
@@ -1009,14 +1011,7 @@ int ParseInputMod(char* CommandValue)
     // Default name is the mass (rounded to integer, with sign indicated)
     if (!StrName)
     {
-        if (MassDelta > 0)
-        {
-            sprintf(ModNameBuffer, "%+d", (int)(MassDelta + 0.5));
-        }
-        else
-        {
-            sprintf(ModNameBuffer, "%+d", (int)(MassDelta - 0.5));
-        }
+        sprintf(ModNameBuffer, "%+d", (int)rint(MassDelta));
         StrName = ModNameBuffer;
     }
     // If it's a fixed modification, then adjust the amino acid mass:
@@ -1027,7 +1022,7 @@ int ParseInputMod(char* CommandValue)
             AminoIndex = *Amino - 'A';
             if (AminoIndex >= 0 && AminoIndex < TRIE_CHILD_COUNT)
             {
-                PeptideMass[Amino[0]] += (int)(MassDelta * MASS_SCALE);
+                PeptideMass[Amino[0]] += rint(MassDelta * MASS_SCALE);
                 // We haven't yet called PopulateJumpingHash(), so that's all we need to do
             }
         }
@@ -1073,7 +1068,7 @@ int ParseInputMod(char* CommandValue)
                 if (!MassDeltas[AminoIndex][ModIndex].Flags)
                 {
                     strncpy(MassDeltas[AminoIndex][ModIndex].Name, StrName, 40);
-                    MassDeltas[AminoIndex][ModIndex].RealDelta = (int)(MassDelta * MASS_SCALE);
+                    MassDeltas[AminoIndex][ModIndex].RealDelta = rint(MassDelta * MASS_SCALE);
                     ROUND_MASS_TO_DELTA_BIN(MassDelta, Bin);
                     MassDeltas[AminoIndex][ModIndex].Delta = Bin;
                     MassDeltas[AminoIndex][ModIndex].Index = AllPTModCount;
@@ -1090,7 +1085,7 @@ int ParseInputMod(char* CommandValue)
         REPORT_ERROR_S(37, StrAminos);
         return 0;
     }
-    AllKnownPTMods[AllPTModCount].Mass = (int)(MassDelta * MASS_SCALE);
+    AllKnownPTMods[AllPTModCount].Mass = rint(MassDelta * MASS_SCALE);
     g_PTMLimit[AllPTModCount] = 2; // allow 2 per peptide by default
     // But, only allow ONE c-terminal one:
     if ((ModFlags & DELTA_FLAG_C_TERMINAL) || (ModFlags & DELTA_FLAG_N_TERMINAL))

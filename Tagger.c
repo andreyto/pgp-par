@@ -567,11 +567,6 @@ JumpNode* JumpingHashAddJump(int Mass, char Amino, MassDelta* Delta)
         printf("Mass %d amino %c delta %s\n", Mass, Amino, Delta->Name);
         return NULL;
     }
-    // HashBucket = (int)Mass;
-    //if (Mass > HashBucket + 0.5)
-    //{
-    //    HashBucket += 1;
-    //}
     NewNode = (JumpNode*)calloc(sizeof(JumpNode), 1);
     NewNode->Amino = Amino;
     NewNode->Mass = Mass;
@@ -729,7 +724,7 @@ void TagGraphPopulateEdges(TagGraph* Graph)
     MaxJumpSize = MaxAA;
     for (ModIndex = 0; ModIndex < AllPTModCount; ModIndex++)
     {
-        MaxJumpSize = (int)max(MassDeltaByIndex[MAX_PT_MODTYPE * MDBI_ALL_MODS + ModIndex]->RealDelta + MaxAA, MaxJumpSize);
+        MaxJumpSize = max(rint(MassDeltaByIndex[MAX_PT_MODTYPE * MDBI_ALL_MODS + ModIndex]->RealDelta + MaxAA), MaxJumpSize);
         for (AA = 0; AA < 26; AA++)
         {
             ModJumpCount += AllKnownPTMods[ModIndex].Allowed[AA];
@@ -1287,12 +1282,12 @@ void TagGraphBuildNodeIndex(TagGraph* Graph)
     int Bucket;
     int BucketMax;
     SafeFree(Graph->NodeIndex);
-    Graph->NodeIndexSize = ((int)(Graph->LastNode->Mass / DALTON)) + 1;
+    Graph->NodeIndexSize = rint(Graph->LastNode->Mass / DALTON) + 1;
     Graph->NodeIndex = (TagGraphNode**)calloc(sizeof(TagGraphNode*), Graph->NodeIndexSize);
     for (Node = Graph->FirstNode; Node; Node = Node->Next)
     {
-        BucketMax = (int)min(Graph->NodeIndexSize - 1, Node->Mass / DALTON + 1);
-        for (Bucket = max(0, ((int)Node->Mass / DALTON) - 1); Bucket <= BucketMax; Bucket++)
+        BucketMax = min(Graph->NodeIndexSize - 1, rint(Node->Mass / DALTON + 1));
+        for (Bucket = max(0, rint(Node->Mass / DALTON) - 1); Bucket <= BucketMax; Bucket++)
         {
             if (!Graph->NodeIndex[Bucket])
             {
@@ -2044,13 +2039,13 @@ TrieTag* TagGraphGenerateTags(TagGraph* Graph, MSSpectrum* Spectrum, int* TagCou
             }
             ////////////////////////////////////////////////////
             // If the total skew is large, penalize the tag's score:
-            Bin = (int)fabs((Tag->TotalSkew / 50.0) + 0.5);
+            Bin = rint(fabs((Tag->TotalSkew / 50.0)));
             if (Bin >= TagSkewBinCount)
             {
                 Bin = TagSkewBinCount - 1;
             }
             Tag->Score += TagSkewScore[Bin] * TagEdgeScoreMultiplier;
-            Bin = (int)fabs((Tag->TotalAbsSkew / 50.0) + 0.5);
+            Bin = rint(fabs((Tag->TotalAbsSkew / 50.0)));
             if (Bin >= TagSkewBinCount)
             {
                 Bin = TagSkewBinCount - 1;

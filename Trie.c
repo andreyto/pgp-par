@@ -693,7 +693,6 @@ Peptide* GetPeptideFromAnnotation(char* Annotation)
     MassDelta* Delta;
     int PRM = 0;
     char* BaseAnnotation;
-    int MaxModsFromParsedPeptide = 10;
     //
     if (!Annotation)
     {
@@ -1405,7 +1404,6 @@ void FindOptimalPTModPositions(MSSpectrum* Spectrum, char* Peptide,
             BestScore = 0; 
             BestSubDecoration = DecorationIndex;
             BYScore = GetIonPRMFeatures(Spectrum, Tweak, Model, Mass + AllDecorations[DecorationIndex].Mass, 0);
-            //BYScore = (int)(100 * GetPRMFeatures(Spectrum, Tweak, Model, Mass + AllDecorations[DecorationIndex].Mass, 0));
             if (PeptidePos)
             {
                 // Consider attaching nothing at this peptide:
@@ -1573,7 +1571,6 @@ Peptide* StoreSpectralMatch(MSSpectrum* Spectrum, Peptide* Match, int PeptideLen
 {
     Peptide* OldMatch;
     Peptide* CrummyScoreOldMatch;
-    int VerboseFlag = 0;
     int SameFlag = 0;
     SpectrumNode* Node = Spectrum->Node;
     int NTT;
@@ -1846,7 +1843,7 @@ Peptide* AddNewMatch(SearchInfo* Info, int FilePos, TrieTag* Tag, char* MatchedB
 #else
     Match->MatchQualityScore = LDAComputeMQScore(Spectrum, Match, Match->ScoreFeatures);
 #endif
-    Match->InitialScore = (int)(1000 * Match->MatchQualityScore);
+    Match->InitialScore = rint(1000 * Match->MatchQualityScore);
     Match->GenomicLocationEnd = GenomicEnd;
     Match->GenomicLocationStart = GenomicStart;
     if (Match->MatchQualityScore < ScoreToBeat)
@@ -2165,7 +2162,6 @@ int ScanFileWithTrie(SearchInfo* Info)
     int BytesRead;
     int OldPos;
     int PaddingDistance = 50;
-    int Verbose = 0;
     //
     Info->RecordNumber = 0;
     File = Info->DB->DBFile;
@@ -2441,7 +2437,7 @@ void WriteTagToString(TrieTag* Tag, char* Buffer, int IncludeMods)
     //
     Stuff = Buffer;
 
-    for (AminoPos = 0; AminoPos < (int)strlen(Tag->Tag); AminoPos++)
+    for (AminoPos = 0; AminoPos < strlen(Tag->Tag); AminoPos++)
     {
         *Stuff++ = Tag->Tag[AminoPos];
         if (IncludeMods)
@@ -2488,7 +2484,7 @@ void WriteMatchToString(Peptide* Match, char* Buffer, int IncludeMods)
         *Stuff++ = '-';
     }
     *Stuff++ = '.';
-    for (AminoPos = 0; AminoPos < (int)strlen(Match->Bases); AminoPos++)
+    for (AminoPos = 0; AminoPos < strlen(Match->Bases); AminoPos++)
     {
         *Stuff++ = Match->Bases[AminoPos];
         if (IncludeMods)

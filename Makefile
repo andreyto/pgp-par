@@ -2,7 +2,7 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .c .o
 CC = cc
-CFLAGS = -g -DDEBUG -D_CONSOLE -O3 -funroll-loops
+CFLAGS = -Wall -g -DDEBUG -D_CONSOLE -O3 -funroll-loops
 LDFLAGS = -lm -lexpat
 
 OBJS = base64.o BN.o BuildMS2DB.o ChargeState.o CMemLeak.o Errors.o ExonGraphAlign.o \

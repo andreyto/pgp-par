@@ -275,7 +275,7 @@ float GetPRMFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, BayesianModel* 
     //Spectrum->Charge = Tweak->Charge;
     //Spectrum->ParentMass = Tweak->ParentMass;
     ParentMass = Tweak->ParentMass;
-    SectorCutoffA = (int)(ParentMass * 0.5 + 0.5);
+    SectorCutoffA = rint(ParentMass * 0.5);
     // SECTOR_COUNT
     if (PRM > SectorCutoffA)
     {
@@ -389,7 +389,7 @@ float GetPRMFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, BayesianModel* 
     }
 
     // doubly-charged y:
-    Mass = (int)((MassY + HYDROGEN_MASS)/2 + 0.5);
+    Mass = rint((MassY + HYDROGEN_MASS)/2);
     //IntensityLevel = SeizePeaks(Spectrum, Mass, 0);
     GET_BIN_INTENSITY(Mass);
     g_PRMFeatures[IonY2] = IntensityLevel;
@@ -407,7 +407,7 @@ float GetPRMFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, BayesianModel* 
     }
 
     // doubly-charged b:
-    Mass = (int)((MassB + HYDROGEN_MASS)/2 + 0.5);
+    Mass = rint((MassB + HYDROGEN_MASS)/2);
     //IntensityLevel = SeizePeaks(Spectrum, Mass, 0);
     GET_BIN_INTENSITY(Mass);
     g_PRMFeatures[IonB2] = IntensityLevel; 
@@ -643,7 +643,7 @@ void GetCutFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, Peptide* Match,
         }
     }
 
-    SectorCutoffA = (int)(ParentMass * 0.5 + 0.5);
+    SectorCutoffA = rint(ParentMass * 0.5);
     //SectorCutoffB = (int)(ParentMass * 0.667 + 0.5);
     //SectorCutoffC = (int)(ParentMass * 0.667 + 0.5); // SECTOR_COUNT
     memset(g_VerboseCutFeatures, 0, sizeof(int) * MAX_PEPTIDE_LENGTH * CUT_FEATURE_COUNT);
@@ -771,7 +771,7 @@ void GetCutFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, Peptide* Match,
         }
 
         // doubly-charged y:
-        Mass = (int)((MassY + HYDROGEN_MASS)/2 + 0.5);
+        Mass = rint((MassY + HYDROGEN_MASS)/2);
         IntensityLevel = SeizePeaks(Spectrum, Mass, IonY2, AminoIndexY, 0, 0, 0);
         g_CutFeatures[CutFeaturesBaseIndex + IonY2] = IntensityLevel;
         GET_SECTOR(Mass);
@@ -789,7 +789,7 @@ void GetCutFeatures(MSSpectrum* Spectrum, SpectrumTweak* Tweak, Peptide* Match,
             }
         }
 
-        Mass = (int)((MassB + HYDROGEN_MASS)/2 + 0.5);
+        Mass = rint((MassB + HYDROGEN_MASS)/2);
         IntensityLevel = SeizePeaks(Spectrum, Mass, IonB2, AminoIndexB, 0, 0, 0);
         g_CutFeatures[CutFeaturesBaseIndex + IonB2] = IntensityLevel;
         GET_SECTOR(Mass);
@@ -1000,7 +1000,7 @@ void ScorpionSetPRMScores(MSSpectrum* Spectrum, SpectrumTweak* Tweak)
     for (PRM = 0; PRM < Tweak->PRMScoreMax; PRM++)
     {
         fScore = GetPRMFeatures(Spectrum, Tweak, Model, PRM * PRM_BIN_SIZE, 0);
-        Tweak->PRMScores[PRM] = (int)(fScore * 1000);
+        Tweak->PRMScores[PRM] = rint(fScore * 1000);
     }
 }
 
@@ -1010,7 +1010,7 @@ void FinishPRMTestRecord(char* RememberFileName, int* Scores, int MatchCount, in
     int ScoreIndex;
     int BestScore = -9999;
     int BestScoreIndex = 0;
-    int HistogramPoint;
+    int HistogramPoint = 0;
     //
     // Find the best score:
     for (ScoreIndex = 0; ScoreIndex < MatchCount; ScoreIndex++)
@@ -1208,7 +1208,7 @@ void TestPRMQuickScoringCallback(SpectrumNode* Node, int Charge, int ParentMass,
         PRMCount++;
 
 
-        Score += (int)(1000 * g_CutScores[AminoIndex]); 
+        Score += rint(1000 * g_CutScores[AminoIndex]); 
     }
     Score = Score / PRMCount;
     // Cheese to prevent running off the edge of the array:

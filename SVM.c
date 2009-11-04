@@ -80,7 +80,7 @@ float GetPValue(float MQScore)
 {
     int Bin;
     //
-    Bin = (int)((MQScore - g_SVMToPValueMin)*10 + 0.5);
+    Bin = rint((MQScore - g_SVMToPValueMin)*10);
     Bin = max(Bin, 0);
     Bin = min(Bin, g_PValueBinCount - 1);
     return g_SVMToPValue[Bin];
@@ -474,7 +474,7 @@ void TestPValue(char* FeatureVectorFileName)
         }
         Result = SVMClassify(PValueSVM, Coords, 1);
         fprintf(OutputFile, "%.4f\n", Result);
-        HistogramBin = (int)(Result*10 + 0.5) + 300;
+        HistogramBin = rint(Result*10) + 300;
         HistogramBin = max(0, min(999, HistogramBin));
         if (TrueFlag)
         {

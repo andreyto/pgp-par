@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 The nightly build and test suite is an important tool for releasing robust software.
 These tests run automatically every night on the latest code snapshot.  If the
