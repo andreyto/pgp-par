@@ -34,5 +34,7 @@ void RunSearch();
 void PerformSpectrumTweakage();
 void PerformTagGeneration();
 
+void DebugPrintSpectrumPeaks(MSSpectrum*);
+
 #endif // RUN_H
 
