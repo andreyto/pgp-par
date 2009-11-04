@@ -28,6 +28,7 @@
 //THE SOFTWARE WILL NOT INFRINGE ANY PATENT, TRADEMARK OR OTHER RIGHTS.
 #include "CMemLeak.h"
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -503,10 +504,12 @@ void PerformTagGeneration()
             {
                 WindowFilterPeaks(SNode->Spectrum, 0, 0);
                 IntensityRankPeaks(SNode->Spectrum);
+//                DebugPrintSpectrumPeaks(SNode->Spectrum);
             }
             if (!SNode->PMCFlag)
             {
                 TweakSpectrum(SNode);
+//                DebugPrintPRMBayesianModel(PRMModelCharge2);
             }
             TotalTagCount = 0;
             for (TweakIndex = 0; TweakIndex < TWEAK_COUNT; TweakIndex++)
@@ -524,6 +527,12 @@ void PerformTagGeneration()
                 TagGraphAddNodes(SNode->Spectrum->Graph, SNode->Spectrum);
                 TagGraphScorePRMNodes(NULL, SNode->Spectrum->Graph, SNode->Spectrum, Tweak);
                 TagGraphPopulateEdges(SNode->Spectrum->Graph);
+/*                printf("**iteration %d,", TweakIndex);
+                printf(" Assumed Charge %d,", Tweak->Charge);
+                printf(" Guessed PM %d", Tweak->ParentMass);
+                printf("\n");
+                DebugPrintTagGraphEdges(SNode->Spectrum->Graph);
+*/
                 Tags = TagGraphGenerateTags(SNode->Spectrum->Graph, SNode->Spectrum, &TagsGenerated, TagCount, Tweak, TAG_EDGE_SCORE_MULTIPLIER, NULL);
 
                 for (TagIndex = 0; TagIndex < min(TagCount, TagsGenerated); TagIndex++)
@@ -755,7 +764,7 @@ TrieNode* ConstructTagsExternalTagger(TrieNode* Root, SpectrumNode* Node, int Ta
                 NewTag->ParentMass = Node->Tweaks[TweakIndex].ParentMass;
                 NewTag->PSpectrum = Node->Spectrum;
                 NewTag->Tweak = Node->Tweaks;
-                NewTag->PrefixMass = (int)(PrefixMass * MASS_SCALE + 0.5);
+                NewTag->PrefixMass = rint(PrefixMass * MASS_SCALE);
                 NewTag->SuffixMass = Node->Spectrum->ParentMass - NewTag->PrefixMass;
                 NewTag->Score = Probability;
                 for (TempAA = NewTag->Tag; *TempAA; TempAA++)
@@ -1256,8 +1265,8 @@ void PerformSpectrumTweakage()
 //fritz the charge state guessing, and tagging.  So we remove it.
 void AttemptParentMassPeakRemoval(MSSpectrum* Spectrum)
 {
-    int MostIntensePeakIndex;
-    int MostIntenseMass;
+    int MostIntensePeakIndex = 0;
+    int MostIntenseMass = 0;
     int PeakIndex;
     float MostIntense = 0.0;
     float NextMostIntense = 0.0;
@@ -1319,4 +1328,20 @@ void RestoreParentMassPeakRemoval(MSSpectrum* Spectrum)
 		return;
 	}
 	Spectrum->Peaks[Spectrum->RemovedPeakIndex].Intensity = Spectrum->RemovedPeakIntensity;
+}
+
+void DebugPrintSpectrumPeaks(MSSpectrum* Spectrum)
+{
+    int PeakIndex;
+    FILE* OutputFile;
+
+    OutputFile = fopen("PeakDump.txt", "wb");
+    for (PeakIndex = 0; PeakIndex < Spectrum->PeakCount; PeakIndex++)
+    {
+        fprintf(OutputFile, "%d\t", Spectrum->Peaks[PeakIndex].Mass);
+        fprintf(OutputFile, "%.2f\t", Spectrum->Peaks[PeakIndex].Intensity);
+        fprintf(OutputFile, "\n");
+        fflush(OutputFile);
+    }
+
 }
