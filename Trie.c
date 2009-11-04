@@ -1721,6 +1721,11 @@ Peptide* AddNewMatch(SearchInfo* Info, int FilePos, TrieTag* Tag, char* MatchedB
     // Optimally place the prefix and suffix PTMs:
     VerboseFlag = 0;
 
+    /* Used for debug fprintf below */
+    char peptide[PeptideLength+1];
+    strncpy(peptide, MatchedBases, PeptideLength);
+    peptide[PeptideLength] = 0;
+
     ////////////////////////////////////////////////////////////////////////////////////////
     // Temporarily adjust the charge and parent mass to reflect this candidate:
     Spectrum->Charge = Tag->Charge;
@@ -1844,6 +1849,8 @@ Peptide* AddNewMatch(SearchInfo* Info, int FilePos, TrieTag* Tag, char* MatchedB
     Match->MatchQualityScore = LDAComputeMQScore(Spectrum, Match, Match->ScoreFeatures);
 #endif
     Match->InitialScore = rint(1000 * Match->MatchQualityScore);
+    fprintf(stderr,"Tag %s pep %s MatchQualScore %f InitScore %d\n",
+            Tag->Tag, peptide, Match->MatchQualityScore,Match->InitialScore);
     Match->GenomicLocationEnd = GenomicEnd;
     Match->GenomicLocationStart = GenomicStart;
     if (Match->MatchQualityScore < ScoreToBeat)
