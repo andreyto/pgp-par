@@ -250,11 +250,11 @@ void ComputePMCFeatures(PMCSpectrumInfo* SpectrumInfo)
             AverageConvolution += Info->Convolve[OffsetIndex];
             MaxConvolution = max(MaxConvolution, Info->Convolve[OffsetIndex]);
         }
-        printf("ParentMass.c::ComputePMCFeatures. Iteration on PM %d\n", Info->ParentMass);
-        printf("Average convolution (summation) %f\n", AverageConvolution);
+//        printf("ParentMass.c::ComputePMCFeatures. Iteration on PM %d\n", Info->ParentMass);
+//        printf("Average convolution (summation) %f\n", AverageConvolution);
         AverageConvolution /= (float)SELF_CONVOLVE_OFFSETS;
         AverageConvolution = max(EPSILON, AverageConvolution);
-        printf("Average convolution (final) %f\n", AverageConvolution);
+//        printf("Average convolution (final) %f\n", AverageConvolution);
         MaxConvolution = max(EPSILON, MaxConvolution);
         for (OffsetIndex = 0; OffsetIndex < SELF_CONVOLVE_OFFSETS; OffsetIndex++)
         {
@@ -443,7 +443,7 @@ void PerformPMC(PMCSpectrumInfo* SpectrumInfo)
 #endif
         }
     }
-    DebugPrintPMCSpectrumInfo(SpectrumInfo,DebugLevelHIGH);
+//    DebugPrintPMCSpectrumInfo(SpectrumInfo,DebugLevelHIGH);
     // Remember the best one:
     for (Info = SpectrumInfo->Head; Info; Info = Info->Next)
     {
