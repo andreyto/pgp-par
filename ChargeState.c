@@ -661,7 +661,7 @@ void TrainOnOracleFile(char* OracleFileName, char* SpectrumDir, TrainingCallback
             continue;
         }
 
-        ParentMass = (int)(atof(Field) * MASS_SCALE + 0.5);
+        ParentMass = rint(atof(Field) * MASS_SCALE);
         Field = strtok(NULL, "\t");
         if (!Field)
         {

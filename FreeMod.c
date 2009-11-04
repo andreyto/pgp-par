@@ -575,7 +575,7 @@ int SeekMatch1PTM(SearchInfo* Info, char* Buffer, int BufferLen, int MatchMass, 
                                 AbsSkew = abs(Skew);
                                 if (AbsSkew <= GlobalOptions->Epsilon)
                                 {                                    
-                                    MatchScoreWithDelta = MatchScore + (int)(DeltaNode->Delta->Score * DELTA_SCORE_SCALER);
+                                    MatchScoreWithDelta = MatchScore + rint(DeltaNode->Delta->Score * DELTA_SCORE_SCALER);
                                     if (MatchScoreWithDelta > ScoreToBeat)
                                     {
                                         Match = Add1ModMatch(Info, Buffer, BufferLen, SuffixEndPos, SuffixStartPos, PrefixLength, MatchScoreWithDelta, DeltaNode->Delta, Tweak, FilePos, ExtraPrefixChar);
@@ -1565,7 +1565,7 @@ int MSAlignmentGeneral(SearchInfo* Info, char* Buffer, int BufferEnd, int MatchM
     int Result;
     int ReturnAmino = -1;
     int AminoIndex;
-    int AA;
+    int AA = 0;
     int AminoBlock = 0;
     int NodeIndex;
     int CellIndex;
@@ -1578,10 +1578,10 @@ int MSAlignmentGeneral(SearchInfo* Info, char* Buffer, int BufferEnd, int MatchM
     int AminoBlockSize;
     int ZSize = MaxMods + 1;
     int MaxAmino;
-    int AAMass;
+    int AAMass = 0;
     int AA2Mass;
-    int BackEdgeDoubleIndex;
-    int BackEdgeTripleIndex;
+    int BackEdgeDoubleIndex = 0;
+    int BackEdgeTripleIndex = 0;
     int PrevCellIndex;
     int Score;
     int PRM;
@@ -1592,7 +1592,7 @@ int MSAlignmentGeneral(SearchInfo* Info, char* Buffer, int BufferEnd, int MatchM
     int Mass;
     int BackNodeIndex;
     int BackNodeDirection;
-    int Delta;
+    int Delta = 0;
     int MinPossibleDelta = -130000; // W->G mutation
     int MaxPossibleDelta = GlobalOptions->MaxPTMDelta * MASS_SCALE;
     int DeltaBin;
@@ -1864,7 +1864,7 @@ int MSAlignmentGeneral(SearchInfo* Info, char* Buffer, int BufferEnd, int MatchM
                             if (abs(Skew) <= GlobalOptions->Epsilon)
                             {
                                 PrevCellIndex = AminoBlock - AminoBlockSize + (BackNodeIndex * ZSize) + ModCountIndex - 1;
-                                Score = g_SkewPenalty[AbsSkew] + (int)(DeltaNode->Delta->Score * DELTA_SCORE_SCALER) + ScoreTable[PrevCellIndex];
+                                Score = g_SkewPenalty[AbsSkew] + rint(DeltaNode->Delta->Score * DELTA_SCORE_SCALER) + ScoreTable[PrevCellIndex];
                                 if (Score > ScoreTable[CellIndex])
                                 {
                                     ScoreTable[CellIndex] = Score;
@@ -2231,11 +2231,11 @@ int ExtendMatchRightwardDuo(SearchInfo* Info, char* Buffer, int BufferEnd, int M
                     {
                         if (StartAminoIndex == AminoIndex)
                         {
-                            Score = g_SkewPenalty[AbsSkew] + (int)(DeltaNode->Delta->Score * DELTA_SCORE_SCALER);
+                            Score = g_SkewPenalty[AbsSkew] + rint(DeltaNode->Delta->Score * DELTA_SCORE_SCALER);
                         }
                         else
                         {
-                            Score = g_SkewPenalty[AbsSkew] + (int)(DeltaNode->Delta->Score * DELTA_SCORE_SCALER + PrefixTable[StartAminoIndex*MAX_ROWS + EndAminoIndex]);
+                            Score = g_SkewPenalty[AbsSkew] + rint(DeltaNode->Delta->Score * DELTA_SCORE_SCALER + PrefixTable[StartAminoIndex*MAX_ROWS + EndAminoIndex]);
                         }
                         Score += StartPointPenalty[StartAminoIndex - 1];
                         //Score += Spectrum->PRMScores[PRM];
@@ -2348,7 +2348,7 @@ int ExtendMatchRightwardDuo(SearchInfo* Info, char* Buffer, int BufferEnd, int M
                     //Skew = abs(DeltaNode->RealDelta - Delta);
                     if (Skew < GlobalOptions->Epsilon)
                     {
-                        Score = CellScore + (int)(DeltaNode->Delta->Score * DELTA_SCORE_SCALER) + SuffixTable[(AminoIndex + 1)*MAX_ROWS + EndAminoIndex] + g_SkewPenalty[Skew / 10];
+                        Score = CellScore + rint(DeltaNode->Delta->Score * DELTA_SCORE_SCALER) + SuffixTable[(AminoIndex + 1)*MAX_ROWS + EndAminoIndex] + g_SkewPenalty[Skew / 10];
                         Score += EndPointPenalty[EndAminoIndex - 1];
                         Spectrum->CandidatesScored++;
                         GlobalStats->CandidatesScored++;
@@ -2507,7 +2507,7 @@ void AddNewMatchDuo(SearchInfo* Info, SpectrumTweak* Tweak, char* Buffer, int Sc
             }
             // Make a variant-match:
             VariantMatch = ClonePeptide(Match);
-            VariantMatch->InitialScore = (int)RunningScore;
+            VariantMatch->InitialScore = rint(RunningScore);
             BestDiff = -1;
             VariantMatch->ModType[0] = NULL;
             for (Node = MassDeltaByMass[Match->Bases[AminoIndex-1]-'A'][Match->ModType[0]->Delta]; Node; Node = Node->Next)
@@ -2585,7 +2585,7 @@ void AddNewMatchDuo(SearchInfo* Info, SpectrumTweak* Tweak, char* Buffer, int Sc
 
                 // Make a variant-match:
                 VariantMatch = ClonePeptide(Match);
-                VariantMatch->InitialScore = (int)RunningScore;
+                VariantMatch->InitialScore = rint(RunningScore);
                 BestDiff = -1;
                 VariantMatch->ModType[ModCount-1] = NULL;
                 for (Node = MassDeltaByMass[Match->Bases[AminoIndex]-'A'][Match->ModType[ModCount-1]->Delta]; Node; Node = Node->Next)
