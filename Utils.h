@@ -98,17 +98,17 @@ typedef int (*QSortCompare)(const void*, const void*);
 
 #define FAST_ROUND(Float, Int)\
 {\
-    Int = (int)((Float) + 0.5);\
+    Int = rint(Float);\
 }
 
 #define ROUND_MASS(FloatMass, IntMass)\
 {\
-    (IntMass) = (int)(FloatMass * 1000 + 0.5);\
+    (IntMass) = rint(FloatMass * 1000);\
 }
 
 #define ROUND_MASS_TO_DELTA_BIN(x, bin) \
 {\
-(bin) = (int)(((x) + 200000) / 1000.0 + 0.5);\
+(bin) = rint(((x) + 200000) / 1000.0);\
 }
 
 #define MAX_FILENAME_LEN 1024
