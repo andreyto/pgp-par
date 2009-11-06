@@ -629,11 +629,11 @@ int IonScoringGetSector(PRMBayesianNode* Node, int ParentMass, int Mass)
         break;
     case 1:
         // Three sectors, LOW and MEDIUM and HIGH:
-        if (Mass < ParentMass * 0.33)
+        if (Mass < rint(ParentMass * 0.33))
         {
             return 0;
         }
-        if (Mass < ParentMass * 0.66)
+        if (Mass < rint(ParentMass * 0.66))
         {
             return 1;
         }
@@ -641,15 +641,15 @@ int IonScoringGetSector(PRMBayesianNode* Node, int ParentMass, int Mass)
         break;
     case 2:
         // Four sectors:
-        if (Mass < ParentMass * 0.25)
+        if (Mass < rint(ParentMass * 0.25))
         {
             return 0;
         }
-        if (Mass < ParentMass * 0.5)
+        if (Mass < rint(ParentMass * 0.5))
         {
             return 1;
         }
-        if (Mass < ParentMass * 0.75)
+        if (Mass < rint(ParentMass * 0.75))
         {
             return 2;
         }
@@ -657,19 +657,19 @@ int IonScoringGetSector(PRMBayesianNode* Node, int ParentMass, int Mass)
         break;
     case 3:
         // Five sectors:
-        if (Mass < ParentMass * 0.2)
+        if (Mass < rint(ParentMass * 0.2))
         {
             return 0;
         }
-        if (Mass < ParentMass * 0.4)
+        if (Mass < rint(ParentMass * 0.4))
         {
             return 1;
         }
-        if (Mass < ParentMass * 0.6)
+        if (Mass < rint(ParentMass * 0.6))
         {
             return 2;
         }
-        if (Mass < ParentMass * 0.8)
+        if (Mass < rint(ParentMass * 0.8))
         {
             return 3;
         }
