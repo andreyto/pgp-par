@@ -152,7 +152,7 @@ TagMaster MasterTaggingModel;
 TagGraph* ConstructTagGraph(MSSpectrum* Spectrum)
 {
     TagGraph* Graph;
-    Graph = (TagGraph*)calloc(sizeof(TagGraph), 1);
+    Graph = (TagGraph*)calloc(1, sizeof(TagGraph));
     return Graph;
 }
 
@@ -302,7 +302,7 @@ void TagGraphAddNodes(TagGraph* Graph, MSSpectrum* Spectrum)
         // is 57)
         if (NodeMass > -GlobalOptions->Epsilon && (NodeMass < GlobalOptions->Epsilon || NodeMass > MinPRMMass) && (NodeMass < Spectrum->ParentMass + GlobalOptions->ParentMassEpsilon))
         {
-            Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+            Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
             Node->NodeType = evGraphNodeB;
             Node->OriginalPeakIndex = PeakIndex;
             Node->IntensityRankB = Spectrum->Peaks[PeakIndex].IntensityRank;
@@ -314,7 +314,7 @@ void TagGraphAddNodes(TagGraph* Graph, MSSpectrum* Spectrum)
             INSERT_TAGNODE_ASC(FirstBNode, LastBNode, Node);
 			if (0)//(Spectrum->Charge > 2 && Spectrum->Peaks[PeakIndex].IntensityRank < 16)
 			{ //charge 3 spectra have high intensity doubly-charged peaks. I need to put those into the graph
-				Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+				Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
 				Node->NodeType = evGraphNodeB;
 				Node->OriginalPeakIndex = PeakIndex;
 				Node->IntensityRankB = Spectrum->Peaks[PeakIndex].IntensityRank;
@@ -330,7 +330,7 @@ void TagGraphAddNodes(TagGraph* Graph, MSSpectrum* Spectrum)
         NodeMass = Spectrum->ParentMass - Spectrum->Peaks[PeakIndex].Mass;
         if (NodeMass > -GlobalOptions->Epsilon && (NodeMass < GlobalOptions->Epsilon || NodeMass > MinPRMMass) && (NodeMass < Spectrum->ParentMass + GlobalOptions->ParentMassEpsilon))
         {
-            Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+            Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
             Node->NodeType = evGraphNodeY;
             Node->OriginalPeakIndex = PeakIndex;
             Node->IntensityRankY = Spectrum->Peaks[PeakIndex].IntensityRank;
@@ -342,7 +342,7 @@ void TagGraphAddNodes(TagGraph* Graph, MSSpectrum* Spectrum)
             INSERT_TAGNODE_DESC(FirstYNode, LastYNode, Node);
 			if (0)//(Spectrum->Charge > 2 && Spectrum->Peaks[PeakIndex].IntensityRank < 16)
 			{ //charge 3 spectra have high intensity doubly-charged peaks. I need to put those into the graph
-				Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+				Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
 				Node->NodeType = evGraphNodeY;
 				Node->OriginalPeakIndex = PeakIndex;
 				Node->IntensityRankY = Spectrum->Peaks[PeakIndex].IntensityRank;
@@ -471,7 +471,7 @@ void TagGraphAddEndpointNodes(TagGraph* Graph, MSSpectrum* Spectrum)
     int ModType;
 
     // LEFT edge:
-    Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+    Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
     Node->Mass = 0;
     Node->NodeType = evGraphNodeLeft;
     Node->IonTypeFlags = ION_FLAG_B;
@@ -484,7 +484,7 @@ void TagGraphAddEndpointNodes(TagGraph* Graph, MSSpectrum* Spectrum)
     {
         if (AllKnownPTMods[ModType].Flags & DELTA_FLAG_N_TERMINAL)
         {
-            Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+            Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
             Node->Mass = AllKnownPTMods[ModType].Mass;
             Node->NodeType = evGraphNodeLeftMod;
             Node->IonTypeFlags = ION_FLAG_B;
@@ -497,7 +497,7 @@ void TagGraphAddEndpointNodes(TagGraph* Graph, MSSpectrum* Spectrum)
         }
     }
 
-    Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+    Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
     Node->Mass = Spectrum->ParentMass - PARENT_MASS_BOOST;
     Node->NodeType = evGraphNodeRight;
     Node->IonTypeFlags = ION_FLAG_Y;
@@ -509,7 +509,7 @@ void TagGraphAddEndpointNodes(TagGraph* Graph, MSSpectrum* Spectrum)
     {
         if (AllKnownPTMods[ModType].Flags & DELTA_FLAG_C_TERMINAL)
         {
-            Node = (TagGraphNode*)calloc(sizeof(TagGraphNode), 1);
+            Node = (TagGraphNode*)calloc(1, sizeof(TagGraphNode));
             Node->Mass = Spectrum->ParentMass - PARENT_MASS_BOOST - AllKnownPTMods[ModType].Mass;
             Node->NodeType = evGraphNodeRightMod;
             Node->IonTypeFlags = ION_FLAG_Y;
@@ -567,7 +567,7 @@ JumpNode* JumpingHashAddJump(int Mass, char Amino, MassDelta* Delta)
         printf("Mass %d amino %c delta %s\n", Mass, Amino, Delta->Name);
         return NULL;
     }
-    NewNode = (JumpNode*)calloc(sizeof(JumpNode), 1);
+    NewNode = (JumpNode*)calloc(1, sizeof(JumpNode));
     NewNode->Amino = Amino;
     NewNode->Mass = Mass;
     NewNode->Delta = Delta;  // The PTM for this jump, or -1 if there's no mod.
@@ -607,9 +607,9 @@ void PopulateJumpingHash()
     FreeJumpingHash(); // free any old stuff
 
     // Allocate memory:
-    JumpingHash = (JumpNode**)calloc(sizeof(JumpNode*), MAX_JUMPING_HASH);
+    JumpingHash = (JumpNode**)calloc(MAX_JUMPING_HASH, sizeof(JumpNode*));
     SafeFree(JumpsByAA);
-    JumpsByAA = (JumpNode**)calloc(sizeof(JumpNode*), AMINO_ACIDS * GlobalOptions->DeltasPerAA);
+    JumpsByAA = (JumpNode**)calloc(AMINO_ACIDS * GlobalOptions->DeltasPerAA, sizeof(JumpNode*));
 
     memset(JumpsByAA, 0, sizeof(JumpNode*) * AMINO_ACIDS * GlobalOptions->DeltasPerAA);
     for (Amino = 'A'; Amino<='Y'; Amino++)
@@ -781,7 +781,7 @@ void TagGraphPopulateEdges(TagGraph* Graph)
                         }
                     }
                     // Allocate a TagGraphEdge, initialize it, and add it to this node's list of edges:
-                    Edge = (TagGraphEdge*)calloc(sizeof(TagGraphEdge), 1);
+                    Edge = (TagGraphEdge*)calloc(1, sizeof(TagGraphEdge));
                     Edge->Jump = JNode;
                     Edge->FromNode = Node;
                     Edge->ToNode = OtherNode;
@@ -1283,7 +1283,7 @@ void TagGraphBuildNodeIndex(TagGraph* Graph)
     int BucketMax;
     SafeFree(Graph->NodeIndex);
     Graph->NodeIndexSize = rint(Graph->LastNode->Mass / DALTON) + 1;
-    Graph->NodeIndex = (TagGraphNode**)calloc(sizeof(TagGraphNode*), Graph->NodeIndexSize);
+    Graph->NodeIndex = (TagGraphNode**)calloc(Graph->NodeIndexSize, sizeof(TagGraphNode*));
     for (Node = Graph->FirstNode; Node; Node = Node->Next)
     {
         BucketMax = min(Graph->NodeIndexSize - 1, rint(Node->Mass / DALTON + 1));
@@ -1476,7 +1476,7 @@ void TestTaggingCallback(SpectrumNode* Node, int Charge, int ParentMass, Peptide
         if (!Charge)
         {
             // Initialization call:
-            TrueTagRankHistogram = (int*)calloc(sizeof(int), 512);
+            TrueTagRankHistogram = (int*)calloc(512, sizeof(int));
         }
         else
         {
@@ -1927,7 +1927,7 @@ TrieTag* TagGraphGenerateTags(TagGraph* Graph, MSSpectrum* Spectrum, int* TagCou
     TagAllocation = 1024;
     if (!AllTags)
     {
-        AllTags = (TrieTag*)calloc(sizeof(TrieTag), TagAllocation);
+        AllTags = (TrieTag*)calloc(TagAllocation, sizeof(TrieTag));
     }
     NodeIndex = 0;
     EdgeIndex = -1;

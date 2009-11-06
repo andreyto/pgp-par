@@ -1862,7 +1862,7 @@ Peptide* AddNewMatch(SearchInfo* Info, int FilePos, TrieTag* Tag, char* MatchedB
     // Store the match details, if requested:
     if (GlobalOptions->ReportAllMatches)
     {
-        PepInfo = (PeptideMatch*)calloc(sizeof(PeptideMatch), 1);
+        PepInfo = (PeptideMatch*)calloc(1, sizeof(PeptideMatch));
         PepInfo->FilePos = FilePos;
         PepInfo->RecordNumber = Info->RecordNumber;
         PepInfo->Tag = Tag;
