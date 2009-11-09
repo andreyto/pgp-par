@@ -1456,7 +1456,7 @@ void OutputMS2Exon(MS2Builder* Builder, MS2Gene* Gene, MS2Exon* Exon)
 
     if (Exon->Sequence)
     {
-        fprintf(File, "    <ExonSequence Length=\"%d\">%s</ExonSequence>\n", strlen(Exon->Sequence), Exon->Sequence);
+        fprintf(File, "    <ExonSequence Length=\"%zd\">%s</ExonSequence>\n", strlen(Exon->Sequence), Exon->Sequence);
     }
     //fprintf(File, "    <ExonSequence>%s</ExonSequence>\n", Exon->Sequence);
     // Write out all the edges linking back from this exon to lower-numbered exons:
