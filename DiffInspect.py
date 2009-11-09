@@ -36,18 +36,18 @@ class SpectrumResult(ResultsParser.ResultsParser):
             print "ERROR: trying to add a PSM with a rank already in use."
             return
         self.PSMs[Rank] = Bits
-    def GetPeptideRanking(self):
+    def GetPeptides(self):
         """Parameters: none
-        Return: a dictionary with Rank->Bits[Annotation]
+        Return: a list of peptides for all these PSMs
         Description: This gives you quick access to some of the result.
         if it so happens that this is all you care about
         """
-        Dictionary = {}
+        List = []
         for (Rank, Bits) in self.PSMs.items():
             Annotation = Bits[self.Columns.Annotation]
             Peptide = GetPeptideFromModdedName(Annotation)
-            Dictionary[Rank] = Peptide.Aminos
-        return Dictionary
+            List.append( Peptide.Aminos)
+        return List
 
 
 
@@ -87,18 +87,32 @@ class FinderClass(ResultsParser.ResultsParser):
                 continue # no more can be done on this spectrum
             ResultB = DictionaryB[Key]
             #now how deep do we want to go.
-            PeptidesA = ResultA.GetPeptideRanking()
-            PeptidesB = ResultB.GetPeptideRanking()
+            PeptidesA = ResultA.GetPeptides()
+            PeptidesB = ResultB.GetPeptides()
             Disagreements = self.ComparePeptideLists(PeptidesA, PeptidesB)
             if Disagreements: #shortcut because I expect zero
                 Handle.write( "I got %s disagreements for %s, %s\n"%(Disagreements, File, Spectrum))
-                StringA = self.DictionaryToString(PeptidesA)
-                StringB = self.DictionaryToString(PeptidesB)
-                Handle.write( "%s\n"%StringA)
-                Handle.write( "%s\n"%StringB)
-                Handle.write("\n\n")
+                #now that we have disagreements, we should look more closely
+                PeptidesA.sort()# I sort here because I don't want to waste the time otherwise
+                PeptidesB.sort()
+                StringA = self.ListToString(PeptidesA)
+                StringB = self.ListToString(PeptidesB)
+                Handle.write("%s\n"%StringA)
+                Handle.write("%s\n"%StringB)
         Handle.close()
         
+
+    def ListToString(self, List):
+        """Paramters: a List with simple values
+        Return: a string 
+        Description: turns it into a string for printing
+        """
+        String = ""
+        for Item in List:
+            String += "%s, "%Item
+        String = String[:-2] #chomp off the 2 last characters
+        return String
+
         
     def DictionaryToString(self, Dictionary):
         """Paramters: a dictionary with simple key value pairs
@@ -114,23 +128,42 @@ class FinderClass(ResultsParser.ResultsParser):
         String = String[:-1] #chomp off the last character
         return String
     
-    def ComparePeptideLists(self, PeptidesA, PeptidesB):
-        """Parameters: Two dictionaries where rank->annotation
+    def ComparePeptideLists(self, ListA, ListB):
+        """Parameters: Two lists of amino acid strings, no order required
         Return: Int - the number of disagreements
         Description: simply compare the two lists.  I expect exactly
         the same thing.
         """
         Disagreements = 0
-        for Rank in PeptidesA:
-            A = PeptidesA[Rank]
-            if not PeptidesB.has_key(Rank):
-                Disagreements += 1
-                continue
-            B = PeptidesB[Rank]
-            if not A == B:
-                Disagreements +=1
+        for Item in ListA:
+            if not Item in ListB:
+                #now we don't find it.  WE should try some L->I and K->Q conversions
+                FoundWithReplacements = self.FindWithReplacements(Item, ListB)
+                if not FoundWithReplacements:
+                    Disagreements += 1
+                
         return Disagreements
-        
+
+
+    def FindWithReplacements(self, Item, List):
+        """Parameters: A string, a list of strings
+        Return: 0/1 found or not
+        Description: WE can't find the string in the list, but are
+        curious about if any isomers of it may exist.  You see Inspect
+        can't tell the difference between I and L, or Q and K.  So let's do
+        some replacement, and see how things work.
+        """
+        NewList = []
+        NewItem = Item.replace("I", "L")
+        NewItem = NewItem.replace("Q", "K")
+        for ListMember in List:
+            NewString = ListMember.replace("I", "L")
+            NewString = NewString.replace("Q", "K")
+            NewList.append(NewString)
+        #now check to see if it's there
+        if NewItem in NewList:
+            return 1
+        return 0
        
     def ParseInspectCallback(self, FilePath):
         """Called by the ResultsParser.ProcessResultsFiles
@@ -166,7 +199,7 @@ class FinderClass(ResultsParser.ResultsParser):
         Handle.close()
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "a:b:1")
+        (Options, Args) = getopt.getopt(Arguments, "a:b:w:1")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
