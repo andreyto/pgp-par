@@ -918,7 +918,7 @@ void SSDatabaseScan(char* TrieFileName, char* IndexFileName, char* SpliceDBFileN
     int BlockIndex = 0;
     FILE* OutputFile;
     int RecordNumber;
-    int BlockFirstRecordNumber;
+    int BlockFirstRecordNumber = 0;
     //
     TrieFile = fopen(TrieFileName, "rb");
     if (!TrieFile)

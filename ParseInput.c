@@ -35,6 +35,9 @@
 #include <string.h>
 #include <locale.h>
 #include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "Trie.h"
 #include "Utils.h"
@@ -43,7 +46,6 @@
 #include "Score.h"
 #include "Tagger.h"
 #include "FreeMod.h"
-#include "CMemLeak.h"
 #include "SVM.h"
 #include "BN.h"
 #include "Run.h"
@@ -519,7 +521,7 @@ void ProcessInputCommandSpectra(char* FileName, int FirstScan, int LastScan)
             {
                 sprintf(FileNameBuffer, "%s%s", DirBuffer, wFileFindData.cFileName);
                 StatResult = stat(FileNameBuffer, &StatBuffer);
-                if (StatBuffer.st_mode & _S_IFREG)
+                if (S_ISREG(StatBuffer.st_mode))
                 {
                     //printf("Adding file to list: '%s'\n", FileNameBuffer);
                     AddSpectraToList(FileNameBuffer, FirstScan, LastScan);
@@ -581,7 +583,7 @@ void ProcessInputCommandSpectra(char* FileName, int FirstScan, int LastScan)
             }
             sprintf(FileNameBuffer, "%s%s", DirBuffer, ep->d_name);
             StatResult = stat(FileNameBuffer, &StatBuffer);
-            if (StatBuffer.st_mode & S_IFREG)
+            if (S_ISREG(StatBuffer.st_mode))
             {
                 AddSpectraToList(FileNameBuffer, FirstScan, LastScan);
             }

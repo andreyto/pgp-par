@@ -2,7 +2,7 @@ SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .c .o
 CC = cc
-CFLAGS = -Wall -g -DDEBUG -D_CONSOLE -O3 -funroll-loops
+CFLAGS = -std=c99 -Wall -g -DDEBUG -D_CONSOLE -O3 -funroll-loops
 LDFLAGS = -lm -lexpat
 
 OBJS = base64.o BN.o BuildMS2DB.o ChargeState.o CMemLeak.o Errors.o ExonGraphAlign.o \
@@ -23,7 +23,7 @@ all: $(EXE)
 .c.o: $(HDRS)
 	$(CC) $(CFLAGS) -c $<
 
-$(EXE): $(OBJS)
+$(EXE): $(OBJS) $(HDRS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(EXE) $(OBJS)
 
 clean-objs:

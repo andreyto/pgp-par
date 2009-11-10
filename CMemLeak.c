@@ -250,7 +250,7 @@ static struct XWBNode* XWBMemFind(void* iPtr, unsigned int* oSize,
 //Allocate memory
 void* XWBMalloc(unsigned int iSize, const char* iFile, const unsigned int iLine)
 {
-    register usize;
+    register unsigned int usize;
     unsigned char* result;
     
     usize = ((iSize + xwbProtSize) / sizeof(unsigned int) + 1) * sizeof(unsigned int);
@@ -265,7 +265,7 @@ void* XWBMalloc(unsigned int iSize, const char* iFile, const unsigned int iLine)
 // re-allocate memory
 void* XWBRealloc(void* iPtr, unsigned int iSize, const char* iFile, const unsigned int iLine)
 {
-    register usize;
+    register unsigned int usize;
     unsigned char* result;
     struct XWBNode* node;
     unsigned int size, line;
@@ -395,7 +395,7 @@ void XWBReport(const char* iTag)
     // Print statistics 
     fprintf(xwbMem.mReport, "Total allocations    : %ld\n",
         xwbMem.mAllocTotal);
-    fprintf(xwbMem.mReport, "Max memory allocation: %ld (%dK)\n", 
+    fprintf(xwbMem.mReport, "Max memory allocation: %ld (%ldK)\n", 
         xwbMem.mAllocUsed, xwbMem.mAllocUsed / 1024);
     fprintf(xwbMem.mReport, "Total leak           : %ld\n\n", 
         xwbMem.mAllocCurrent);

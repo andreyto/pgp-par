@@ -931,7 +931,7 @@ void ParseSpectraFromMZXML(char* FileName, InputFileNode* InputFile, int FirstSc
         XMLParseResult = XML_ParseBuffer(Cursor->Parser, BytesRead, DoneFlag);
         if (!XMLParseResult)
         {
-            printf("XML Parse error - file position ~%d\n", XML_GetCurrentByteIndex(Cursor->Parser));
+            printf("XML Parse error - file position ~%ld\n", XML_GetCurrentByteIndex(Cursor->Parser));
             Error = XML_GetErrorCode(Cursor->Parser);
             printf("Error code %d description '%s'\n", Error, XML_ErrorString(Error));
         }
@@ -1082,7 +1082,7 @@ void ParseSpectraFromMZData(char* FileName, InputFileNode* InputFile, int FirstS
         XMLParseResult = XML_Parse(Cursor->Parser, Cursor->XMLBuffer, BytesRead, DoneFlag);
         if (!XMLParseResult)
         {
-            printf("XML Parse error - file position ~%d\n", XML_GetCurrentByteIndex(Cursor->Parser));
+            printf("XML Parse error - file position ~%ld\n", XML_GetCurrentByteIndex(Cursor->Parser));
             Error = XML_GetErrorCode(Cursor->Parser);
             printf("Error code %d description '%s'\n", Error, XML_ErrorString(Error));
         }

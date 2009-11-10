@@ -145,7 +145,7 @@ void DebugPrintBuiltGene()
             TrueLen = strlen(Exon->Prefix) + Exon->Length*3 + strlen(Exon->Suffix);
             if (IntervalLen != TrueLen)
             {
-                printf("** Warning: %d-%d is length %d, but true exon length is %d+%d+%d\n", 
+                printf("** Warning: %d-%d is length %d, but true exon length is %zd+%d+%zd\n", 
                     Exon->Start, Exon->End, IntervalLen, 
                     strlen(Exon->Prefix), Exon->Length*3, strlen(Exon->Suffix));
             }
@@ -2644,7 +2644,7 @@ void GenomeDAGLinkBack(GenomeDAGNode* DAGNode, GenomeDAGNode* BackDAGNode, int C
 
 int GetReadingFrameFlag(int Start, int End, int Offset, int ReverseFlag)
 {
-    int ReadingFrameFlag;
+    int ReadingFrameFlag = 0;
     //
     if (ReverseFlag)
     {

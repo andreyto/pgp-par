@@ -50,6 +50,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
+
 #include "Trie.h"
 #include "Utils.h"
 #include "Spectrum.h"
@@ -57,7 +59,6 @@
 #include "Score.h"
 #include "Tagger.h"
 #include "FreeMod.h"
-#include "CMemLeak.h"
 #include "SVM.h"
 #include "BN.h"
 #include "LDA.h"
