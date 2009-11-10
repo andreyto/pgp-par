@@ -36,9 +36,9 @@ class SpectrumResult(ResultsParser.ResultsParser):
             print "ERROR: trying to add a PSM with a rank already in use."
             return
         self.PSMs[Rank] = Bits
-    def GetPeptides(self):
+    def GetAminos(self):
         """Parameters: none
-        Return: a list of peptides for all these PSMs
+        Return: a list of Aminos for all these PSMs
         Description: This gives you quick access to some of the result.
         if it so happens that this is all you care about
         """
@@ -48,6 +48,18 @@ class SpectrumResult(ResultsParser.ResultsParser):
             Peptide = GetPeptideFromModdedName(Annotation)
             List.append( Peptide.Aminos)
         return List
+    
+    def GetAminosToRank(self):
+        """Parameters: none
+        Return: dictionary Aminos->Rank
+        Description: make this dictionary for you if you find it useful
+        """
+        Dict = {}
+        for (Rank, Bits) in self.PSMs.items():
+            Annotation = Bits[self.Columns.Annotation]
+            Peptide = GetPeptideFromModdedName(Annotation)
+            Dict[Peptide.Aminos] = Rank
+        return Dict
 
 
 
@@ -87,21 +99,75 @@ class FinderClass(ResultsParser.ResultsParser):
                 continue # no more can be done on this spectrum
             ResultB = DictionaryB[Key]
             #now how deep do we want to go.
-            PeptidesA = ResultA.GetPeptides()
-            PeptidesB = ResultB.GetPeptides()
-            Disagreements = self.ComparePeptideLists(PeptidesA, PeptidesB)
-            if Disagreements: #shortcut because I expect zero
-                Handle.write( "I got %s disagreements for %s, %s\n"%(Disagreements, File, Spectrum))
-                #now that we have disagreements, we should look more closely
-                PeptidesA.sort()# I sort here because I don't want to waste the time otherwise
-                PeptidesB.sort()
-                StringA = self.ListToString(PeptidesA)
-                StringB = self.ListToString(PeptidesB)
-                Handle.write("%s\n"%StringA)
-                Handle.write("%s\n"%StringB)
+            AminosA = ResultA.GetAminos()
+            AminosB = ResultB.GetAminos()
+            LosersOfA = self.ComparePeptideLists(AminosA, AminosB) #those in A without a match in B
+            NumDisagreements = len(LosersOfA)
+            if NumDisagreements: #shortcut because I expect zero
+                Handle.write( "I got %s disagreements for %s, %s\n"%(NumDisagreements, File, Spectrum))
+                LosersOfB = self.ComparePeptideLists(AminosB, AminosA) #those in B without a match in A
+                self.DeepComparison(ResultA, ResultB, LosersOfA, LosersOfB, Handle)
+                
         Handle.close()
-        
+  
+    def DeepComparison(self, ResultA, ResultB, LosersOfA, LosersOfB, Handle):
+        """Parameters: Two SpectrumResults Objects, two lists of peptides absent from the comparative set
+            and an open file handle
+        Return: None
+        Description: we got two sets of PSMs that are not the same. Here
+        we want to take a better look at the differences
+        """
+        #Bits that I care about: MQScore Vector Components cols 7-12, not in the ResultsParser.Columns
+        #also columns 5 and 6 which are score and length
+        ColumnsOfConcern = range(5, 13)
+        #first what may seem duplicitous, just to get a handle on what is different
+        AminosToRankA = ResultA.GetAminosToRank()
+        AminosToRankB = ResultB.GetAminosToRank()
+        #so - LosersOfA are those peptides in A without a match in B, let's print out everything
+        ##relevant on those peptides.
+        StringA = self.ListToString(LosersOfA)
+        StringB = self.ListToString(LosersOfB)
+        Handle.write("The following peptides do not overlap between the results sets\n")
+        Handle.write("From A: %s\n"%StringA)
+        Handle.write("From B: %s\n"%StringB)
+        #now let's check out the rest of the hits to make sure that everything is same-same
+        #in this loop we are looking at aminos which are the same between the two results sets
+        # having already printed out our loosers.
+        for (RankA, BitsA) in ResultA.PSMs.items():
+            AnnotationA = BitsA[self.Columns.Annotation]
+            PeptideA = GetPeptideFromModdedName(AnnotationA)
+            AminosA = PeptideA.Aminos
+            if AminosA in LosersOfA:
+                continue #we've done what we need with these guys
+            # a totally chicken hack.  I just can't deal with this now.
+            if not AminosToRankB.has_key(AminosA):
+                continue
+            RankB = AminosToRankB[AminosA]
+            BitsB = ResultB.PSMs[RankB]
+            #now let's check the bits that we care about
+            Okay = 1
+            for Col in ColumnsOfConcern:
+                BitA = BitsA[Col]
+                BitB = BitsB[Col]
+                if not BitA == BitB:
+                    Okay = 0
+                    break
+            #now print if there's an issue
+            if not Okay:
+                StringBitsA = self.ListToString(BitsA[5:13])
+                StringBitsB = self.ListToString(BitsB[5:13])
+                Handle.write("Discrepencies for the annotation of %s\n"%AminosA)
+                Handle.write("%s\n"%StringBitsA)
+                Handle.write("%s\n"%StringBitsB)
+               
+                    
 
+    def AmbiguousAminoAcidReplacement(self, String):
+        NewString = String.replace("I", "L")
+        NewString = NewString.replace("Q", "K")
+        return NewString
+            
+            
     def ListToString(self, List):
         """Paramters: a List with simple values
         Return: a string 
@@ -130,17 +196,17 @@ class FinderClass(ResultsParser.ResultsParser):
     
     def ComparePeptideLists(self, ListA, ListB):
         """Parameters: Two lists of amino acid strings, no order required
-        Return: Int - the number of disagreements
+        Return: List of disagreeing string
         Description: simply compare the two lists.  I expect exactly
         the same thing.
         """
-        Disagreements = 0
+        Disagreements = []
         for Item in ListA:
             if not Item in ListB:
                 #now we don't find it.  WE should try some L->I and K->Q conversions
                 FoundWithReplacements = self.FindWithReplacements(Item, ListB)
                 if not FoundWithReplacements:
-                    Disagreements += 1
+                    Disagreements.append(Item)
                 
         return Disagreements
 
@@ -154,11 +220,9 @@ class FinderClass(ResultsParser.ResultsParser):
         some replacement, and see how things work.
         """
         NewList = []
-        NewItem = Item.replace("I", "L")
-        NewItem = NewItem.replace("Q", "K")
+        NewItem  = self.AmbiguousAminoAcidReplacement(Item)
         for ListMember in List:
-            NewString = ListMember.replace("I", "L")
-            NewString = NewString.replace("Q", "K")
+            NewString = self.AmbiguousAminoAcidReplacement(ListMember)
             NewList.append(NewString)
         #now check to see if it's there
         if NewItem in NewList:
