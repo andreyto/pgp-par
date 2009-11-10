@@ -129,7 +129,7 @@ LDAModel* LoadLDAModel(char* LDAModelFileName)
 {
     FILE* File;
     LDAModel* Model;
-    float Value;
+    double Value;
     int BytesRead;
     //
     File = fopen(LDAModelFileName, "rb");
