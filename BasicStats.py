@@ -124,6 +124,30 @@ def PrettyPrintHistogram(Histogram, FileHandle = None):
             FileHandle.write("%s\t%s\n"%(Key, Histogram[Key]))
         else:
             print "%s\t%s"%(Key, Histogram[Key])
+            
+def PrettyPrintMultiHistogram(HistogramList, FileHandle = None):
+    """Parameters: a list of histogram dictionaries with identical keys, an optional filehandle
+    Return: None
+    Description: print out several histograms which all have the exact same keys.  As noted
+    above, the FileHandle is expected to be already instantiated and opened for writing
+    """
+    if FileHandle:
+        FileHandle.write("Histogram\n")
+    else:
+        print "Histogram\n"
+    Keys = HistogramList[0].keys()
+    Keys.sort()
+    for Key in Keys:
+        ValueString = ""
+        for H in HistogramList:
+            Value = H[Key]
+            ValueString += "%s\t"%Value
+        Line = "%s\t%s"%(Key, ValueString)
+        if FileHandle:
+            FileHandle.write("%s\n"%Line)
+        else:
+            print Line
+
         
 def PrettyPrintCDF(CDF, FileHandle = None):
     """You should call this with a histogram that is created
