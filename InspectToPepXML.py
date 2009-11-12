@@ -534,9 +534,15 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
              
             # done processing a single line of InsPecT output file
 
+        # write conversion of last line of InsPecT output file
+        this_scan.WriteSpectrumQueries(PepXMLHandle, \
+                       SpectrumFileName, self.protease, \
+                       self.MaxHitsPerCharge)
+
         self.WritePepXMLClosing(PepXMLHandle)
         InspectHandle.close()
         PepXMLHandle.close()
+
 
     #---------------------------------------------------------------------
 
