@@ -53,7 +53,8 @@ class FinderClass(ResultsParser.ResultsParser):
         self.ProcessResultsFiles(self.ReferenceResults, self.ParseInspectCallback)
         print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
         self.PutPeptidesOnProteins()
-        self.SignalPeptideHunt()
+        self.PrintFirstObservation()
+        #self.SignalPeptideHunt()
         #self.NMEHunt()
         #self.MCaptureHunt()
         #if self.PredictedSignalPeptideFile:
@@ -170,6 +171,18 @@ class FinderClass(ResultsParser.ResultsParser):
                     continue
         return Names
 
+    def PrintFirstObservation(self):
+        """just print out each protein with the first observed residue
+        """
+        for ProteinName in self.ProteinsAndFirstObservedAA.keys():
+            PeptideStart = self.ProteinsAndFirstObservedAA[ProteinName]
+            FirstPeptideObject = self.FirstPeptideInProtein[ProteinName]
+            ID = self.NameToID[ProteinName]
+            PrefixSequence = self.ProteinPicker.ProteinSequences[ID][:PeptideStart]
+            AfterCut = self.ProteinPicker.ProteinSequences[ID][PeptideStart:PeptideStart+2]
+            String = "%s\t%s\t%s\t%s\t"%(ProteinName, PeptideStart, PrefixSequence, AfterCut)
+            print String
+       
     
     def SignalPeptideHunt(self):
         """look at the first observed peptide and see if we have evidence of 
