@@ -87,7 +87,6 @@ class ScriptMongler:
         # number of PTMs allowed per peptide; passed along to ClusterRunInspect
         self.PTMLimit = 0 
         self.ScanCounts = {} # stub -> number of scans
-        self.IncludeCommonDB = 0
         self.gridEnv = gridEnv
         self.scanCountFile = None
         # Count of the number of master jobs, to be used as job array index
@@ -164,8 +163,6 @@ PMTolerance,3.0
         for db in self.DBPath:
             Script += "db,%s\n" % db
 
-        if self.IncludeCommonDB:
-            Script += "db,%s\n"%self.CommonDBPath
         return Script
 
     def GetAlreadySearchedDict(self):
@@ -319,7 +316,7 @@ PMTolerance,3.0
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:c:s:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:s:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -337,13 +334,6 @@ PMTolerance,3.0
                     self.DBPath.append( Value )
                 else:
                     self.DBPath = [Value]
-            elif Option == "-c":
-                if not os.path.exists(Value):
-                    print "** Error: couldn't find database archive '%s'\n\n"%Value
-                    print UsageInfo
-                    sys.exit(1)
-                self.IncludeCommonDB = 1
-                self.CommonDBPath = Value               
             elif Option == "-m":
                 # -m mzxml file name list
                 if not os.path.exists(Value):
@@ -389,8 +379,6 @@ Required Parameters:
  -s [FilePath] path to the ScanCount.txt file created by CountScans.py
 
 Options:
- -c [CommonDBFile] - Give the full path to a database.zip file as above.  This is an
-     additional database, expected to be the common contaminants.
  -a Search ALL mzxml files in the mzxml directory, ignore flags in the "done" directory
  -m [FileName] - Specify a text file listing the mzxml file names to search.
  -b Blind search - for PTMs!
