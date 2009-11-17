@@ -17,6 +17,7 @@ import os
 import sys
 import getopt
 import shutil
+import tarfile
 
 from CountScans import CountScanBits
 import ClusterUtils
@@ -191,6 +192,7 @@ PMTolerance,3.0
 ##            print "  ",Key
 ##        print "===End of clusterSub done flags."
         return self.AlreadySearchedDict
+
     def GetSpectrumFileList(self):
         # If we were passed -m argument, look in that file for a list
         # of mzXML file names.  
@@ -219,6 +221,7 @@ PMTolerance,3.0
                     SpectrumFileNameList.append(Name)
         SpectrumFileNameList.sort()
         return SpectrumFileNameList
+
     def BuildJobs(self):
         """
         Create input scripts (.sh files) to search all the spectra that
@@ -242,6 +245,7 @@ PMTolerance,3.0
             self.gridEnv.projectCode, len(JobList), sys.path[0] )
         ########
         return JobList
+
     def BuildJobsStandardSearch(self, SpectrumFileNames):
         PendingJobList = []
         CurrentMasterJob = None
@@ -274,6 +278,7 @@ PMTolerance,3.0
         if CurrentMasterJob:
             CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         return PendingJobList
+
     def BuildJobsBlindSearch(self, SpectrumFileNames):
         """
         For a blind search, a job may be TOO LARGE and take a long time
@@ -312,11 +317,37 @@ PMTolerance,3.0
         if CurrentMasterJob:
             CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         return PendingJobList
+
+    def copyArchiveSpectraToRun( self, archiveDir ):
+        tarContents = {}
+        tarCount = 0
+
+        for root, dirs, files in os.walk( archiveDir ):
+            if root.lower().find('mzxml') < 0:
+                continue
+            tarfiles = [x for x in files if x.endswith('tar.gz')]
+            for tf in tarfiles:
+                fulltar = os.path.join( root, tf )
+                tarCount += 1
+
+                tfile = tarfile.open( fulltar, 'r' )
+                for tinfo in tfile:
+                    if tinfo.name in tarContents:
+                        raise ValueError("Error dup tar entry %s %s %s" % ( tinfo.name,
+                                fulltar, tarContents[tinfo.name] ))
+
+                    tarContents[ tinfo.name ] = fulltar
+#                   tfile.extract(tinfo)
+
+        print "Found %d tar files with %d members" % (tarCount,len(tarContents))
+        exit(1)
+
+
     def ParseCommandLine(self):
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:s:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:s:t:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -356,6 +387,8 @@ PMTolerance,3.0
                 destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
                 if not os.path.exists( destScanCountPath ):
                     shutil.copy( Value, destScanCountPath )
+            elif Option == "-t":
+                self.copyArchiveSpectraToRun( Value )
             else:
                 print UsageInfo
                 sys.exit(1)
@@ -383,6 +416,7 @@ Options:
  -m [FileName] - Specify a text file listing the mzxml file names to search.
  -b Blind search - for PTMs!
  -p [Int] number of PTMs desired in the search
+ -t [FileName] transfer all mzxml files from the named dir into a grid ready work dir
 
 See the comments in this script for more details.
 """
