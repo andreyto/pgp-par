@@ -39,15 +39,20 @@ class ClusterEnv:
         Create some directories for input files, results, etc.
         """
         self.MakeDirectory(self.ScratchDir)
+
         SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX"]
         for SubDirName in SubDirNames:
             SubDir = os.path.join(self.ScratchDir, SubDirName)
             self.MakeDirectory(SubDir)
 
 class JCVIGridEnv(ClusterEnv):
-    def __init__(self):
+    def __init__(self, projectName=None):
         ClusterEnv.__init__(self)
         self.ScratchDir = "/usr/local/projects/PGP/run/%s/" % self.USER_NAME
+#        self.ScratchDir = "/tmp/t/%s/" % self.USER_NAME
+        if projectName:
+            self.ScratchDir = os.path.join( self.ScratchDir, os.path.basename(projectName))
+
         self.CopyFlagDir   = self.ScratchDir + "CopyFlags"
         self.MZXMLDir      = self.ScratchDir + "mzxml"
         self.DoneDir       = self.ScratchDir + "Done"

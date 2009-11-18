@@ -59,6 +59,7 @@ class JobClass:
         self.File = None
         self.FileName = None
         self.TotalScans = None
+        self.projectDir = None
 
     def FlagRunningJob(self, Name, File):
         """
@@ -80,7 +81,7 @@ class JobClass:
         return FileNameList
       
 class ScriptMongler:
-    def __init__(self,gridEnv):
+    def __init__(self):
         self.CheckDoneFlags = 1
         self.MZXMLListFile = None
         self.DBPath = None 
@@ -88,7 +89,7 @@ class ScriptMongler:
         # number of PTMs allowed per peptide; passed along to ClusterRunInspect
         self.PTMLimit = 0 
         self.ScanCounts = {} # stub -> number of scans
-        self.gridEnv = gridEnv
+        self.gridEnv = None
         self.scanCountFile = None
         # Count of the number of master jobs, to be used as job array index
         self.master_job_count = 0
@@ -233,6 +234,15 @@ PMTolerance,3.0
             print "** Error: Please specify a database path!"
             print UsageInfo
             return
+
+        # Would like to move this somewhere else, but it needs to be after
+        # the project prefix is added to the ScratchDir
+        destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
+        if not os.path.exists( destScanCountPath ):
+            shutil.copy( self.scanCountFile, destScanCountPath )
+
+        self.copyArchiveSpectraToRun( self.projectDir )
+
         #JobScript = self.GetJobScript()
         self.GetAlreadySearchedDict()
         SpectrumFileNames = self.GetSpectrumFileList()
@@ -319,8 +329,15 @@ PMTolerance,3.0
         return PendingJobList
 
     def copyArchiveSpectraToRun( self, archiveDir ):
+        """Extracts all the data from the mzxml tar.gz files in one (archive)
+        location into the grid accessible project directory in preparation for
+        inspect execution on the grid.
+        """
         tarContents = {}
         tarCount = 0
+
+        if not archiveDir:
+            return
 
         for root, dirs, files in os.walk( archiveDir ):
             if root.lower().find('mzxml') < 0:
@@ -337,7 +354,16 @@ PMTolerance,3.0
                                 fulltar, tarContents[tinfo.name] ))
 
                     tarContents[ tinfo.name ] = fulltar
-#                   tfile.extract(tinfo)
+                    # Would like to just call extract here but it doesn't seem
+                    # to do any error checking, like a disk full error, so we'll
+                    # just call the tar system command after the loop
+                    # tfile.extract(tinfo)
+
+                rval = os.system("tar xzCf %s %s" % (self.gridEnv.MZXMLDir, fulltar))
+                if rval:
+                    raise OSError("untar of %s to %s failed with %d" % ( fulltar,
+                        self.gridEnv.MZXMLDir, rval ))
+                
 
         print "Found %d tar files with %d members" % (tarCount,len(tarContents))
         exit(1)
@@ -384,11 +410,8 @@ PMTolerance,3.0
             elif Option == "-s":
                 # -s ScanCount.txt file
                 self.scanCountFile = Value
-                destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
-                if not os.path.exists( destScanCountPath ):
-                    shutil.copy( Value, destScanCountPath )
             elif Option == "-t":
-                self.copyArchiveSpectraToRun( Value )
+                self.projectDir = Value
             else:
                 print UsageInfo
                 sys.exit(1)
@@ -422,9 +445,9 @@ See the comments in this script for more details.
 """
 
 if __name__ == "__main__":
-    gridEnv = ClusterUtils.JCVIGridEnv()
-    gridEnv.MakeGridDirectories()
     # Parse command-line options; see UsageInfo for explanations
-    Mongler = ScriptMongler(gridEnv)
+    Mongler = ScriptMongler()
     Mongler.ParseCommandLine()
+    Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.projectDir)
+    Mongler.gridEnv.MakeGridDirectories()
     Mongler.BuildJobs()
