@@ -51,16 +51,17 @@ class JCVIGridEnv(ClusterEnv):
         self.ScratchDir = "/usr/local/projects/PGP/run/%s/" % self.USER_NAME
 #        self.ScratchDir = "/tmp/t/%s/" % self.USER_NAME
         if projectName:
-            self.ScratchDir = os.path.join( self.ScratchDir, os.path.basename(projectName))
+            self.ScratchDir = os.path.join( self.ScratchDir,
+                os.path.basename( projectName.rstrip(os.path.sep) ) )
 
-        self.CopyFlagDir   = self.ScratchDir + "CopyFlags"
-        self.MZXMLDir      = self.ScratchDir + "mzxml"
-        self.DoneDir       = self.ScratchDir + "Done"
-        self.InspectDir    = self.ScratchDir + "Inspect"
-        self.GenomeZipPath = self.ScratchDir + "IPIIPI.zip"
-        self.ResultsXDir   = self.ScratchDir + "ResultsX"
-        self.OutputDir     = self.ScratchDir + "output"
-        self.JobDir        = self.ScratchDir + "jobs"
+        self.CopyFlagDir   = os.path.join(self.ScratchDir , "CopyFlags")
+        self.MZXMLDir      = os.path.join(self.ScratchDir , "mzxml" )
+        self.DoneDir       = os.path.join(self.ScratchDir , "Done" )
+        self.InspectDir    = os.path.join(self.ScratchDir , "Inspect" )
+        self.GenomeZipPath = os.path.join(self.ScratchDir , "IPIIPI.zip" )
+        self.ResultsXDir   = os.path.join(self.ScratchDir , "ResultsX" )
+        self.OutputDir     = os.path.join(self.ScratchDir , "output" )
+        self.JobDir        = os.path.join(self.ScratchDir , "jobs" )
         self.projectCode   = '0438'
 
     def GetRunningJobCount(self):
