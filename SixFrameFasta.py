@@ -393,6 +393,10 @@ class AbacusClass(ProteinTranslationClass):
         else:
             raise ValueError("Invalid strand %s" % strand)
 
+def main(args):
+    BeanCounter = AbacusClass()
+    BeanCounter.ParseCommandLine(args)
+    BeanCounter.Main()                
 
 if __name__ == "__main__":
     try:
@@ -400,6 +404,4 @@ if __name__ == "__main__":
         psyco.full()
     except:
         print "(psyco not found - running in non-optimized mode)"
-    BeanCounter = AbacusClass()
-    BeanCounter.ParseCommandLine(sys.argv[1:])
-    BeanCounter.Main()                
+    main(sys.argv[1:])

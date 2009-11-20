@@ -21,6 +21,7 @@ import tarfile
 
 from CountScans import CountScanBits
 import ClusterUtils
+import SixFrameFasta
 
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
@@ -241,7 +242,8 @@ PMTolerance,3.0
         if not os.path.exists( destScanCountPath ):
             shutil.copy( self.scanCountFile, destScanCountPath )
 
-        self.copyArchiveSpectraToRun( self.projectDir )
+        self.copyArchiveDatabasesToRun( self.projectDir )
+        self.copyArchiveSpectraToRun(   self.projectDir )
 
         #JobScript = self.GetJobScript()
         self.GetAlreadySearchedDict()
@@ -347,27 +349,35 @@ PMTolerance,3.0
                 fulltar = os.path.join( root, tf )
                 tarCount += 1
 
-                tfile = tarfile.open( fulltar, 'r' )
+                tfile = tarfile.open( fulltar, 'r', errorlevel=2 )
                 for tinfo in tfile:
                     if tinfo.name in tarContents:
-                        raise ValueError("Error dup tar entry %s %s %s" % ( tinfo.name,
+                        raise ValueError("Error duplicate tar entry %s %s %s" % ( tinfo.name,
                                 fulltar, tarContents[tinfo.name] ))
 
                     tarContents[ tinfo.name ] = fulltar
-                    # Would like to just call extract here but it doesn't seem
-                    # to do any error checking, like a disk full error, so we'll
-                    # just call the tar system command after the loop
-                    # tfile.extract(tinfo)
+                    tfile.extract(tinfo, path=self.gridEnv.MZXMLDir)
 
-                rval = os.system("tar xzCf %s %s" % (self.gridEnv.MZXMLDir, fulltar))
-                if rval:
-                    raise OSError("untar of %s to %s failed with %d" % ( fulltar,
-                        self.gridEnv.MZXMLDir, rval ))
-                
+        print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
 
-        print "Found %d tar files with %d members" % (tarCount,len(tarContents))
-        exit(1)
+    def copyArchiveDatabasesToRun( self, archiveDir ):
+        inspectDBs = os.path.join( archiveDir, 'Databases', 'Inspect' )
+        currentDir = os.getcwd()
+        os.chdir( self.gridEnv.InspectDBDir )
 
+        for root, dirs, files in os.walk( inspectDBs ):
+            fnafiles = [x for x in files if x.endswith('.fna')]
+
+            for fasta in fnafiles:
+                fullFastaPath = os.path.join( root, fasta )
+                fastaPrefix = fasta[0:-4]
+
+                dest = fastaPrefix + '.6frame.fna'
+                if not os.path.exists( dest ):
+                    args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
+                    SixFrameFasta.main(args.split())
+        
+        os.chdir( currentDir )
 
     def ParseCommandLine(self):
         """

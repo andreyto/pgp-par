@@ -40,7 +40,8 @@ class ClusterEnv:
         """
         self.MakeDirectory(self.ScratchDir)
 
-        SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX"]
+        SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX",
+                "Databases/Inspect","Databases/Predictions","Databases/Contaminats"]
         for SubDirName in SubDirNames:
             SubDir = os.path.join(self.ScratchDir, SubDirName)
             self.MakeDirectory(SubDir)
@@ -62,6 +63,8 @@ class JCVIGridEnv(ClusterEnv):
         self.ResultsXDir   = os.path.join(self.ScratchDir , "ResultsX" )
         self.OutputDir     = os.path.join(self.ScratchDir , "output" )
         self.JobDir        = os.path.join(self.ScratchDir , "jobs" )
+        self.InspectDBDir  = os.path.join(self.ScratchDir , "Databases","Inspect")
+        self.Contaminants  = os.path.join(self.ScratchDir , "Databases","Contaminants")
         self.projectCode   = '0438'
 
     def GetRunningJobCount(self):
