@@ -151,43 +151,27 @@ class FASTACompressor:
         print "Created database file '%s'"%self.SquishedFileName
 
 
-def PrintUsage():
-    print "Please supply a database filename."
-    print "Usage: PrepDB.py <format> <OriginalDB> [NewDB] [IndexFile]"
-    print "Example: Prepdb.py FASTA Drome.fasta"
-    print "  The source format can be either FASTA or SWISS"
-    print "  New DB file name defaults to original filename with .trie appended"
-    print "  Index file name defaults to original filename with .index appended"
-
-if __name__ == "__main__":    
-    if len(sys.argv)<3:
-        PrintUsage()
-        sys.exit()
-    try:
-        import psyco
-        psyco.full()
-    except:
-        print "(psyco not found - running in non-optimized mode)"
+def main(args):
     # First argument: Original database file format
-    Format = sys.argv[1].lower()
+    Format = args[0].lower()
     if Format == "fasta":
         CompressorClass = FASTACompressor
     elif Format == "swiss":
         CompressorClass = SwissCompressor
     else:
         print "Unknown source database format '%s'"%Format
-        PrintUsage()
-        sys.exit()
+        raise Exception( UsageInfo )
+
     # Second argument: Original database file
-    SourceFileName = sys.argv[2]
+    SourceFileName = args[1]
     # Optional third argument: New database file name
-    if len(sys.argv) > 3:
-        SquishedFileName = sys.argv[3]
+    if len(args) > 2:
+        SquishedFileName = args[2]
     else:
         SquishedFileName = "%s.trie"%os.path.splitext(SourceFileName)[0]
     # Optional third argument: Index file name
-    if len(sys.argv) > 4:
-        IndexFileName = sys.argv[4]
+    if len(args) > 3:
+        IndexFileName = args[3]
     else:
         IndexFileName = "%s.index"%os.path.splitext(SourceFileName)[0]
     # Use FASTACompressor for FASTA format, Compressor for the weird swiss-prot format
@@ -197,3 +181,24 @@ if __name__ == "__main__":
     Species = None
     Squasher = CompressorClass(SourceFileName, SquishedFileName, IndexFileName, Species)
     Squasher.Compress()
+
+UsageInfo = """
+Please supply a database filename.
+Usage: PrepDB.py <format> <OriginalDB> [NewDB] [IndexFile]
+Example: Prepdb.py FASTA Drome.fasta
+  The source format can be either FASTA or SWISS
+  New DB file name defaults to original filename with .trie appended
+  Index file name defaults to original filename with .index appended
+"""
+
+if __name__ == "__main__":    
+    if len(sys.argv)<3:
+        print UsageInfo
+        sys.exit(1)
+    try:
+        import psyco
+        psyco.full()
+    except:
+        print "(psyco not found - running in non-optimized mode)"
+
+    main(sys.argv[1:])

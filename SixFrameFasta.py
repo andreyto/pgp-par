@@ -369,16 +369,15 @@ class AbacusClass(ProteinTranslationClass):
                 # -r results file(s)
                 if not os.path.exists(Value):
                     print "** Error: couldn't find results file '%s'\n\n"%Value
-                    print UsageInfo
-                    sys.exit(1)
+                    raise Exception( UsageInfo )
+
                 self.InputFile = Value
             elif Option == "-w":
                 self.OutputFile = Value
             elif Option == "-c":
                 self.ChromosomeName = Value
         if not OptionsSeen.has_key("-r") or not OptionsSeen.has_key("-w"):
-            print UsageInfo
-            sys.exit(1)
+            raise Exception( UsageInfo )
 
     def writeFrame(self,frame,strand):
         idx = frame - 1

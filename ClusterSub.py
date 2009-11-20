@@ -22,6 +22,8 @@ import tarfile
 from CountScans import CountScanBits
 import ClusterUtils
 import SixFrameFasta
+import PrepDB
+import ShuffleDB
 
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
@@ -375,7 +377,12 @@ PMTolerance,3.0
                 dest = fastaPrefix + '.6frame.fna'
                 if not os.path.exists( dest ):
                     args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
-                    SixFrameFasta.main(args.split())
+                    SixFrameFasta.main( args.split() )
+                    PrepDB.main( ['FASTA', dest] )
+
+                    args = "-r %s -w %s -p" % (fastaPrefix + '.6frame.trie',
+                                               fastaPrefix + '.6frame.RS.trie')
+                    ShuffleDB.main( args.split() ) 
         
         os.chdir( currentDir )
 

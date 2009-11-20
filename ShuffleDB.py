@@ -240,15 +240,18 @@ class Shuffler:
             else:
                 print "** Warning: Option %s not understood"%Option
         
+def main(args):
+    App = Shuffler()
+    App.ParseCommandLine(args)
+    if not App.TrieFileName or not App.OutputFileName:
+        raise Exception(UsageInfo)
+    App.Main()
+
 if __name__ =="__main__":
     try:
         import psyco
         psyco.full()
     except:
         print "* Warning: psyco not found"
-    App = Shuffler()
-    App.ParseCommandLine(sys.argv[1:])
-    if not App.TrieFileName or not App.OutputFileName:
-        print UsageInfo
-        sys.exit(-1)
-    App.Main()
+
+    main(sys.argv[1:])
