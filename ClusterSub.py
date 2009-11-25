@@ -232,12 +232,6 @@ PMTolerance,3.0
         still need searching.  Return a list of JOB objects.  
         """
         print "Mongler invoked: Blind flag %s"%self.BlindSearchFlag
-        # Sanity-check our arguments:
-        if not self.DBPath:
-            print "** Error: Please specify a database path!"
-            print UsageInfo
-            return
-
         # Would like to move this somewhere else, but it needs to be after
         # the project prefix is added to the ScratchDir
         destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
@@ -246,6 +240,10 @@ PMTolerance,3.0
 
         self.copyArchiveDatabasesToRun( self.projectDir )
         self.copyArchiveSpectraToRun(   self.projectDir )
+        # Sanity-check our arguments:
+        if not self.DBPath:
+            raise Exception("** Error: No databases found in %s!" % self.projectDir)
+
 
         #JobScript = self.GetJobScript()
         self.GetAlreadySearchedDict()
@@ -392,9 +390,13 @@ PMTolerance,3.0
 
                     PrepDB.main( ['FASTA', dest] )
 
-                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie',
-                                               fastaPrefix + sixFrame + '.RS.trie')
+                    dest = fastaPrefix + sixFrame + '.RS.trie'
+                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', dest)
                     ShuffleDB.main( args.split() ) 
+                    if self.DBPath:
+                        self.DBPath.append( dest )
+                    else:
+                        self.DBPath = [dest]
 
     def copyArchiveDatabasesToRun( self, archiveDir ):
         """Copies and prepares for inspect the fasta databases from the specified
@@ -412,7 +414,7 @@ PMTolerance,3.0
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "d:am:bp:s:t:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:s:t:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -420,17 +422,7 @@ PMTolerance,3.0
 
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
-            if Option == "-d":
-                # -d database path
-                if not os.path.exists(Value):
-                    print "** Error: couldn't find database archive '%s'\n\n"%Value
-                    print UsageInfo
-                    sys.exit(1)
-                if self.DBPath:
-                    self.DBPath.append( Value )
-                else:
-                    self.DBPath = [Value]
-            elif Option == "-m":
+            if Option == "-m":
                 # -m mzxml file name list
                 if not os.path.exists(Value):
                     print "** Error: couldn't find mzxml-list file '%s'\n\n"%Value
@@ -469,8 +461,6 @@ UsageInfo = """
 ClusterSub.py - Prepare scripts to search mzXML files over a grid.
 
 Required Parameters:
- -d [DatabaseFile] - Give the full path to a database .zip file.  File named Foo.zip should
-   contain Foo.trie and Foo.index (as produced by PrepDB.py)
  -s [FilePath] path to the ScanCount.txt file created by CountScans.py
 
 Options:
