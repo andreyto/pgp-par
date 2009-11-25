@@ -362,27 +362,49 @@ PMTolerance,3.0
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
 
-    def copyArchiveDatabasesToRun( self, archiveDir ):
-        inspectDBs = os.path.join( archiveDir, 'Databases', 'Inspect' )
-        currentDir = os.getcwd()
-        os.chdir( self.gridEnv.InspectDBDir )
+    def copyAndPrepDBs(self, archiveDir, isContaiminant):
+        if isContaiminant:
+            suffix   = '.fasta'
+            dbSubDir = 'Contaminants'
+            sixFrame = ''
+            os.chdir( self.gridEnv.Contaminants )
+        else:
+            suffix   = '.fna'
+            dbSubDir = 'Inspect'
+            sixFrame = '.6frame'
+            os.chdir( self.gridEnv.InspectDBDir )
 
+        inspectDBs = os.path.join( archiveDir, 'Databases', dbSubDir )
         for root, dirs, files in os.walk( inspectDBs ):
-            fnafiles = [x for x in files if x.endswith('.fna')]
+            fnafiles = [x for x in files if x.endswith(suffix)]
 
             for fasta in fnafiles:
                 fullFastaPath = os.path.join( root, fasta )
-                fastaPrefix = fasta[0:-4]
+                fastaPrefix = fasta[0:-len(suffix)]
 
-                dest = fastaPrefix + '.6frame.fna'
+                dest = fastaPrefix + sixFrame + suffix
                 if not os.path.exists( dest ):
-                    args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
-                    SixFrameFasta.main( args.split() )
+                    if sixFrame:
+                        args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
+                        SixFrameFasta.main( args.split() )
+                    else:
+                        os.symlink( fullFastaPath, dest )
+
                     PrepDB.main( ['FASTA', dest] )
 
-                    args = "-r %s -w %s -p" % (fastaPrefix + '.6frame.trie',
-                                               fastaPrefix + '.6frame.RS.trie')
+                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie',
+                                               fastaPrefix + sixFrame + '.RS.trie')
                     ShuffleDB.main( args.split() ) 
+
+    def copyArchiveDatabasesToRun( self, archiveDir ):
+        """Copies and prepares for inspect the fasta databases from the specified
+        path to the grid run directory.
+        """
+        # Some of the DB prep scripts below work with files in PWD
+        currentDir = os.getcwd()
+
+        self.copyAndPrepDBs( archiveDir, False )
+        self.copyAndPrepDBs( archiveDir, True )
         
         os.chdir( currentDir )
 

@@ -41,7 +41,7 @@ class ClusterEnv:
         self.MakeDirectory(self.ScratchDir)
 
         SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX",
-                "Databases/Inspect","Databases/Predictions","Databases/Contaminats"]
+                "Databases/Inspect","Databases/Predictions","Databases/Contaminants"]
         for SubDirName in SubDirNames:
             SubDir = os.path.join(self.ScratchDir, SubDirName)
             self.MakeDirectory(SubDir)
