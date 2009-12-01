@@ -198,15 +198,18 @@ Arguments:
  -w [FileName]: Save scan counts here.
 """
 
+def main(args):
+    Counter = ScanCounter()
+    Counter.ParseCommandLine(args)
+    if not Counter.CountDirectory:
+        raise Exception( UsageInfo )
+    Counter.Main()
+
 if __name__ == "__main__":
     try:
         import psyco
         psyco.full()
     except:
         print "(no psyco)"
-    Counter = ScanCounter()
-    Counter.ParseCommandLine(sys.argv[1:])
-    if not Counter.CountDirectory:
-        print UsageInfo
-        sys.exit(-1)
-    Counter.Main()
+
+    main(sys.argv[1:])

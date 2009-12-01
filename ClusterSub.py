@@ -19,11 +19,11 @@ import getopt
 import shutil
 import tarfile
 
-from CountScans import CountScanBits
 import ClusterUtils
 import SixFrameFasta
 import PrepDB
 import ShuffleDB
+import CountScans
 
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
@@ -131,10 +131,10 @@ class ScriptMongler:
             Bits = fileLine.split("\t")
             print "LoadScanCounts:", Bits
             try:
-                ScanCount = int(Bits[CountScanBits.MaxScan]) 
+                ScanCount = int(Bits[CountScans.CountScanBits.MaxScan]) 
             except:
                 continue
-            self.ScanCounts[Bits[CountScanBits.Stub]] = ScanCount
+            self.ScanCounts[Bits[CountScans.CountScanBits.Stub]] = ScanCount
         scanfile.close()
 
     def BuildInspectInputFile(self,Job):
@@ -232,14 +232,12 @@ PMTolerance,3.0
         still need searching.  Return a list of JOB objects.  
         """
         print "Mongler invoked: Blind flag %s"%self.BlindSearchFlag
-        # Would like to move this somewhere else, but it needs to be after
-        # the project prefix is added to the ScratchDir
-        destScanCountPath = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
-        if not os.path.exists( destScanCountPath ):
-            shutil.copy( self.scanCountFile, destScanCountPath )
 
         self.copyArchiveDatabasesToRun( self.projectDir )
         self.copyArchiveSpectraToRun(   self.projectDir )
+        # Scan counts are now created in ArchivveSpectraToRun
+        # should probably refactor the code
+        self.LoadScanCounts()
         # Sanity-check our arguments:
         if not self.DBPath:
             raise Exception("** Error: No databases found in %s!" % self.projectDir)
@@ -337,6 +335,9 @@ PMTolerance,3.0
         """
         tarContents = {}
         tarCount = 0
+        self.scanCountFile = os.path.join(self.gridEnv.ScratchDir,"ScanCount.txt")
+        scanArgStr = "-r %s -w %s" % (self.gridEnv.MZXMLDir, self.scanCountFile)
+        scanArgs = scanArgStr.split()
 
         if not archiveDir:
             return
@@ -357,6 +358,7 @@ PMTolerance,3.0
 
                     tarContents[ tinfo.name ] = fulltar
                     tfile.extract(tinfo, path=self.gridEnv.MZXMLDir)
+                    CountScans.main( scanArgs )
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
 
@@ -414,7 +416,7 @@ PMTolerance,3.0
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:s:t:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:t:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -438,20 +440,16 @@ PMTolerance,3.0
             elif Option == "-p":
                 # -p PTM count
                 self.PTMLimit = int(Value)
-            elif Option == "-s":
-                # -s ScanCount.txt file
-                self.scanCountFile = Value
             elif Option == "-t":
                 self.projectDir = Value
             else:
                 print UsageInfo
                 sys.exit(1)
                 
-        if not self.scanCountFile:
+        if not self.projectDir:
             print UsageInfo
             sys.exit(1)
 
-        self.LoadScanCounts()
         # If blind search was requested, but PTM limit is zero, then set it to 1
         if self.BlindSearchFlag and self.PTMLimit == 0:
             print "* Setting PTM limit to 1, since blind search was requested!"
@@ -461,14 +459,13 @@ UsageInfo = """
 ClusterSub.py - Prepare scripts to search mzXML files over a grid.
 
 Required Parameters:
- -s [FilePath] path to the ScanCount.txt file created by CountScans.py
+ -t [FileName] transfer all mzxml files from the named dir into a grid ready work dir
 
 Options:
  -a Search ALL mzxml files in the mzxml directory, ignore flags in the "done" directory
  -m [FileName] - Specify a text file listing the mzxml file names to search.
  -b Blind search - for PTMs!
  -p [Int] number of PTMs desired in the search
- -t [FileName] transfer all mzxml files from the named dir into a grid ready work dir
 
 See the comments in this script for more details.
 """
