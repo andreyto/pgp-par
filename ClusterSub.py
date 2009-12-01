@@ -362,17 +362,20 @@ PMTolerance,3.0
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
 
-    def copyAndPrepDBs(self, archiveDir, isContaiminant):
-        if isContaiminant:
+    def copyAndPrepDBs(self, archiveDir, isProteomic):
+
+        workDir = None
+        if isProteomic:
             suffix   = '.fasta'
-            dbSubDir = 'Contaminants'
+            workDir = self.gridEnv.Contaminants
             sixFrame = ''
-            os.chdir( self.gridEnv.Contaminants )
         else:
             suffix   = '.fna'
-            dbSubDir = 'Inspect'
+            workDir = self.gridEnv.InspectDBDir
             sixFrame = '.6frame'
-            os.chdir( self.gridEnv.InspectDBDir )
+
+        dbSubDir = os.path.basename( workDir )
+        os.chdir( workDir )
 
         inspectDBs = os.path.join( archiveDir, 'Databases', dbSubDir )
         for root, dirs, files in os.walk( inspectDBs ):
