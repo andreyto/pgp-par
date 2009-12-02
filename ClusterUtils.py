@@ -40,7 +40,7 @@ class ClusterEnv:
         """
         self.MakeDirectory(self.ScratchDir)
 
-        SubDirNames = ["Inspect", "jobs", "mzxml", "Done", "output", "CopyFlags", "ResultsX",
+        SubDirNames = [ "jobs", "mzxml", "Done", "output", "ResultsX",
                 "Databases/Genomic","Databases/Predictions","Databases/Proteomic"]
         for SubDirName in SubDirNames:
             SubDir = os.path.join(self.ScratchDir, SubDirName)
@@ -55,10 +55,10 @@ class JCVIGridEnv(ClusterEnv):
             self.ScratchDir = os.path.join( self.ScratchDir,
                 os.path.basename( projectName.rstrip(os.path.sep) ) )
 
-        self.CopyFlagDir   = os.path.join(self.ScratchDir , "CopyFlags")
+        self.CopyFlagDir   = None
         self.MZXMLDir      = os.path.join(self.ScratchDir , "mzxml" )
         self.DoneDir       = os.path.join(self.ScratchDir , "Done" )
-        self.InspectDir    = os.path.join(self.ScratchDir , "Inspect" )
+        self.InspectDir    = None
         self.GenomeZipPath = os.path.join(self.ScratchDir , "IPIIPI.zip" )
         self.ResultsXDir   = os.path.join(self.ScratchDir , "ResultsX" )
         self.OutputDir     = os.path.join(self.ScratchDir , "output" )

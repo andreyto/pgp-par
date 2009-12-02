@@ -364,21 +364,29 @@ PMTolerance,3.0
 
     def copyAndPrepDBs(self, archiveDir, isProteomic):
 
-        workDir = None
         if isProteomic:
             suffix   = '.fasta'
             workDir = self.gridEnv.Contaminants
             sixFrame = ''
+            foundCommon = False
         else:
             suffix   = '.fna'
             workDir = self.gridEnv.InspectDBDir
             sixFrame = '.6frame'
+            foundCommon = True
 
         dbSubDir = os.path.basename( workDir )
         os.chdir( workDir )
 
         inspectDBs = os.path.join( archiveDir, 'Databases', dbSubDir )
         for root, dirs, files in os.walk( inspectDBs ):
+            if not foundCommon:
+                Common = 'Common.RS.trie'
+                if Common in files:
+                    shutil.copy( os.path.join( inspectDBs, Common), workDir ) 
+                    shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir ) 
+                    foundCommon = True
+
             fnafiles = [x for x in files if x.endswith(suffix)]
 
             for fasta in fnafiles:
@@ -402,6 +410,9 @@ PMTolerance,3.0
                         self.DBPath.append( dest )
                     else:
                         self.DBPath = [dest]
+
+        if not foundCommon:
+            raise Exception("Common Contaminant file not found in %s" % inspectDBs )
 
     def copyArchiveDatabasesToRun( self, archiveDir ):
         """Copies and prepares for inspect the fasta databases from the specified
