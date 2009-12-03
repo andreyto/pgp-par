@@ -87,7 +87,7 @@ class ScriptMongler:
     def __init__(self):
         self.CheckDoneFlags = 1
         self.MZXMLListFile = None
-        self.DBPath = None 
+        self.DBPath = [] 
         self.BlindSearchFlag = 0
         # number of PTMs allowed per peptide; passed along to ClusterRunInspect
         self.PTMLimit = 0 
@@ -406,10 +406,8 @@ PMTolerance,3.0
                     dest = fastaPrefix + sixFrame + '.RS.trie'
                     args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', dest)
                     ShuffleDB.main( args.split() ) 
-                    if self.DBPath:
-                        self.DBPath.append( dest )
-                    else:
-                        self.DBPath = [dest]
+
+                self.DBPath.append( dest )
 
         if not foundCommon:
             raise Exception("Common Contaminant file not found in %s" % inspectDBs )
