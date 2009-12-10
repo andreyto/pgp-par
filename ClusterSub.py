@@ -96,6 +96,8 @@ class ScriptMongler:
         self.scanCountFile = None
         # Count of the number of master jobs, to be used as job array index
         self.master_job_count = 0
+        # set the number of spectra to put in a single inspect job run
+        self.SpectraPerJob = 1
 
     def createMainJob(self, CurrentMasterJob, SpectrumFileName, BlockNumber):
         MainJob = JobClass()
@@ -281,7 +283,7 @@ PMTolerance,3.0
             self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
             CurrentMasterJob.TotalScans += ScanCount
             # If the Master job now has two Main jobs, then finish it off:
-            if len(CurrentMasterJob.SubJobs) > 1:
+            if len(CurrentMasterJob.SubJobs) >= self.SpectraPerJob:
                 CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         # The loop over spectrum files and blocks is now complete.
         # If we're in the middle of handling a Master job, then finish it off.
@@ -320,7 +322,7 @@ PMTolerance,3.0
                 # Add a MAIN JOB, to search this file:
                 self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
                 # If the Master job now has two Main jobs, then finish it off:
-                if len(CurrentMasterJob.SubJobs) > 1:
+                if len(CurrentMasterJob.SubJobs) >= self.SpectraPerJob:
                     CurrentMasterJob = self.closeMasterJob(PendingJobList, CurrentMasterJob)
         # The loop over spectrum files and blocks is now complete.
         # If we're in the middle of handling a Master job, then finish it off.
@@ -379,11 +381,12 @@ PMTolerance,3.0
         os.chdir( workDir )
 
         inspectDBs = os.path.join( archiveDir, 'Databases', dbSubDir )
+        Common = 'Common.RS.trie'
         for root, dirs, files in os.walk( inspectDBs ):
+            # Special case for the common contaminants file, should always be there
             if not foundCommon:
-                Common = 'Common.RS.trie'
                 if Common in files:
-                    shutil.copy( os.path.join( inspectDBs, Common), workDir ) 
+                    shutil.copy( os.path.join( inspectDBs, Common), workDir )
                     shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir ) 
                     foundCommon = True
 
@@ -393,7 +396,8 @@ PMTolerance,3.0
                 fullFastaPath = os.path.join( root, fasta )
                 fastaPrefix = fasta[0:-len(suffix)]
 
-                dest = fastaPrefix + sixFrame + suffix
+                dest   = fastaPrefix + sixFrame + suffix
+                rstrie = fastaPrefix + sixFrame + '.RS.trie'
                 if not os.path.exists( dest ):
                     if sixFrame:
                         args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
@@ -403,14 +407,16 @@ PMTolerance,3.0
 
                     PrepDB.main( ['FASTA', dest] )
 
-                    dest = fastaPrefix + sixFrame + '.RS.trie'
-                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', dest)
+                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', rstrie)
                     ShuffleDB.main( args.split() ) 
 
-                self.DBPath.append( dest )
+                self.DBPath.append( os.path.join( workDir, rstrie) )
 
         if not foundCommon:
             raise Exception("Common Contaminant file not found in %s" % inspectDBs )
+
+        if isProteomic:
+            self.DBPath.append( os.path.join( workDir, Common) )
 
     def copyArchiveDatabasesToRun( self, archiveDir ):
         """Copies and prepares for inspect the fasta databases from the specified
