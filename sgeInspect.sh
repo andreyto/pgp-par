@@ -33,4 +33,6 @@ inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt
 rescoreOut=${inspectOut/.txt/.res}
 ./PepNovo_bin -model CID_IT_TRYP -PTMs 'C+57' -file $mzxml -rescore_inspect $inspectOut $rescoreOut
 
+bzip2 $inspectOut $rescoreOut
+
 touch $rundir/Done/$SGE_TASK_ID

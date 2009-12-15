@@ -354,15 +354,20 @@ PMTolerance,3.0
 
                 tfile = tarfile.open( fulltar, 'r', errorlevel=2 )
                 for tinfo in tfile:
-                    if tinfo.name in tarContents:
-                        raise ValueError("Error duplicate tar entry %s %s %s" % ( tinfo.name,
-                                fulltar, tarContents[tinfo.name] ))
+                    mzFile = tinfo.name
+                    if mzFile in tarContents:
+                        raise ValueError("Error duplicate tar entry %s %s %s" % ( mzFile,
+                                fulltar, tarContents[mzFile] ))
 
-                    tarContents[ tinfo.name ] = fulltar
+                    tarContents[ mzFile ] = fulltar
                     tfile.extract(tinfo, path=self.gridEnv.MZXMLDir)
                     CountScans.main( scanArgs )
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
+        mzManifest = open(os.path.join(self.gridEnv.ScratchDir,"SpectraList.txt"),'w')
+        for mzName in tarContents:
+            mzManifest.write("%s\t%s\n" % (mzName, tarContents[ mzName ] ))
+        mzManifest.close()
 
     def copyAndPrepDBs(self, archiveDir, isProteomic):
 
