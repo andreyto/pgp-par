@@ -14,7 +14,7 @@ import InspectResults
 class Test(unittest.TestCase):
 
     IN = 'inspect.txt.bz2'
-    ANNO = ['Annotation', 
+    ANNO = [
     'R.GGAAPA.P',
     'G.GGAAAP.G',
     'H.GGALAG.I',
@@ -24,7 +24,7 @@ class Test(unittest.TestCase):
     'L.GGIAAG.A',
     'G.GGLAAG.E',
     'S.GGLAGA.R']
-    PVAL = ['p-value',
+    PVAL = [
     0.99972,
     0.99990,
     0.99999,
@@ -41,19 +41,16 @@ class Test(unittest.TestCase):
                  InspectResults.Columns.Annotation,
                  InspectResults.Columns.PValue])
         i = 0
-        self.assertEqual( 10, len(self.ANNO) )
-        self.assertEqual( 10, len(self.PVAL) )
+        self.assertEqual( 9, len(self.ANNO) )
+        self.assertEqual( 9, len(self.PVAL) )
 
         for vals in parser:
             self.assertEqual( self.ANNO[i], vals[0] )
-            if i == 0:
-                self.assertEqual( self.PVAL[i], vals[1] )
-            else:
-                self.assertEqual( self.PVAL[i], float(vals[1]) )
+            self.assertEqual( self.PVAL[i], float(vals[1]) )
 
             i += 1
 
-        self.assertEqual( 10, i)
+        self.assertEqual( 9, i)
 
 if __name__ == "__main__":
     unittest.main()

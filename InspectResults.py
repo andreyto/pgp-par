@@ -65,12 +65,18 @@ class Parser():
             self.FileCount += 1
 
             for line in fileHandle:
+                if line[0] == '#':
+                    continue
                 cols = line.split("\t")
+                if len(cols) != Columns.LFDR+1:
+                    raise "Error in number of columns."
                 wanted = []
                 for i in range(len(cols)):
                     if i in self.wantedColumns:
                         wanted.append( cols[i] )
                 yield wanted
+
+            fileHandle.close()
 
             # Don't parse every single file, that will take too long!
             if self.maxFiles != None and self.FileCount > self.maxFiles:
