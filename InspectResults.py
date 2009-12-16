@@ -14,6 +14,11 @@ class Columns:
     Charge = 4
     MQScore = 5
     Length = 6
+    TotalPRM = 7
+    MedianPRM = 8
+    FractionY = 9
+    FraxtionB = 10
+    Intensity = 11
     NTT = 12
     PValue = 13
     FScore = 14
@@ -25,9 +30,11 @@ class Columns:
     LFDR = 20
     
 class Parser():
-    def __init__(self, FilePath, wantedCols=Columns, MaxFilesToParse = None, QuietFlag = 0):
+    def __init__(self, FilePath, wantedCols=[getattr(Columns,x) for x in dir(Columns) if not x[0] == '_'],
+            MaxFilesToParse = None, QuietFlag = 0):
         self.Columns = Columns
         self.extensions = (".txt", ".filtered", ".res", ".csv", ".out")
+        wantedCols.sort()
         self.wantedColumns = wantedCols
         self.maxFiles = MaxFilesToParse
         self.quiet = QuietFlag
@@ -67,9 +74,9 @@ class Parser():
             for line in fileHandle:
                 if line[0] == '#':
                     continue
-                cols = line.split("\t")
-                if len(cols) != Columns.LFDR+1:
-                    raise "Error in number of columns."
+                cols = line.strip().split("\t")
+                if len(cols) != Columns.LFDR:
+                    raise Exception("Error in number of columns, got %d:\n%s\n" % (len(cols),cols))
                 wanted = []
                 for i in range(len(cols)):
                     if i in self.wantedColumns:

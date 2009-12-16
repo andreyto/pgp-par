@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Takes Post PValue results (1 hit per scan, decoy hits reported) and determines
 instantaneous FDR at different pvalue cutoffs.  Writes out each forward DB hit with added column of localFDR based on pvalue.

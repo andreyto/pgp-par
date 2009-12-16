@@ -42,15 +42,15 @@ match above the score cutoff is correct:
 """
 import os
 import sys
-import random
 import math
 import getopt
 import traceback
-import struct
-import ResultsParser
+import InspectResults
 import SelectProteins
 import Learning
+
 from Utils import *
+
 Initialize()
 try:
     from PIL import Image
@@ -123,7 +123,7 @@ def Gamma(Z):
 class Bag:
     pass
 
-class PValueParser(ResultsParser.ResultsParser):
+class PValueParser():
     def __init__(self):
         self.RetainBadMatches = 0
         self.LoadDistributionPath = None
@@ -151,7 +151,7 @@ class PValueParser(ResultsParser.ResultsParser):
         # Overwrite existing files in -w target:
         self.OverwriteNewScoresFlag = 1
         self.ClusterInfoPath = None
-        ResultsParser.ResultsParser.__init__(self)
+
     def ReadDeltaScoreDistribution(self, FilePath):
         """
         Read delta-scores from a file, to compute the average delta-score.
@@ -162,7 +162,7 @@ class PValueParser(ResultsParser.ResultsParser):
         self.AllSpectrumCount3 = 0
         self.MeanDeltaScore2 = 0
         self.MeanDeltaScore3 = 0
-        self.ProcessResultsFiles(FilePath, self.ReadDeltaScoreDistributionFromFile, MAX_RESULTS_FILES_TO_PARSE)
+        self.ReadDeltaScoreDistributionFromFile(FilePath)
         self.MeanDeltaScore2 /= max(1, self.AllSpectrumCount2)
         self.MeanDeltaScore3 /= max(1, self.AllSpectrumCount3)
         if self.VerboseFlag:
@@ -176,26 +176,18 @@ class PValueParser(ResultsParser.ResultsParser):
         "Read delta-scores from a single file, to compute the average delta-score."
         print "Read delta-score distribution from %s..."%FilePath
         try:
-            File = open(FilePath, "rb")
+            FileParser = InspectResults.Parser( FilePath, MaxFilesToParse=MAX_RESULTS_FILES_TO_PARSE )
         except:
             traceback.print_exc()
             return
         OldSpectrum = None
-        for FileLine in File.xreadlines():
-            # Skip header lines and blank lines
-            if FileLine[0] == "#":
-                continue
-            if not FileLine.strip():
-                continue
-            Bits = list(FileLine.split("\t"))
-            if len(Bits) <= self.Columns.DeltaScore:
-                continue
+        for Bits in FileParser:
             try:
-                Charge = int(Bits[self.Columns.Charge])
-                MQScore = float(Bits[self.Columns.MQScore])
-                DeltaScore = float(Bits[self.Columns.DeltaScore])
-                Peptide = GetPeptideFromModdedName(Bits[self.Columns.Annotation][2:-2])
-                Spectrum = (Bits[self.Columns.SpectrumFile], Bits[self.Columns.ScanNumber])
+                Charge = int(Bits[InspectResults.Columns.Charge])
+                MQScore = float(Bits[InspectResults.Columns.MQScore])
+                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
+                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
+                Spectrum = (Bits[InspectResults.Columns.SpectrumFile], Bits[InspectResults.Columns.ScanNumber])
             except:
                 traceback.print_exc()
                 print Bits
@@ -217,32 +209,26 @@ class PValueParser(ResultsParser.ResultsParser):
             else:
                 self.AllSpectrumCount3 += 1
                 self.MeanDeltaScore3 += DeltaScore
-        File.close()            
+
     def ReadScoreDistributionFromFile(self, FilePath):
         """
         Read F-scores from a single file, to compute the score histogram.
         """
         print "Read score distribution from %s..."%FilePath
         try:
-            File = open(FilePath, "rb")
+            resultsParser = InspectResults.Parser(FilePath, MaxFilesToParse=MAX_RESULTS_FILES_TO_PARSE)
         except:
             traceback.print_exc()
             return
         OldSpectrum = None
-        for FileLine in File.xreadlines():
-            # Skip header lines and blank lines
-            if FileLine[0] == "#":
-                continue
-            if not FileLine.strip():
-                continue            
-            Bits = list(FileLine.split("\t"))
+        for Bits in resultsParser:
             try:
-                Charge = int(Bits[self.Columns.Charge])
-                MQScore = float(Bits[self.Columns.MQScore])
-                DeltaScore = float(Bits[self.Columns.DeltaScore])
-                Peptide = GetPeptideFromModdedName(Bits[self.Columns.Annotation][2:-2])
-                Protein = Bits[self.Columns.ProteinName]
-                Spectrum = (Bits[self.Columns.SpectrumFile], Bits[self.Columns.ScanNumber])
+                Charge = int(Bits[InspectResults.Columns.Charge])
+                MQScore = float(Bits[InspectResults.Columns.MQScore])
+                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
+                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
+                Protein = Bits[InspectResults.Columns.ProteinName]
+                Spectrum = (Bits[InspectResults.Columns.SpectrumFile], Bits[InspectResults.Columns.ScanNumber])
             except:
                 continue # header line
             if Spectrum == OldSpectrum:
@@ -277,7 +263,7 @@ class PValueParser(ResultsParser.ResultsParser):
                         self.ShuffledScoreHistogram2[ScoreBin] = self.ShuffledScoreHistogram2.get(ScoreBin, 0) + Hit
                     else:
                         self.ShuffledScoreHistogram3[ScoreBin] = self.ShuffledScoreHistogram3.get(ScoreBin, 0) + Hit
-        File.close()
+
     def ProduceScoreDistributionImage(self, ImagePath, Charge3Flag = 0):
         """
         Write out, to the specified path, an image with f-score on the X-axis
@@ -709,14 +695,14 @@ class PValueParser(ResultsParser.ResultsParser):
             else:
                 TrueOdds = max(0.00001, min(TrueOdds, 0.99999))
             Match.PValue = (1.0 - TrueOdds)
-            Match.Bits[self.Columns.FScore] = "%s"%WeightedScore
-            Match.Bits[self.Columns.PValue] = "%s"%Match.PValue
+            Match.Bits[InspectResults.Columns.FScore] = "%s"%WeightedScore
+            Match.Bits[InspectResults.Columns.PValue] = "%s"%Match.PValue
             if self.ProteinPicker:
                 # Replace the original protein with the "correct" one:
                 ProteinID = self.ProteinPicker.PeptideProteins.get(Match.Peptide.Aminos, None)
                 if ProteinID != None:
-                    Match.Bits[self.Columns.ProteinID] = str(ProteinID)
-                    Match.Bits[self.Columns.ProteinName] = self.ProteinPicker.ProteinNames[ProteinID]
+                    Match.Bits[InspectResults.Columns.ProteinID] = str(ProteinID)
+                    Match.Bits[InspectResults.Columns.ProteinName] = self.ProteinPicker.ProteinNames[ProteinID]
             if (not self.RetainBadMatches):
                 if (Match.PValue > self.PValueCutoff):
                     continue
@@ -742,8 +728,9 @@ class PValueParser(ResultsParser.ResultsParser):
             os.makedirs(DirName)
         except:
             pass
-        self.ProcessResultsFiles(self.ReadScoresPath, self.WriteFixedScoresFile)
+        self.WriteFixedScoresFile(self.ReadScoresPath)
         print "Total accepted lines: %s of %s"%(self.TotalLinesAcceptedCount, self.TotalLinesSecondPass)
+
     def WriteFixedScoresFile(self, Path):
         if os.path.isdir(self.ReadScoresPath):
             OutputPath = os.path.join(self.WriteScoresPath, os.path.split(Path)[1])
@@ -752,27 +739,22 @@ class PValueParser(ResultsParser.ResultsParser):
         if (not self.OverwriteNewScoresFlag) and os.path.exists(OutputPath):
             return
         try:
-            InFile = open(Path, "rb")
+            InFile = InspectResults.Parser(Path)
             OutFile = open(OutputPath, "wb")
             LineCount = 0
             self.LinesAcceptedCount = 0
             OldSpectrum = None
             MatchesForSpectrum = []
-            for FileLine in InFile.xreadlines():
-                # Lines starting with # are comments (e.g. header line), and are written out as-is:
-                if FileLine[0] == "#":
-                    OutFile.write(FileLine)
-                    continue
-                Bits = list(FileLine.strip().split("\t"))
+            for Bits in InFile:
                 Match = Bag()
                 try:
                     Match.Bits = Bits
-                    Match.Charge = int(Bits[self.Columns.Charge])
-                    Match.MQScore = float(Bits[self.Columns.MQScore])
-                    #Match.DeltaScoreAny = float(Bits[self.Columns.DeltaScoreAny])
-                    Match.DeltaScore = float(Bits[self.Columns.DeltaScore])
-                    Match.Peptide = GetPeptideFromModdedName(Bits[self.Columns.Annotation][2:-2])
-                    Match.ProteinName = Bits[self.Columns.ProteinName]
+                    Match.Charge = int(Bits[InspectResults.Columns.Charge])
+                    Match.MQScore = float(Bits[InspectResults.Columns.MQScore])
+                    #Match.DeltaScoreAny = float(Bits[InspectResults.Columns.DeltaScoreAny])
+                    Match.DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
+                    Match.Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
+                    Match.ProteinName = Bits[InspectResults.Columns.ProteinName]
                 except:
                     continue
                 LineCount += 1
@@ -784,7 +766,6 @@ class PValueParser(ResultsParser.ResultsParser):
                 MatchesForSpectrum.append(Match)
             # Finish the last spectrum:
             self.WriteMatchesForSpectrum(MatchesForSpectrum, OutFile)
-            InFile.close()
             OutFile.close()
             print "%s\t%s\t%s\t"%(Path, LineCount, self.LinesAcceptedCount)
             self.TotalLinesAcceptedCount += self.LinesAcceptedCount
@@ -871,7 +852,7 @@ class PValueParser(ResultsParser.ResultsParser):
         self.ProteinPicker.FScoreCutoff3 = FScoreCutoff3
         self.ProteinPicker.MeanDeltaScore2 = self.MeanDeltaScore2
         self.ProteinPicker.MeanDeltaScore3 = self.MeanDeltaScore3
-        self.ProcessResultsFiles(ReadScoresPath, self.ProteinPicker.ParseAnnotations)
+        self.ProteinPicker.ParseAnnotations( ReadScoresPath )
         # We've COUNTED the protein hits.  Now ask the picker to decide which
         # protein 'owns' each peptide:
         self.ProteinPicker.ChooseProteins()
@@ -921,6 +902,7 @@ class PValueParser(ResultsParser.ResultsParser):
             elif Option == "-w":
                 self.WriteScoresPath = Value
             elif Option == "-m":
+                global MAX_RESULTS_FILES_TO_PARSE
                 MAX_RESULTS_FILES_TO_PARSE = int(Value)
             elif Option == "-v":
                 self.VerboseFlag = 1
@@ -1019,7 +1001,7 @@ def Main(Parser = None):
         Parser.SetOutputDistributionPath(Parser.SaveDistributionPath)
         ##############################
         # Loop for F-score methods
-        Parser.ProcessResultsFiles(Parser.ReadScoresPath, Parser.ReadScoreDistributionFromFile, MAX_RESULTS_FILES_TO_PARSE)
+        Parser.ReadScoreDistributionFromFile( Parser.ReadScoresPath )
         if Parser.ShuffledDatabaseFraction != None:
             print "Compute PValues with shuffled..."
             Parser.ComputePValuesWithShuffled(0)

@@ -7,11 +7,11 @@ import os
 import sys
 import traceback
 import struct
-import ResultsParser
+import InspectResults
 from Utils import *
 Initialize()
 
-class ProteinSelector(ResultsParser.ResultsParser):
+class ProteinSelector():
     def __init__(self):
         self.PeptideDict = {} # aminos -> location list
         self.ProteinPeptideCounts = {}
@@ -36,7 +36,7 @@ class ProteinSelector(ResultsParser.ResultsParser):
         self.AnnotationSpectrumCounts = {}
         self.FScoreCutoff2 = None
         self.FScoreCutoff3 = None
-        ResultsParser.ResultsParser.__init__(self)
+
     def FindPeptideLocations(self, Aminos):
         PrevPos = -1
         LocationList = []
@@ -234,21 +234,16 @@ class ProteinSelector(ResultsParser.ResultsParser):
         Parse annotations, remembering all protein locations for each peptide.
         """
         print "Parse %s..."%FileName
-        File = open(FileName, "rb")
+        File = InspectResults.Parser(FileName)
         OldSpectrum = None
         Stub = os.path.split(FileName)[1]
         LineNumber = 0
-        for FileLine in File.xreadlines():
+        for Bits in File:
             LineNumber += 1
             if LineNumber % 100 == 0:
                 print "%s %s..."%(Stub, LineNumber)
                 if self.MaxFileLines != None and LineNumber >= self.MaxFileLines:
                     return # Quick-parse, for debugging only!
-            if FileLine[0] == "#":
-                continue
-            if not FileLine.strip():
-                continue                        
-            Bits = FileLine.split("\t")
             try:
                 Spectrum = (Bits[0], Bits[1])
             except:
@@ -257,9 +252,9 @@ class ProteinSelector(ResultsParser.ResultsParser):
                 continue
             OldSpectrum = Spectrum
             try:
-                MQScore = float(Bits[self.Columns.MQScore])
-                DeltaScore = float(Bits[self.Columns.DeltaScore])
-                Charge = int(Bits[self.Columns.Charge])
+                MQScore = float(Bits[InspectResults.Columns.MQScore])
+                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
+                Charge = int(Bits[InspectResults.Columns.Charge])
             except:
                 traceback.print_exc()
                 print Bits
@@ -267,7 +262,7 @@ class ProteinSelector(ResultsParser.ResultsParser):
             # Apply a threshold: EITHER f-score cutoff (default) OR p-value cutoff
             if self.PValueCutoff != None:
                 try:
-                    PValue = float(Bits[self.Columns.PValue])
+                    PValue = float(Bits[InspectResults.Columns.PValue])
                 except:
                     traceback.print_exc()
                     print Bits
@@ -287,7 +282,7 @@ class ProteinSelector(ResultsParser.ResultsParser):
                 PeptideScore = WeightedScore
                 
             try:
-                Peptide = GetPeptideFromModdedName(Bits[self.Columns.Annotation])
+                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation])
             except:
                 continue
             if len(Peptide.Aminos) < self.MinimumPeptideLength:
@@ -317,7 +312,7 @@ class ProteinSelector(ResultsParser.ResultsParser):
                 Peptide.PValue = PValue
                 Peptide.SpectrumFilePath = Bits[0]
                 Peptide.ScanNumber = int(Bits[1])
-                Peptide.SpectrumFilePos = int(Bits[self.Columns.FileOffset])
+                Peptide.SpectrumFilePos = int(Bits[InspectResults.Columns.FileOffset])
                 Key = Peptide.GetFullModdedName()
                 RepresentativeList = self.BestRepresentatives.get(Key, [])
                 Tuple = (PeptideScore, Peptide)
