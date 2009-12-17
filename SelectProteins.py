@@ -238,34 +238,34 @@ class ProteinSelector():
         OldSpectrum = None
         Stub = os.path.split(FileName)[1]
         LineNumber = 0
-        for Bits in File:
+        for row in File:
             LineNumber += 1
             if LineNumber % 100 == 0:
                 print "%s %s..."%(Stub, LineNumber)
                 if self.MaxFileLines != None and LineNumber >= self.MaxFileLines:
                     return # Quick-parse, for debugging only!
             try:
-                Spectrum = (Bits[0], Bits[1])
+                Spectrum = (row.SpectrumFile, row.ScanNumber)
             except:
                 continue # header line
             if Spectrum == OldSpectrum:
                 continue
             OldSpectrum = Spectrum
             try:
-                MQScore = float(Bits[InspectResults.Columns.MQScore])
-                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
-                Charge = int(Bits[InspectResults.Columns.Charge])
+                MQScore = row.MQScore
+                DeltaScore = row.DeltaScore
+                Charge = row.Charge
             except:
                 traceback.print_exc()
-                print Bits
+                print row
                 continue
             # Apply a threshold: EITHER f-score cutoff (default) OR p-value cutoff
             if self.PValueCutoff != None:
                 try:
-                    PValue = float(Bits[InspectResults.Columns.PValue])
+                    PValue = row.PValue
                 except:
                     traceback.print_exc()
-                    print Bits
+                    print row
                     continue
                 PeptideScore = (-PValue, MQScore)
                 if PValue > self.PValueCutoff:
@@ -282,7 +282,7 @@ class ProteinSelector():
                 PeptideScore = WeightedScore
                 
             try:
-                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation])
+                Peptide = GetPeptideFromModdedName(row.Annotation)
             except:
                 continue
             if len(Peptide.Aminos) < self.MinimumPeptideLength:
@@ -310,9 +310,9 @@ class ProteinSelector():
             if self.RetainRepresentativeCount:
                 Peptide.MQScore = MQScore
                 Peptide.PValue = PValue
-                Peptide.SpectrumFilePath = Bits[0]
-                Peptide.ScanNumber = int(Bits[1])
-                Peptide.SpectrumFilePos = int(Bits[InspectResults.Columns.FileOffset])
+                Peptide.SpectrumFilePath = row.SpectrumFile
+                Peptide.ScanNumber = row.ScanNumber
+                Peptide.SpectrumFilePos = row.FileOffset
                 Key = Peptide.GetFullModdedName()
                 RepresentativeList = self.BestRepresentatives.get(Key, [])
                 Tuple = (PeptideScore, Peptide)

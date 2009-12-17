@@ -36,29 +36,23 @@ class Test(unittest.TestCase):
     0.99999]
 
 
+    def testResultParserPrint(self):
+        parser = InspectResults.Parser( self.IN )
+        for result in parser:
+            continue
+#            print result
+#            print "%s\n" % result
+
     def testResultParser2Cols(self):
-        parser = InspectResults.Parser(self.IN, wantedCols=[
-                 InspectResults.Columns.Annotation,
-                 InspectResults.Columns.PValue])
+        parser = InspectResults.Parser( self.IN )
         i = 0
         self.assertEqual( 9, len(self.ANNO) )
         self.assertEqual( 9, len(self.PVAL) )
 
-        for vals in parser:
-            self.assertEqual( self.ANNO[i], vals[0] )
-            self.assertEqual( self.PVAL[i], float(vals[1]) )
+        for result in parser:
+            self.assertEqual( self.ANNO[i], result.Annotation )
+            self.assertEqual( self.PVAL[i], result.PValue )
 
-            i += 1
-
-        self.assertEqual( 9, i)
-
-    def testResultParserAllCols(self):
-        parser = InspectResults.Parser( self.IN )
-        i = 0
-        for vals in parser:
-            self.assertEqual( InspectResults.Columns.LFDR, len(vals) )
-            self.assertEqual( self.ANNO[i], vals[InspectResults.Columns.Annotation] )
-            self.assertEqual( self.PVAL[i], float(vals[InspectResults.Columns.PValue]) )
             i += 1
 
         self.assertEqual( 9, i)

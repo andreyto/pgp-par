@@ -181,16 +181,16 @@ class PValueParser():
             traceback.print_exc()
             return
         OldSpectrum = None
-        for Bits in FileParser:
+        for row in FileParser:
             try:
-                Charge = int(Bits[InspectResults.Columns.Charge])
-                MQScore = float(Bits[InspectResults.Columns.MQScore])
-                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
-                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
-                Spectrum = (Bits[InspectResults.Columns.SpectrumFile], Bits[InspectResults.Columns.ScanNumber])
+                Charge = row.Charge
+                MQScore = row.MQScore
+                DeltaScore = row.DeltaScore
+                Peptide = GetPeptideFromModdedName(row.Annotation[2:-2])
+                Spectrum = (row.SpectrumFile, row.ScanNumber)
             except:
                 traceback.print_exc()
-                print Bits
+                print row
                 continue # header line
             if Spectrum == OldSpectrum:
                 continue
@@ -200,7 +200,7 @@ class PValueParser():
                 continue
             if DeltaScore < 0:
                 print "## Warning: DeltaScore < 0!", Spectrum, FilePath
-                print Bits
+                print row
                 continue
             if Charge < 3:
                 self.AllSpectrumCount2 += 1
@@ -221,14 +221,14 @@ class PValueParser():
             traceback.print_exc()
             return
         OldSpectrum = None
-        for Bits in resultsParser:
+        for row in resultsParser:
             try:
-                Charge = int(Bits[InspectResults.Columns.Charge])
-                MQScore = float(Bits[InspectResults.Columns.MQScore])
-                DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
-                Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
-                Protein = Bits[InspectResults.Columns.ProteinName]
-                Spectrum = (Bits[InspectResults.Columns.SpectrumFile], Bits[InspectResults.Columns.ScanNumber])
+                Charge = row.Charge
+                MQScore = row.MQScore
+                DeltaScore = row.DeltaScore
+                Peptide = GetPeptideFromModdedName(row.Annotation[2:-2])
+                Protein = row.ProteinName
+                Spectrum = (row.SpectrumFile, row.ScanNumber)
             except:
                 continue # header line
             if Spectrum == OldSpectrum:
@@ -246,8 +246,8 @@ class PValueParser():
             Hit = 1
             if self.ClusterInfoPath:
                 # Get this cluster's size:
-                ClusterFileName = Bits[0].replace("/","\\").split("\\")[-1]
-                ScanNumber = int(Bits[1])
+                ClusterFileName = row.SpectrumFile.replace("/","\\").split("\\")[-1]
+                ScanNumber = row.ScanNumber
                 ClusterSize = self.ClusterSizes.get((ClusterFileName, ScanNumber), None)
                 if not ClusterSize:
                     print "* Warning: ClusterSize not known for %s, %s"%(ClusterFileName, ScanNumber)
@@ -695,14 +695,14 @@ class PValueParser():
             else:
                 TrueOdds = max(0.00001, min(TrueOdds, 0.99999))
             Match.PValue = (1.0 - TrueOdds)
-            Match.Bits[InspectResults.Columns.FScore] = "%s"%WeightedScore
-            Match.Bits[InspectResults.Columns.PValue] = "%s"%Match.PValue
+            Match.Bits.FScore = "%s"%WeightedScore
+            Match.Bits.PValue = "%s"%Match.PValue
             if self.ProteinPicker:
                 # Replace the original protein with the "correct" one:
                 ProteinID = self.ProteinPicker.PeptideProteins.get(Match.Peptide.Aminos, None)
                 if ProteinID != None:
-                    Match.Bits[InspectResults.Columns.ProteinID] = str(ProteinID)
-                    Match.Bits[InspectResults.Columns.ProteinName] = self.ProteinPicker.ProteinNames[ProteinID]
+                    Match.Bits.ProteinID = str(ProteinID)
+                    Match.Bits.ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
             if (not self.RetainBadMatches):
                 if (Match.PValue > self.PValueCutoff):
                     continue
@@ -711,7 +711,7 @@ class PValueParser():
                 if Match.MQScore < MIN_MQSCORE:
                     continue
             self.LinesAcceptedCount += 1
-            OutFile.write(string.join(Match.Bits, "\t"))
+            OutFile.write(str(Match.Bits))
             OutFile.write("\n")
     def WriteFixedScores(self, OutputPath):
         self.TotalLinesAcceptedCount = 0
@@ -745,20 +745,19 @@ class PValueParser():
             self.LinesAcceptedCount = 0
             OldSpectrum = None
             MatchesForSpectrum = []
-            for Bits in InFile:
+            for row in InFile:
                 Match = Bag()
                 try:
-                    Match.Bits = Bits
-                    Match.Charge = int(Bits[InspectResults.Columns.Charge])
-                    Match.MQScore = float(Bits[InspectResults.Columns.MQScore])
-                    #Match.DeltaScoreAny = float(Bits[InspectResults.Columns.DeltaScoreAny])
-                    Match.DeltaScore = float(Bits[InspectResults.Columns.DeltaScore])
-                    Match.Peptide = GetPeptideFromModdedName(Bits[InspectResults.Columns.Annotation][2:-2])
-                    Match.ProteinName = Bits[InspectResults.Columns.ProteinName]
+                    Match.Bits = row
+                    Match.Charge = row.Charge
+                    Match.MQScore = row.MQScore
+                    Match.DeltaScore = row.DeltaScore
+                    Match.Peptide = GetPeptideFromModdedName(row.Annotation[2:-2])
+                    Match.ProteinName = row.ProteinName
                 except:
                     continue
                 LineCount += 1
-                Spectrum = (Bits[0], Bits[1])
+                Spectrum = (row.SpectrumFile, row.ScanNumber)
                 if Spectrum != OldSpectrum:
                     self.WriteMatchesForSpectrum(MatchesForSpectrum, OutFile)
                     MatchesForSpectrum = []

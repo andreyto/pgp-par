@@ -5,37 +5,82 @@ import os
 import bz2
 import random
 
-class Columns:
-    "Constants for which columns contain which data"
-    SpectrumFile = 0
-    ScanNumber = 1
-    Annotation = 2
-    ProteinName = 3
-    Charge = 4
-    MQScore = 5
-    Length = 6
-    TotalPRM = 7
-    MedianPRM = 8
-    FractionY = 9
-    FraxtionB = 10
-    Intensity = 11
-    NTT = 12
-    PValue = 13
-    FScore = 14
-    DeltaScoreAny = 15
-    DeltaScore = 16
-    ProteinID = 17
-    DBPos = 18
-    FileOffset = 19
-    LFDR = 20
+class Row:
+    "Object representing one row of inspect output."
+    def __init__(self):
+        self.SpectrumFile = None
+        self.ScanNumber = None
+        self.Annotation = None
+        self.ProteinName = None
+        self.Charge = None
+        self.MQScore = None
+        self.Length = None
+        self.TotalPRM = None
+        self.MedianPRM = None
+        self.FractionY = None
+        self.FraxtionB = None
+        self.Intensity = None
+        self.NTT = None
+        self.PValue = None
+        self.FScore = None
+        self.DeltaScoreAny = None
+        self.DeltaScore = None
+        self.ProteinID = None
+        self.DBPos = None
+        self.FileOffset = None
+        self.LFDR = None
+
+    def __str__(self):
+        return "\t".join([
+        self.SpectrumFile,
+        str(self.ScanNumber),
+        self.Annotation,
+        self.ProteinName,
+        str(self.Charge),
+        str(self.MQScore),
+        str(self.Length),
+        str(self.TotalPRM),
+        str(self.MedianPRM),
+        str(self.FractionY),
+        str(self.FraxtionB),
+        str(self.Intensity),
+        str(self.NTT),
+        str(self.PValue),
+        str(self.FScore),
+        str(self.DeltaScoreAny),
+        str(self.DeltaScore),
+        str(self.ProteinID),
+        str(self.DBPos),
+        str(self.FileOffset)])
+
+    def populateFromString(self, inspectLine):
+        cols = inspectLine.strip().split("\t")
+        if len(cols) != 20:
+            raise Exception("Error in number of columns, got %d:\n%s\n" % (len(cols),cols))
+        self.SpectrumFile = cols[0]
+        self.ScanNumber   = int(cols[1])
+        self.Annotation   = cols[2]
+        self.ProteinName  = cols[3]
+        self.Charge       = int(cols[4])
+        self.MQScore      = float(cols[5])
+        self.Length       = float(cols[6])
+        self.TotalPRM     = float(cols[7])
+        self.MedianPRM    = float(cols[8])
+        self.FractionY    = float(cols[9])
+        self.FraxtionB    = float(cols[10])
+        self.Intensity    = float(cols[11])
+        self.NTT          = float(cols[12])
+        self.PValue       = float(cols[13])
+        self.FScore       = float(cols[14])
+        self.DeltaScoreAny= float(cols[15])
+        self.DeltaScore   = float(cols[16])
+        self.ProteinID    = int(cols[17])
+        self.DBPos        = int(cols[18])
+        self.FileOffset   = int(cols[19])
     
 class Parser():
-    def __init__(self, FilePath, wantedCols=[getattr(Columns,x) for x in dir(Columns) if not x[0] == '_'],
-            MaxFilesToParse = None, QuietFlag = 0):
-        self.Columns = Columns
+    def __init__(self, FilePath, MaxFilesToParse = None, QuietFlag = 0):
         self.extensions = (".txt", ".filtered", ".res", ".csv", ".out")
-        wantedCols.sort()
-        self.wantedColumns = wantedCols
         self.maxFiles = MaxFilesToParse
         self.quiet = QuietFlag
         self.filePath = FilePath
@@ -74,14 +119,9 @@ class Parser():
             for line in fileHandle:
                 if line[0] == '#':
                     continue
-                cols = line.strip().split("\t")
-                if len(cols) != Columns.LFDR:
-                    raise Exception("Error in number of columns, got %d:\n%s\n" % (len(cols),cols))
-                wanted = []
-                for i in range(len(cols)):
-                    if i in self.wantedColumns:
-                        wanted.append( cols[i] )
-                yield wanted
+                row = Row()
+                row.populateFromString(line)
+                yield row
 
             fileHandle.close()
 
