@@ -57,7 +57,8 @@ class Row:
 
     def populateFromString(self, inspectLine):
         cols = inspectLine.strip().split("\t")
-        if len(cols) != 20:
+        numCols = len(cols)
+        if numCols not in [20,21]:
             raise Exception("Error in number of columns, got %d:\n%s\n" % (len(cols),cols))
         self.SpectrumFile = cols[0]
         self.ScanNumber   = int(cols[1])
@@ -79,6 +80,8 @@ class Row:
         self.ProteinID    = int(cols[17])
         self.DBPos        = int(cols[18])
         self.FileOffset   = int(cols[19])
+        if numCols == 21:
+            self.LFDR     = float(cols[20])
     
 class Parser():
     def __init__(self, FilePath, MaxFilesToParse = None, QuietFlag = 0):
