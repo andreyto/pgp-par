@@ -7,7 +7,7 @@ instantaneous FDR at different pvalue cutoffs.  Writes out each forward DB hit w
 import os
 import sys
 import getopt
-import ResultsParser
+import InspectResults
 
 
 UsageInfo = """ProduceFDRBins.py
@@ -57,21 +57,11 @@ class BinMaker:
                 continue
             
 
-            File = open(FileName,'r')
+            inspectParser = InspectResults.Parser( FileName )
 
-            for Line in File:
-                Line = Line.strip()
-                if Line == "" or Line[0] == "#":
-                    if Line[0] == "#":
-                        self.Header = Line
-                        #print self.Header
-                    continue 
-
-                Bits = Line.split("\t")
-
-                Charge = int(Bits[ResultsParser.Columns.Charge])
-                #Score = float(Bits[ResultsParser.Columns.FScore])
-                Score = float(Bits[ResultsParser.Columns.PValue])
+            for result in inspectParser:
+                Charge = result.Charge
+                Score = result.PValue
                 Index = int(Score/(self.BinWidth))
 
                 if Charge <= 2:
@@ -79,9 +69,9 @@ class BinMaker:
                 else:
                     (TP,FP) = self.IScoreCounts_3.setdefault(Index,(0,0))
                     
-                Protein = Bits[ResultsParser.Columns.ProteinName]
+                Protein = result.ProteinName
                 if self.VerboseFlag:
-                    print Bits
+                    print result
                     print Protein
                     print self.IScoreCounts_1_2[Index]
                     print self.IScoreCounts_3[Index]
@@ -101,7 +91,7 @@ class BinMaker:
                     print self.IScoreCounts_3[Index]
                     raw_input()
                 
-            File.close()
+            self.Header = inspectParser.header
 
         if self.VerboseFlag:
             self.PrintResults()
@@ -117,51 +107,29 @@ class BinMaker:
             FileName = self.FileNames[i]
     
             print "(%s/%s) Writing to %s"%(i,len(self.FileNames)-1,FileName)
-            InFile = open(os.path.join(self.InputDir,FileName),'r')
+            inspectParser = InspectResults.Parser(
+                    os.path.join( self.InputDir, FileName) ,'r' )
             OutFile = open(os.path.join(self.OutputDir,FileName),'w')
             OutFile.write(self.Header)
-            for Line in InFile:
-                Line = Line.strip()
-                if Line == "" or Line[0] == "#":
-                    continue
-                Bits = Line.split("\t")
-                #if len(Bits) != 25:
-                #    print Bits
-                #    print len(Bits)
-                #    raw_input()
-                PValue = float(Bits[ResultsParser.Columns.PValue])
+            for result in inspectParser:
+                PValue = result.PValue
                 Index = int(PValue/self.BinWidth)
-                Charge = int(Bits[ResultsParser.Columns.Charge])
-                Protein = Bits[ResultsParser.Columns.ProteinName]
+                Charge = result.Charge
+                Protein = result.ProteinName
                 if Protein[0:3] == "XXX":
                     continue
 
                 if Charge <= 2:
-                    Scans += 1
-                    OutFile.write(Line + "\t")
-                    
-                    EntryCount = len(Bits)
-                    while(EntryCount < ResultsParser.Columns.LFDR):
-                        OutFile.write("\t")
-                        EntryCount += 1
-                    OutFile.write(str(self.LFDR_1_2[Index]) + "\n")
-                    
-                    if self.LFDR_1_2[Index] < self.PValueCutoff:
-                        GoodScans += 1
+                    result.LFDR = self.LFDR_1_2[Index]
                 else:
-                    Scans += 1
-                    OutFile.write(Line + "\t")
-                    EntryCount = len(Bits)
-                    while(EntryCount < ResultsParser.Columns.LFDR):
-                        OutFile.write("\t")
-                        EntryCount += 1
-                    OutFile.write(str(self.LFDR_3[Index]) + "\n")
+                    result.LFDR = self.LFDR_3[Index]
                     
-                    if self.LFDR_3[Index] < self.PValueCutoff:
-                        GoodScans += 1
+                Scans += 1
+                if result.LFDR < self.PValueCutoff:
+                    GoodScans += 1
+                OutFile.write( str(result) )
                         
             OutFile.close()
-            InFile.close()
         print "%s of %s (%s) forward hits retained"%(GoodScans,Scans,float(GoodScans)/float(Scans))
                 
     def ComputeAndWriteTable(self):

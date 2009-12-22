@@ -31,8 +31,7 @@ class Row:
         self.LFDR = None
 
     def __str__(self):
-        return "\t".join([
-        self.SpectrumFile,
+        outData = [ self.SpectrumFile,
         str(self.ScanNumber),
         self.Annotation,
         self.ProteinName,
@@ -51,7 +50,10 @@ class Row:
         str(self.DeltaScore),
         str(self.ProteinID),
         str(self.DBPos),
-        str(self.FileOffset)])
+        str(self.FileOffset)]
+        if self.LFDR != None:
+            outData.append( str(self.LFDR) )
+        return "\t".join(outData) + "\n"
 
     def populateFromString(self, inspectLine):
         cols = inspectLine.strip().split("\t")
@@ -85,6 +87,7 @@ class Parser():
         self.quiet = QuietFlag
         self.filePath = FilePath
         self.FileCount = 0
+        self.header = ''
 
     def __iter__(self):
         """
@@ -118,6 +121,7 @@ class Parser():
 
             for line in fileHandle:
                 if line[0] == '#':
+                    self.header = line
                     continue
                 row = Row()
                 row.populateFromString(line)
