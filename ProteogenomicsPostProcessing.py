@@ -33,7 +33,7 @@ import sys
 import os
 import getopt
 import traceback
-import ResultsParser
+import InspectResults
 import PeptideMapper
 import GenomicLocations
 import PGORFFilters
@@ -44,7 +44,7 @@ from Utils import *
 Initialize()
 
 
-class FinderClass(ResultsParser.ResultsParser):
+class FinderClass():
     def __init__(self):
         self.ReferenceResults = None
         self.MappedGFFResults = None #alternate input form, mostly used to shunt mapping, because that takes so long
@@ -67,12 +67,11 @@ class FinderClass(ResultsParser.ResultsParser):
         self.SearchForCleavage = 1
         self.OutputPeptidesToGFF = 0
         self.GFFOutputPath = "RenameYourOutput.gff"
-        ResultsParser.ResultsParser.__init__(self)
         
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths)
         if self.ReferenceResults:
-            self.ProcessResultsFiles(self.ReferenceResults, self.ParseInspectCallback)
+            self.ParseInspect( self.ReferenceResults )
             print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
             self.MapAllPeptides()
             
@@ -343,34 +342,27 @@ class FinderClass(ResultsParser.ResultsParser):
             
             self.AllPredictedProteins[ProteinName] = ProteinLocation[0] #explicit assumption that there is only ONE
         
-    def ParseInspectCallback(self, FilePath):
-        """Called by the ResultsParser.ProcessResultsFiles
-        Here I parse out Inspect Results to get peptide annotations, 
+    def ParseInspect(self, FilePath):
+        """Here I parse out Inspect Results to get peptide annotations, 
         Putting them in a hash for safe keeping
         """
-        Handle = open(FilePath, "rb")
-        for Line in Handle.xreadlines():
-            #print "Parsing line %s"%Line
-            if Line[0] == "#":
-                continue # comment line
-            if not Line.strip():
-                continue
-            Bits = list(Line.split("\t"))
+        inspectParser = InspectResults.Parser( FilePath )
+        for result in inspectParser:
             try:
-                Annotation = Bits[self.Columns.Annotation]
+                Annotation = result.Annotation
                 Peptide = GetPeptideFromModdedName(Annotation)
                 Aminos = Peptide.Aminos
-                PValue = float(Bits[self.Columns.PValue])
+                PValue = result.PValue
             except:
                 traceback.print_exc()
                 continue # SNAFU
             #here's some hacking that needs to be fixed.  I currently want to filter stuff by lfdr, but
             #that may not always be present
-            if len(Bits) < self.Columns.LFDR: #meaning that I don't have the column in question
+            if result.LFDR == None: #meaning that I don't have the column in question
                 if PValue > self.PValueLimit: #substitute pvalue for LFDR
                     continue
             else:
-                LFDR = float(Bits[self.Columns.LFDR])
+                LFDR = result.LFDR
                 PValue = LFDR
                 if LFDR > self.PValueLimit:
                     continue
@@ -380,7 +372,6 @@ class FinderClass(ResultsParser.ResultsParser):
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
             self.SpectrumCount += 1
-        Handle.close()
 
     def ParseCommandLine(self,Arguments):
         (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMG:W")
