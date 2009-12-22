@@ -712,7 +712,7 @@ class PValueParser():
                     continue
             self.LinesAcceptedCount += 1
             OutFile.write(str(Match.Bits))
-            OutFile.write("\n")
+
     def WriteFixedScores(self, OutputPath):
         self.TotalLinesAcceptedCount = 0
         self.TotalLinesSecondPass = 0
@@ -732,20 +732,35 @@ class PValueParser():
         print "Total accepted lines: %s of %s"%(self.TotalLinesAcceptedCount, self.TotalLinesSecondPass)
 
     def WriteFixedScoresFile(self, Path):
-        if os.path.isdir(self.ReadScoresPath):
-            OutputPath = os.path.join(self.WriteScoresPath, os.path.split(Path)[1])
-        else:
-            OutputPath = self.WriteScoresPath
-        if (not self.OverwriteNewScoresFlag) and os.path.exists(OutputPath):
-            return
         try:
-            InFile = InspectResults.Parser(Path)
-            OutFile = open(OutputPath, "wb")
+            inspectParser = InspectResults.Parser(Path)
+
+            cloneInputPaths = False
+            lastOutputFile = ''
+            if os.path.isdir( self.WriteScoresPath ):
+                cloneInputPaths = True
+
             LineCount = 0
             self.LinesAcceptedCount = 0
             OldSpectrum = None
             MatchesForSpectrum = []
-            for row in InFile:
+            for row in inspectParser:
+                if cloneInputPaths:
+                    OutputPath = os.path.join( self.WriteScoresPath,
+                                os.path.split( inspectParser.currentFileName)[1])
+                    # Currently we're not compressing our output, but input
+                    # may be compressed, so make sure the extension isn't misleading
+                    # would really like to refactor this output stuff somewhere
+                    if OutputPath[-4:] == '.bz2':
+                        OutputPath = OutputPath[0:-4]
+
+                if (not self.OverwriteNewScoresFlag) and os.path.exists(OutputPath):
+                    return
+
+                if OutputPath != lastOutputFile:
+                    OutFile = open(OutputPath, "wb")
+                    lastOutputFile = OutputPath
+
                 Match = Bag()
                 try:
                     Match.Bits = row

@@ -91,6 +91,7 @@ class Parser():
         self.filePath = FilePath
         self.FileCount = 0
         self.header = ''
+        self.currentFileName = None
 
     def __iter__(self):
         """
@@ -99,7 +100,7 @@ class Parser():
         """
         print "ResultsParser:%s" % self.filePath
         if os.path.isdir(self.filePath):
-            FileNames = os.listdir(self.filePath)
+            FileNames = [os.path.join(self.filePath,x) for x in os.listdir(self.filePath)]
             random.shuffle(FileNames)
         else:
             FileNames = [self.filePath]
@@ -121,6 +122,7 @@ class Parser():
                 continue
 
             self.FileCount += 1
+            self.currentFileName = FileName
 
             for line in fileHandle:
                 if line[0] == '#':

@@ -240,7 +240,7 @@ class ProteinSelector():
         LineNumber = 0
         for row in File:
             LineNumber += 1
-            if LineNumber % 100 == 0:
+            if LineNumber % 1000 == 0:
                 print "%s %s..."%(Stub, LineNumber)
                 if self.MaxFileLines != None and LineNumber >= self.MaxFileLines:
                     return # Quick-parse, for debugging only!
