@@ -84,7 +84,18 @@ class Row:
             self.LFDR     = float(cols[20])
     
 class Parser():
-    def __init__(self, FilePath, MaxFilesToParse = None, QuietFlag = 0):
+    """Class to iterate through an inspect results file, or every
+        search-results file in a directory. Supports bz2 compressed files,
+        as well as a method to mirror the input directory structure into
+        a new location on output.
+    """
+    def __init__(self, FilePath, MaxFilesToParse = None, QuietFlag = 0, inputMirrorTo = None):
+        """Constructor arguments: FilePath is input file or dir of inspect results.
+        MaxFilesToParse: sets a hard limit on how many files from a dir to read.
+        QuietFlag: True for quiet False for verbose
+        inputMirrorTo: an output directory to mirror the input dir structure to.
+            obj.mirrorOutHandle will be the handle to write out to the current file.
+        """
         self.extensions = (".txt", ".filtered", ".res", ".csv", ".out")
         self.maxFiles = MaxFilesToParse
         self.quiet = QuietFlag
@@ -92,12 +103,33 @@ class Parser():
         self.FileCount = 0
         self.header = ''
         self.currentFileName = None
+        self.outputMirrorInput = inputMirrorTo
+        self.mirrorOutHandle = None
+
+    def __createHandles__( self, FileName ):
+        """Internal method that creates the input and optional
+        output file handles for the iterator.
+        """
+        fileHandle = None
+        (dirName,baseName) = os.path.split( FileName )
+        (Stub, Extension) = os.path.splitext(FileName)
+        if Extension.lower() in self.extensions:
+            fileHandle = open( FileName )
+            if self.outputMirrorInput:
+                self.mirrorOutHandle = open( os.path.join(
+                    self.outputMirrorInput, baseName ), "w")
+
+        elif Extension.lower() == '.bz2':
+            Extension = os.path.splitext(Stub)[1]
+            if Extension.lower() in self.extensions:
+                fileHandle = bz2.BZ2File( FileName )
+                if self.outputMirrorInput:
+                    self.mirrorOutHandle = bz2.BZ2File( os.path.join(
+                        self.outputMirrorInput, baseName ),"w")
+
+        return fileHandle
 
     def __iter__(self):
-        """
-        Function for applying a Callback function to one search-results file, or to every
-        search-results file in a directory.
-        """
         print "ResultsParser:%s" % self.filePath
         if os.path.isdir(self.filePath):
             FileNames = [os.path.join(self.filePath,x) for x in os.listdir(self.filePath)]
@@ -110,15 +142,8 @@ class Parser():
             if not self.quiet:
                 print "(%s/%s) %s"%(FileNameIndex, len(FileNames), FileName)
 
-            fileHandle = None
-            (Stub, Extension) = os.path.splitext(FileName)
-            if Extension.lower() in self.extensions:
-                fileHandle = open( FileName )
-            elif Extension.lower() == '.bz2':
-                (prefix, Extension) = os.path.splitext(Stub)
-                if Extension.lower() in self.extensions:
-                    fileHandle = bz2.BZ2File( FileName )
-            else:
+            fileHandle = self.__createHandles__( FileName )
+            if not fileHandle:
                 continue
 
             self.FileCount += 1
@@ -133,6 +158,8 @@ class Parser():
                 yield row
 
             fileHandle.close()
+            if self.outputMirrorInput:
+                self.mirrorOutHandle.close()
 
             # Don't parse every single file, that will take too long!
             if self.maxFiles != None and self.FileCount > self.maxFiles:

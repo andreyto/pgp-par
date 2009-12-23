@@ -662,7 +662,7 @@ class PValueParser():
             self.MQScoreWeight = Defaults.MQScoreWeight
             self.DeltaScoreWeight = Defaults.DeltaScoreWeight
             self.GammaOffset = Defaults.GammaOffset
-    def WriteMatchesForSpectrum(self, MatchesForSpectrum, OutFile):
+    def WriteMatchesForSpectrum(self, MatchesForSpectrum, OutHandle):
         if self.WriteTopMatchOnly:
             MatchesForSpectrum = MatchesForSpectrum[0:1]
         for Match in MatchesForSpectrum:
@@ -711,7 +711,7 @@ class PValueParser():
                 if Match.MQScore < MIN_MQSCORE:
                     continue
             self.LinesAcceptedCount += 1
-            OutFile.write(str(Match.Bits))
+            OutHandle.write(str(Match.Bits))
 
     def WriteFixedScores(self, OutputPath):
         self.TotalLinesAcceptedCount = 0
@@ -733,34 +733,14 @@ class PValueParser():
 
     def WriteFixedScoresFile(self, Path):
         try:
-            inspectParser = InspectResults.Parser(Path)
-
-            cloneInputPaths = False
-            lastOutputFile = ''
-            if os.path.isdir( self.WriteScoresPath ):
-                cloneInputPaths = True
+            inspectParser = InspectResults.Parser(Path,
+                    inputMirrorTo=self.WriteScoresPath)
 
             LineCount = 0
             self.LinesAcceptedCount = 0
             OldSpectrum = None
             MatchesForSpectrum = []
             for row in inspectParser:
-                if cloneInputPaths:
-                    OutputPath = os.path.join( self.WriteScoresPath,
-                                os.path.split( inspectParser.currentFileName)[1])
-                    # Currently we're not compressing our output, but input
-                    # may be compressed, so make sure the extension isn't misleading
-                    # would really like to refactor this output stuff somewhere
-                    if OutputPath[-4:] == '.bz2':
-                        OutputPath = OutputPath[0:-4]
-
-                if (not self.OverwriteNewScoresFlag) and os.path.exists(OutputPath):
-                    return
-
-                if OutputPath != lastOutputFile:
-                    OutFile = open(OutputPath, "wb")
-                    lastOutputFile = OutputPath
-
                 Match = Bag()
                 try:
                     Match.Bits = row
@@ -774,13 +754,16 @@ class PValueParser():
                 LineCount += 1
                 Spectrum = (row.SpectrumFile, row.ScanNumber)
                 if Spectrum != OldSpectrum:
-                    self.WriteMatchesForSpectrum(MatchesForSpectrum, OutFile)
+                    self.WriteMatchesForSpectrum( MatchesForSpectrum,
+                            inspectParser.mirrorOutHandle
+                            )
                     MatchesForSpectrum = []
                 OldSpectrum = Spectrum
                 MatchesForSpectrum.append(Match)
             # Finish the last spectrum:
-            self.WriteMatchesForSpectrum(MatchesForSpectrum, OutFile)
-            OutFile.close()
+            self.WriteMatchesForSpectrum( MatchesForSpectrum,
+                            inspectParser.mirrorOutHandle
+                            )
             print "%s\t%s\t%s\t"%(Path, LineCount, self.LinesAcceptedCount)
             self.TotalLinesAcceptedCount += self.LinesAcceptedCount
             self.TotalLinesSecondPass += LineCount
