@@ -40,58 +40,41 @@ class BinMaker:
 
     def Main(self):
 
-        FullFileNames = []
-        for FileName in os.listdir(self.InputDir):
-            self.FileNames.append(FileName)
-            FullFileNames.append(os.path.join(self.InputDir,FileName))
+        inspectParser = InspectResults.Parser( self.InputDir )
 
-        self.FileNames.sort()
-        FullFileNames.sort()
+        for result in inspectParser:
+            Charge = result.Charge
+            Score = result.PValue
+            Index = int(Score/(self.BinWidth))
 
-        for i in range(0,len(FullFileNames)):
-            FileName = FullFileNames[i]
-
-            print "(%s/%s) Reading Values in %s"%(i,len(FullFileNames)-1,FileName)
-                
-            if os.path.isdir(FileName):
-                continue
-            
-
-            inspectParser = InspectResults.Parser( FileName )
-
-            for result in inspectParser:
-                Charge = result.Charge
-                Score = result.PValue
-                Index = int(Score/(self.BinWidth))
-
-                if Charge <= 2:
-                    (TP,FP) = self.IScoreCounts_1_2.setdefault(Index,(0,0))
-                else:
-                    (TP,FP) = self.IScoreCounts_3.setdefault(Index,(0,0))
+            if Charge <= 2:
+                (TP,FP) = self.IScoreCounts_1_2.setdefault(Index,(0,0))
+            else:
+                (TP,FP) = self.IScoreCounts_3.setdefault(Index,(0,0))
                     
-                Protein = result.ProteinName
-                if self.VerboseFlag:
-                    print result
-                    print Protein
-                    print self.IScoreCounts_1_2[Index]
-                    print self.IScoreCounts_3[Index]
-                if Protein[0:3] == "XXX":
-                    if Charge <= 2:
-                        self.IScoreCounts_1_2[Index] = (TP,FP+1)
-                    else:
-                        self.IScoreCounts_3[Index] = (TP,FP+1)
+            Protein = result.ProteinName
+            if self.VerboseFlag:
+                print result
+                print Protein
+                print self.IScoreCounts_1_2[Index]
+                print self.IScoreCounts_3[Index]
+            if Protein[0:3] == "XXX":
+                if Charge <= 2:
+                    self.IScoreCounts_1_2[Index] = (TP,FP+1)
                 else:
-                    if Charge <= 2:
-                        self.IScoreCounts_1_2[Index] = (TP+1,FP)
-                    else:
-                        self.IScoreCounts_3[Index] = (TP+1,FP)
+                    self.IScoreCounts_3[Index] = (TP,FP+1)
+            else:
+                if Charge <= 2:
+                    self.IScoreCounts_1_2[Index] = (TP+1,FP)
+                else:
+                    self.IScoreCounts_3[Index] = (TP+1,FP)
 
-                if self.VerboseFlag:
-                    print self.IScoreCounts_1_2[Index]
-                    print self.IScoreCounts_3[Index]
-                    raw_input()
+            if self.VerboseFlag:
+                print self.IScoreCounts_1_2[Index]
+                print self.IScoreCounts_3[Index]
+                raw_input()
                 
-            self.Header = inspectParser.header
+        self.Header = inspectParser.header
 
         if self.VerboseFlag:
             self.PrintResults()
@@ -103,33 +86,28 @@ class BinMaker:
 
         Scans = 0
         GoodScans = 0
-        for i in range(0,len(self.FileNames)):
-            FileName = self.FileNames[i]
-    
-            print "(%s/%s) Writing to %s"%(i,len(self.FileNames)-1,FileName)
-            inspectParser = InspectResults.Parser(
-                    os.path.join( self.InputDir, FileName) ,'r' )
-            OutFile = open(os.path.join(self.OutputDir,FileName),'w')
-            OutFile.write(self.Header)
-            for result in inspectParser:
-                PValue = result.PValue
-                Index = int(PValue/self.BinWidth)
-                Charge = result.Charge
-                Protein = result.ProteinName
-                if Protein[0:3] == "XXX":
-                    continue
+        inspectParser = InspectResults.Parser( self.InputDir, inputMirrorTo=self.OutputDir)
+        for result in inspectParser:
+            if not Scans:
+                inspectParser.mirrorOutHandle.write(self.Header)
 
-                if Charge <= 2:
-                    result.LFDR = self.LFDR_1_2[Index]
-                else:
-                    result.LFDR = self.LFDR_3[Index]
+            PValue = result.PValue
+            Index = int(PValue/self.BinWidth)
+            Charge = result.Charge
+            Protein = result.ProteinName
+            if Protein[0:3] == "XXX":
+                continue
+
+            if Charge <= 2:
+                result.LFDR = self.LFDR_1_2[Index]
+            else:
+                result.LFDR = self.LFDR_3[Index]
                     
-                Scans += 1
-                if result.LFDR < self.PValueCutoff:
-                    GoodScans += 1
-                OutFile.write( str(result) )
+            Scans += 1
+            if result.LFDR < self.PValueCutoff:
+                GoodScans += 1
+            inspectParser.mirrorOutHandle.write( str(result) )
                         
-            OutFile.close()
         print "%s of %s (%s) forward hits retained"%(GoodScans,Scans,float(GoodScans)/float(Scans))
                 
     def ComputeAndWriteTable(self):

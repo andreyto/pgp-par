@@ -103,8 +103,10 @@ class Parser():
         self.FileCount = 0
         self.header = ''
         self.currentFileName = None
-        self.outputMirrorInput = inputMirrorTo
         self.mirrorOutHandle = None
+        self.outputMirrorInput = inputMirrorTo
+        if inputMirrorTo and not os.path.exists( inputMirrorTo ):
+            os.makedirs( inputMirrorTo )
 
     def __createHandles__( self, FileName ):
         """Internal method that creates the input and optional
