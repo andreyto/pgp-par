@@ -28,7 +28,6 @@ class ScanCounter:
         self.FileSizes = {}
         self.CountFileName = "ScanCount.txt"  # default
         self.CountDirectory = None
-        self.RecurseFlag = 0
     def SaveKnownCounts(self, CountFileName):
         Keys = self.KnownCounts.keys()
         Keys.sort()
@@ -65,43 +64,43 @@ class ScanCounter:
                 self.CountDirectory = Value
             elif Option == "-w":
                 self.CountFileName = Value
-            elif Option == "-R":
-                self.RecurseFlag = 0
     def Main(self):
         # Load counts:
         self.LoadKnownCounts(self.CountFileName)
         # Count our directory:
-        self.CountScansInDirectory(self.CountDirectory, 0)
+        self.CountScansInDirectory(self.CountDirectory)
         # Save counts:
         self.SaveKnownCounts(self.CountFileName)
-    def CountScansInDirectory(self, FilePath, RecursionDepth):
-        if os.path.isdir(FilePath):
-            if RecursionDepth and not self.RecurseFlag:
-                return
-            # Recurse into a subdirectory:
-            for SubFileName in os.listdir(FilePath):
-                SubFilePath = os.path.join(FilePath, SubFileName)
-                self.CountScansInDirectory(SubFilePath, RecursionDepth + 1)
-            return
-        # Handle a single file:
-        FileName = os.path.split(FilePath)[1]
-        if self.KnownCounts.has_key(FileName):
-            print "(Skip %s - already counted it)"%FileName
-            return
-        print "(Count %s...)"%FileName
-        (Stub, Extension) = os.path.splitext(FilePath)
-        Extension = Extension.lower()
-        if Extension == ".mgf":
-            Result = self.CountScansMGF(FilePath)
-        elif Extension == ".mzxml":
-            Result = self.CountScansMZXML(FilePath)
-        else:
-            Result = None
-        if not Result:
-            return
-        self.KnownCounts[FileName] = Result[0]
-        self.KnownMaxScans[FileName] = Result[1]
-        self.FileSizes[FileName] = os.stat(FilePath).st_size
+    def CountScansInDirectory(self, InputFilePath):
+        pathLen = len(InputFilePath) + 1
+        for root,dirs,files in os.walk( InputFilePath ):
+            if root == InputFilePath:
+                subDir = ''
+            else:
+                subDir = root[pathLen:]
+            for fileStr in files:
+                # Handle a single file:
+                FileName = os.path.join(subDir,fileStr)
+                FilePath = os.path.join(root,fileStr)
+                if self.KnownCounts.has_key(FileName):
+#                    print "(Skip %s - already counted it)"%FileName
+                    continue
+                print "(Count %s...)"%FileName
+                (Stub, Extension) = os.path.splitext(fileStr)
+                Extension = Extension.lower()
+                if Extension == ".mgf":
+                    Result = self.CountScansMGF(FilePath)
+                elif Extension == ".mzxml":
+                    Result = self.CountScansMZXML(FilePath)
+                elif Extension == ".ms2":
+                    Result = self.CountScansMS2(FilePath)
+                else:
+                    Result = None
+                if not Result:
+                    continue
+                self.KnownCounts[FileName] = Result[0]
+                self.KnownMaxScans[FileName] = Result[1]
+                self.FileSizes[FileName] = os.stat(FilePath).st_size
     def CountScansMZXML(self, FilePath):
         FileScanCount = 0
         File = open(FilePath, "rb")
@@ -170,8 +169,24 @@ class ScanCounter:
         else:
             MaxScanNumber = 0
         return (FileScanCount, MaxScanNumber)
+
+    def CountScansMS2(self, FilePath):
+        """New version to count scans in an MS2 file.
+        """
+        file = open(FilePath)
+        scanCount = 0
+        maxScan = 0
+        for line in file:
+            if line[0] == 'S':
+                scanCount += 1
+                (s,scanNum,num2,other) = line.split("\t")
+                if scanNum > max:
+                    maxScan = scanNum
+        return (scanCount, maxScan)
             
 def CountScansMS2(FilePath):
+    """Non working version of MS2 count scans.
+    """
     ScanNumbers = {}
     File = open(FilePath, "rb")
     for FileLine in File.xreadlines():

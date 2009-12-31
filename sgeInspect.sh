@@ -10,6 +10,9 @@ inspectIn=jobs/$SGE_TASK_ID.in
 
 $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 
+rundir=$PWD
+inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt 
+rescoreOut=${inspectOut/.txt/.res}
 PepNovoDir=/usr/local/projects/PGP/ptest
 
 mzxml=`awk -F, '/spectra/ {print $2}' $inspectIn`
@@ -21,18 +24,17 @@ then
     exit 1
 fi
 
-if [ `echo ${mzxml##*.} | tr "[:upper:]" "[:lower:]"` != 'mzxml' ]
-then
-    echo "PepNovo only supports mzxml files got: $spectra"
-    exit
-fi
-
-rundir=$PWD
 cd $PepNovoDir
-inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt 
-rescoreOut=${inspectOut/.txt/.res}
-./PepNovo_bin -model CID_IT_TRYP -PTMs 'C+57' -file $mzxml -rescore_inspect $inspectOut $rescoreOut
+ulimit -c 0 # PepNovo cores have filled up the disk before
 
+if ./PepNovo_bin -model CID_IT_TRYP -PTMs 'C+57' -file $mzxml -rescore_inspect $inspectOut $rescoreOut
+then
+    echo "PepNovo success"
+else
+    echo "PepNovo failure"
+    rescoreOut=''
+fi
+    
 bzip2 $inspectOut $rescoreOut
 
 touch $rundir/Done/$SGE_TASK_ID

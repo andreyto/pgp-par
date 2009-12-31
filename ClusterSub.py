@@ -136,7 +136,9 @@ class ScriptMongler:
                 ScanCount = int(Bits[CountScans.CountScanBits.MaxScan]) 
             except:
                 continue
-            self.ScanCounts[Bits[CountScans.CountScanBits.Stub]] = ScanCount
+            spectraPath = os.path.join( self.gridEnv.MZXMLDir,
+                                        Bits[CountScans.CountScanBits.Stub])
+            self.ScanCounts[spectraPath] = ScanCount
         scanfile.close()
 
     def BuildInspectInputFile(self,Job):
@@ -219,12 +221,12 @@ PMTolerance,3.0
             mzfile.close()
         else:
             # List all files from MZXMLDir with a valid extension:
-            TempList = os.listdir(self.gridEnv.MZXMLDir)
             SpectrumFileNameList = []
-            for Name in TempList:
-                (Stub, Extension) = os.path.splitext(Name)
-                if Extension.lower() in (".mzxml", ".mgf", ".ms2"):
-                    SpectrumFileNameList.append(Name)
+            for root, dirs, files in os.walk( self.gridEnv.MZXMLDir ):
+                for Name in files:
+                    (Stub, Extension) = os.path.splitext(Name)
+                    if Extension.lower() in (".mzxml", ".mgf", ".ms2"):
+                        SpectrumFileNameList.append(os.path.join(root,Name))
         SpectrumFileNameList.sort()
         return SpectrumFileNameList
 
