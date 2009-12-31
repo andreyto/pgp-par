@@ -14,6 +14,7 @@ $SCRATCH/USER_NAME/CopyFlags - Usually empty.  Temporary files are written here 
 $SCRATCH/USER_NAME/ResultsX - Directory for results-files to be copied into.
 """
 import os
+import re
 import sys
 import getopt
 import shutil
@@ -105,7 +106,7 @@ class ScriptMongler:
         MainJob.BlockNumber = BlockNumber
         CurrentMasterJob.SubJobs.append(MainJob)
 
-    def createMasterJob(self, BlockNumber):
+    def createMasterJob(self):
         self.master_job_count += 1
         CurrentMasterJob = JobClass()
         CurrentMasterJob.FileName = "%s.in" % self.master_job_count
@@ -279,7 +280,7 @@ PMTolerance,3.0
                 print "SKIP already searched:", JobKey
                 continue
             if not CurrentMasterJob:
-                CurrentMasterJob = self.createMasterJob(BlockNumber)
+                CurrentMasterJob = self.createMasterJob()
                 CurrentMasterJob.TotalScans = 0
             # Add a MAIN JOB, to search this file:
             self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
@@ -319,7 +320,7 @@ PMTolerance,3.0
                     continue
                 # Create a new MASTER JOB, if necessary:
                 if not CurrentMasterJob:
-                    CurrentMasterJob = self.createMasterJob(BlockNumber)
+                    CurrentMasterJob = self.createMasterJob()
 
                 # Add a MAIN JOB, to search this file:
                 self.createMainJob(CurrentMasterJob, SpectrumFileName, BlockNumber)
@@ -405,17 +406,22 @@ PMTolerance,3.0
 
                 dest   = fastaPrefix + sixFrame + suffix
                 rstrie = fastaPrefix + sixFrame + '.RS.trie'
+                archRStrie = os.path.join( root, rstrie )
                 if not os.path.exists( dest ):
-                    if sixFrame:
-                        args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
-                        SixFrameFasta.main( args.split() )
+                    if os.path.exists( archRStrie ):
+                        shutil.copy( archRStrie, workDir )
+                        shutil.copy( re.sub(".trie$",".index", archRStrie), workDir)
                     else:
-                        os.symlink( fullFastaPath, dest )
+                        if sixFrame:
+                            args = "-r %s -w %s -c %s" % ( fullFastaPath, dest, fastaPrefix )
+                            SixFrameFasta.main( args.split() )
+                        else:
+                            os.symlink( fullFastaPath, dest )
 
-                    PrepDB.main( ['FASTA', dest] )
+                        PrepDB.main( ['FASTA', dest] )
 
-                    args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', rstrie)
-                    ShuffleDB.main( args.split() ) 
+                        args = "-r %s -w %s -p" % (fastaPrefix + sixFrame + '.trie', rstrie)
+                        ShuffleDB.main( args.split() ) 
 
                 self.DBPath.append( os.path.join( workDir, rstrie) )
 
