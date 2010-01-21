@@ -20,8 +20,8 @@ class Test(unittest.TestCase):
         p2 = PGPeptide.GenomicLocation(3,9,'+')
         p3 = PGPeptide.GenomicLocation(5,17,'-')
         p4 = PGPeptide.GenomicLocation(21,367,'-')
-        self.assertEqual( 2, p1.getStart() )
-        self.assertEqual( 11, p1.getStop() )
+        self.assertEqual( 2, p1.start )
+        self.assertEqual( 11, p1.stop )
 
         res = p1.overlap( p2 )
         self.assertEqual( 3, res[0] )
