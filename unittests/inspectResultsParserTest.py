@@ -44,6 +44,7 @@ class Test(unittest.TestCase):
 #            print "%s\n" % result
 
     def testResultParser2Cols(self):
+        "Test that the parser is reading the ANNO and PVAL columns correctly."
         parser = InspectResults.Parser( self.IN )
         i = 0
         self.assertEqual( 9, len(self.ANNO) )

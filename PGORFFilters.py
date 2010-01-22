@@ -39,7 +39,7 @@ class Filter:
 class UniquenessFilter(Filter):
     """Class UniquenessFilter: this is an ORF level filter for proteogenomcis,
     and works to get rid of ORFs that do not have any uniquely mapping peptides
-    The problem with ts is not tat we doubt the reality of their
+    The problem with ts is not that we doubt the reality of their
     peptide matches, but that without any uniquely mapping peptides, we cannot
     say for certain whether it was this locus or another that needs the 
     attention.
@@ -227,7 +227,7 @@ def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):
         #1. first sort the proteins by their start and stop
         TwoLayerTuples = Dictionary.items()
         DictLen = len(Dictionary)
-        print "I foiund %s items in the dictionary"%DictLen
+        print "I found %s items in the dictionary"%DictLen
         TwoLayerTuples.sort(lambda (k1, (b1,e1)), (k2, (b2,e2)): SortStartStop(b1,e1,b2,e2))
         Overlappers = []
         # I now have a sorted list that looks like this

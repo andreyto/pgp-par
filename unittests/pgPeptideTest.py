@@ -5,7 +5,7 @@ Created on Oct 8, 2009
 
 @author: eli
 
-Some unit tests for the database setup code.
+Some unit tests for the Peptide location code
 '''
 import unittest
 import filecmp
@@ -15,7 +15,8 @@ import PGPeptide
 
 class Test(unittest.TestCase):
 
-    def testGenomicLocation(self):
+    def testGenomicLocationOverlap(self):
+        "Test that GenomicLocation.overlap() correctly identifies several overlaps."
         p1 = PGPeptide.GenomicLocation(2,11,'+')
         p2 = PGPeptide.GenomicLocation(3,9,'+')
         p3 = PGPeptide.GenomicLocation(5,17,'-')
@@ -39,5 +40,4 @@ class Test(unittest.TestCase):
         self.assertEqual( None, res )
 
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.test6Frame']
     unittest.main()
