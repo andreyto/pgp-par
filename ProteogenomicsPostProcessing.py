@@ -80,7 +80,8 @@ class FinderClass():
         ##now map all the peptides
         self.MapPredictedProteins()
         self.CreateORFs()
-    
+        #self.CheckComplexity()
+        #return
         ## Now start the analyses
         #self.FindOverlappingDubiousGeneCalls()
         self.FilterORFs()
@@ -91,6 +92,25 @@ class FinderClass():
         if self.SearchForCleavage:
            self.AnalyzeCleavage()
 
+    def CheckComplexity(self):
+        if self.Verbose:
+            print "ProteogenomicsPostProcessing.py:CheckComplexity"
+        LowMW = ["G", "A"]
+        List = []
+        for ORF in self.AllORFs.values():
+            PeptideString = ""
+            for PeptideObject in ORF.PeptideLocationList:
+                PeptideString += PeptideObject.Aminos
+            Count = 0
+            for Letter in PeptideString:
+                if Letter in LowMW:
+                    Count +=1
+            Normalized = Count / float (len(PeptideString))
+            List.append(Normalized)
+        Histogram = BasicStats.CreateHistogram(List, 0, 0.05)
+        BasicStats.PrettyPrintHistogram(Histogram, None)
+          
+
     
     def FindOverlappingDubiousGeneCalls(self):
         """Parameters: none
@@ -98,7 +118,7 @@ class FinderClass():
         Description: There are genomic regions for which two gene calls overlap. 
         For some badly predicted genomes, the overlap is substantial (like >50 bp).
         I believe that most of these are bad gene calls, and I want to filter them 
-        out.  This method calls the PRORFFilters method FindOverlappingDubiousGeneCalls
+        out.  This method calls the PROilters methodFindOverlapnGeneCalls
         which does that.  First we have to build the right dictionary,  so we do that here
         """
         ProteinDictionary = {} #proteinname->(start, stop)
@@ -141,6 +161,11 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FilterORFs"
+            
+        #first let's try the new filter
+        Filter = PGORFFilters.SequenceComplexityFilter()
+        for ORF in self.AllORFs.values():
+            Filter.apply(ORF)    
         for ORF in self.AllORFs.values():
             PGORFFilters.FilterThisORF(ORF)
         DeleteMeList = []

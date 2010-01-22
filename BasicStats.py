@@ -87,7 +87,6 @@ def CreateHistogram(List, FirstBin, BinSize):
     Histogram = {} #bin->count
     List.sort()
     BiggestValue = List[-1]
-    #print "THis is the BiggestValue that I found %s"%BiggestValue
     Bin = FirstBin
     #instantiate bins
     while(Bin <= BiggestValue):
@@ -140,7 +139,7 @@ def PrettyPrintMultiHistogram(HistogramList, FileHandle = None):
     for Key in Keys:
         ValueString = ""
         for H in HistogramList:
-            Value = H[Key]
+            Value = H.get(Key, 0) #this should mean that if there is no key, return zero
             ValueString += "%s\t"%Value
         Line = "%s\t%s"%(Key, ValueString)
         if FileHandle:
