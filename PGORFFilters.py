@@ -11,6 +11,54 @@ NOTE: this is a utility, and not executable from the command line
 
 """
 
+class FilterList:
+    """Class FilterList: This is a container object for a list
+    of filters.  It wraps the sequential calling of each filter
+    (called in order that they were added to the list).
+    Variables:
+        self.List
+    Functions: ApplyAllFilters(ORFList)
+    """
+    def __init__(self, ListOfFilterObjects):
+        """Parameters: List of filter objects, or classes that inherit from 'Filter' 
+        Return: none
+        Description: trivially constructor 
+        """        
+        self.List = ListOfFilterObjects
+        
+    def ApplyAllFilters(self, DictionaryOfORFs):
+        """
+        Parameters: A dict of ORF objects, where the key = name, value = ORF object
+        Return: a filtered dict of ORF objects
+        Description: apply the filters one at a time, deleting
+        the ORF objects that the filters tell me to delete
+        """
+        KeepDict = {}
+        KillList = []
+        for (Name, ORF) in DictionaryOfORFs.items():
+            #now cycle through all our filters.  We use the ordering
+            #of the list, meaning that you should have throught about
+            #what order you wanted to apply them in when you created 
+            #me as an object
+            DeleteMe = 0 #assume innnocence
+            for Filter in self.List:
+                DeleteMe = Filter.apply(ORF)
+                if DeleteMe:
+                    break #quit the filter already, we know it sucks
+            if not DeleteMe:
+                KeepDict[Name] = ORF
+            else:
+                KillList.append(Name)
+                
+        #now we should politely kill all those on the naughty list
+        # I haven't figured out how to do that yet, because there is no
+        #real object model yet, and I need a refresher on garbage collection
+        #especially in the python implementation
+        
+        return KeepDict
+    
+
+
 class Filter:
     """Class Filter: this is a generic filter, meant to be inherited to 
     the actual specific filter classes, e.g. SequenceComplexityFilter
@@ -115,6 +163,41 @@ class TrypticFilter(Filter):
             return 0 #keep me around
         return 1 # delete me NOW
 
+class MinPeptideFilter(Filter):
+    """Class MinPeptideFilter: this is an ORF level filter for proteogenomcis,
+    and works to get rid of ORFs thathave too few peptides.  Although Pavel
+    may disagree, we sometimes use this heuristic, and it's pretty effective
+    We actually should want to look closely at the true significance of matches
+    with only a single peptide, but that is not the purpose of this filter
+    Rules for Filter:
+    Rule 1. If there are fewer peptides than our cutoff, then we signal for 
+    deleting the ORF.
+    
+    
+    """
+    def __init__(self, MinimumPeptides = 2):
+        """
+        Parameters: The minimum number of peptides that you require. defalut = 2 
+        Return: none
+        Description: a rather small constructor
+        """               
+        self.name = "MinPeptideFilter"
+        self.MinimumPeptides = MinimumPeptides
+        
+
+    def apply(self, ORF):
+        """
+        Parameters: an ORF object that is filled with peptides 
+        Return: 0/1 keep/destroy
+        Description: Apply the filter. Check to see if there are any
+        tryptic peptides mapping within the ORF. If not, then delete
+        the ORF
+        """
+        NumPeptidesThisORF = len(ORF.PeptideLocationList)
+        if NumPeptidesThisORF >= self.MinimumPeptides:
+            return 0 #keep me around
+        return 1 # delete me NOW
+
 
     
 class SequenceComplexityFilter(Filter):
@@ -199,22 +282,6 @@ class SequenceComplexityFilter(Filter):
             del ORF.PeptideLocationList[Index] 
         
 
-
-MinimumPeptidesPerORF = 2
-
-def FilterThisORF(ORF):
-    """Parameters: ORF object from GenomicLocations.py
-    Return: none
-    Description: this is the main entry for filtering.  it does all the 
-    rerouting and figuring things out. If it finds peptides to filter
-    it will delete them, then you check afterwards if the ORF now contains
-    any peptides
-    """
-    ## 1. Meet the minimum peptide requirement
-    if len(ORF.PeptideLocationList) < MinimumPeptidesPerORF:
-        del ORF.PeptideLocationList[:] #remove all peptides
-        return 
-    #now we start the more complicated filters, which I will do later.
 
 def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):
         """Parameters: none

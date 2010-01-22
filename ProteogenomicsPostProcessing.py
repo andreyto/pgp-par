@@ -161,20 +161,29 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FilterORFs"
-            
+        
+        #this is the way we do filters.  We create all the filters that
+        #we want to use, and then put them into th efilter list. It does the 
+        #magic for us.
+        SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
+        MinPeptide = PGORFFilters.MinPeptideFilter(2)
+        Uniqueness = PGORFFilters.UniquenessFilter()
+        FilterList = PGORFFilters.FilterList((SequenceComplexity, Uniqueness, MinPeptide)) # an anonymous list
+        FilteredORFs = FilterList.ApplyAllFilters(self.AllORFs)
+        self.AllORFs = FilteredORFs
+         
         #first let's try the new filter
-        Filter = PGORFFilters.SequenceComplexityFilter()
-        for ORF in self.AllORFs.values():
-            Filter.apply(ORF)    
-        for ORF in self.AllORFs.values():
-            PGORFFilters.FilterThisORF(ORF)
-        DeleteMeList = []
-        for (ORFName, ORF) in self.AllORFs.items():
-            if len(ORF.PeptideLocationList) == 0:
-                DeleteMeList.append(ORFName)
+        #for ORF in self.AllORFs.values():
+        #    Filter.apply(ORF)    
+        #for ORF in self.AllORFs.values():
+        #    PGORFFilters.FilterThisORF(ORF)
+        #DeleteMeList = []
+        #for (ORFName, ORF) in self.AllORFs.items():
+        #    if len(ORF.PeptideLocationList) == 0:
+        #        DeleteMeList.append(ORFName)
         #can't delete from a list during the iteration.  so now we clean up
-        for Name in DeleteMeList:
-            del self.AllORFs[Name]
+        #for Name in DeleteMeList:
+        #    del self.AllORFs[Name]
         print "\t%s ORFs left after filtering"%len(self.AllORFs)
         if self.Verbose:
             for (ORFName, ORF) in self.AllORFs.items():
