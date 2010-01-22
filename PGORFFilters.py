@@ -1,12 +1,9 @@
 """PGORFFilters.py
-This auxiliary set of functions is to be used to filter ORFs (not proteins.  
-open reading frames).  The filters are 
-
-1. 2 peptides/ORF
-2. Clustering
-3. Sequence content
-4. Tryptic content of cluster
-
+THis is a set of classes designed to help filter out spurious 
+ORFs from the proteogenomics pipeline.  Each new filter should
+be added as a new class, inheriting from 'Filter' and implementing
+a method called 'apply' where the magic gets done.
+ 
 NOTE: this is a utility, and not executable from the command line
 
 """
