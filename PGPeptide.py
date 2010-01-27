@@ -10,9 +10,9 @@ class GenomicLocation(object):
         if not strand in ['+','-']:
             raise ValueError("strand must be + or -")
 
-        self._start = start
-        self._stop = stop
-        self._frame = None
+        self.__start = start
+        self.__stop = stop
+        self.__frame = None
         self.chromosome = None
         self.strand = strand
         
@@ -22,23 +22,23 @@ class GenomicLocation(object):
     @property
     def start(self):
         'Lesser coordinate on the sequence.'
-        return self._start
+        return self.__start
 
     @property
     def stop(self):
         'Greater coordinate on the sequence.'
-        return self._stop
+        return self.__stop
 
     @property
     def frame(self):
         'Frame of the translation.'
-        return self._frame
+        return self.__frame
 
     @frame.setter
     def frame(self,value):
         if not value in [1,2,3]:
             raise ValueError("Frame must be 1, 2 or 3.")
-        self._frame = value
+        self.__frame = value
 
     def overlap(self,otherLocation):
         """Returns None if the locations don't overlap.
@@ -64,6 +64,11 @@ class GenomicLocation(object):
 class LocatedPeptide(object):
     def __init__(self,location):
         self.location = location
+        self.name = None
+        self.amino = None
+        self.bestScore = None
+        self.spectrumCount = 0
+        self.unique = None
 
     def isTryptic(self):
         # TBD
