@@ -5,9 +5,9 @@ A generic sequence class for passing sequences around.
 Also support classes for doing sequence IO.
 '''
 
-import re
+import os, re
 
-class Sequence():
+class Sequence(object):
     '''
     A generic sequence class
     '''
@@ -21,8 +21,8 @@ class Sequence():
         self.acc = acc  
         self.seq = seq
         self.desc = desc
-        
-class FlatFileReader():
+            
+class FlatFileReader(object):
     '''
     A parent class for all the classes that read flat files to
     inherit from. Children should always be iterable.
@@ -40,7 +40,7 @@ class FlatFileReader():
     def __del__(self):
         self.io.close()
 
-class FlatFileWriter():
+class FlatFileWriter(object):
     '''
     A parent class for all the classes that write flat files to
     inherit from.
@@ -107,7 +107,7 @@ class FastaOut(FlatFileWriter):
     '''
     def __init__(self,out):
         FlatFileWriter.__init__(self, out)
-        self.linesize = 60
+        self.linesize = 80
         
     def write(self,seq):
         if seq.desc:
@@ -118,3 +118,34 @@ class FastaOut(FlatFileWriter):
         for i in xrange(0, len(seq.seq), self.linesize):
             self.io.write("%s\n" % seq.seq[i:i+self.linesize])
 
+class SequenceIO(object):
+    FormatTable = {'fasta': (FastaReader,FastaOut)}
+    
+    def __init__(self,fileName,mode='r'):
+        '''
+        Wrapper for all types of Sequence IO.
+        fileName is the name of the file to read or write
+        mode defaults to r for reading and use w for writing
+        '''
+        self.fileName = fileName
+        self.mode = mode == 'w' and 1 or 0
+        
+        ext = os.path.splitext(fileName)[1].lower()
+        if ext in ['.fa','.fasta','.fsa']:
+            self.handle = SequenceIO.FormatTable['fasta'][self.mode](fileName)
+    
+    def __iter__(self):
+        return self.handle.__iter__()
+        
+    def write(self,seqData):
+        if type(seqData) is list:
+            self.handle.multiWrite(seqData)
+        else:
+            self.handle.write(seqData)                
+
+    def close(self):
+        self.handle.close()
+
+    def set(self, name, value):
+        'Method to set properties on the implementation classes.'
+        setattr(self.handle, name, value)

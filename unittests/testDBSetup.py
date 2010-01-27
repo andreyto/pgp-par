@@ -31,7 +31,7 @@ class Test(unittest.TestCase):
 
     def testFastaReader(self):
         "Test that the fasta sequence is correctly parsed into acc, seq and desc."
-        reader = bioseq.FastaReader(Test.IN)
+        reader = bioseq.SequenceIO(Test.IN)
         for seq in reader:
             self.assertEqual('gi|31795327|ref|NC_004837.1|',seq.acc)
             self.assertEqual('TGTAACGAACGGTG',seq.seq[0:14])
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
 
     def testFastaMultiReader(self):
         "Test that all of the sequences in the multiFasta file are read."
-        reader = bioseq.FastaReader(Test.SIX)
+        reader = bioseq.SequenceIO(Test.SIX)
         i = 0
         for seq in reader:
             i += 1
@@ -49,9 +49,9 @@ class Test(unittest.TestCase):
 
     def testFastaOut(self):
         "Test for no changes on the round trip through the fasta reader and writer."
-        reader = bioseq.FastaReader(Test.IN)
-        output = bioseq.FastaOut(Test.OUT)
-        output.linesize = 70
+        reader = bioseq.SequenceIO(Test.IN)
+        output = bioseq.SequenceIO(Test.OUT,'w')
+        output.set('linesize',70)
         for seq in reader:
             output.write(seq)
             
