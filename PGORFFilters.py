@@ -99,6 +99,7 @@ class UniquenessFilter(Filter):
         Return: none
         Description: a rather small constructor
         """               
+        Filter.__init__(self)
         self.name = "UniquenessFilter"
         
 
@@ -111,8 +112,8 @@ class UniquenessFilter(Filter):
         the ORF
         """
         Save = 0
-        for Peptide in ORF.PeptideLocationList:
-            if Peptide.Unique: # == 1 
+        for Peptide in ORF.peptideIter():
+            if Peptide.isUnique: # == 1 
                 Save = 1
                 break
         if Save:
@@ -140,6 +141,7 @@ class TrypticFilter(Filter):
         Return: none
         Description: a rather small constructor
         """               
+        Filter.__init__(self)
         self.name = "TrypticFilter"
         
 
@@ -178,10 +180,10 @@ class MinPeptideFilter(Filter):
         Return: none
         Description: a rather small constructor
         """               
+        Filter.__init__(self)
         self.name = "MinPeptideFilter"
         self.MinimumPeptides = MinimumPeptides
         
-
     def apply(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
@@ -190,8 +192,7 @@ class MinPeptideFilter(Filter):
         tryptic peptides mapping within the ORF. If not, then delete
         the ORF
         """
-        NumPeptidesThisORF = len(ORF.PeptideLocationList)
-        if NumPeptidesThisORF >= self.MinimumPeptides:
+        if ORF.numPeptides() >= self.MinimumPeptides:
             return 0 #keep me around
         return 1 # delete me NOW
 
@@ -225,10 +226,34 @@ class SequenceComplexityFilter(Filter):
         Return: none
         Description: a rather small constructor
         """               
+        Filter.__init__(self)
         self.name = "SequenceComplexityFilter"
         self.MaximumLowMWContent = 0.9
         self.LowMW = ["G", "A"]
-        self.GA = ["G", "A"]
+
+    # declaring this as a static method so that it doesn't need an object instance
+    # to work on, ie self in the arugment list
+    @staticmethod
+    def lowComplexFilter(PeptideObject):
+        """
+        Parameters: an Peptide object 
+        Return: True to include peptide, False to exclude peptide from list
+        Description: This looks for peptides that are just
+        LowMW residues and removes them entirely.  They are crappy
+        annotations and I don't want to see them!
+        """
+        Saved = 0
+        GA = ["G", "A"]
+        #now cycle through and see if it's only G and A
+        for Letter in PeptideObject.aminos:
+            if not Letter in GA:
+                Saved = 1
+                break
+        if Saved:
+            return True
+        else:
+            return False
+
     def apply(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
@@ -236,12 +261,12 @@ class SequenceComplexityFilter(Filter):
         Description: Apply the filter. Look for sequence complexity
         that is outside of the acceptable range.
         """
-        self.RemoveExclusivelyLowMWPeptides(ORF)
+        ORF.filterPeptides( self.lowComplexFilter )
         return
         #1. Get a big string of all the peptides in the ORF
         PeptideString = ""
-        for PeptideObject in ORF.PeptideLocationList:
-            PeptideString += PeptideObject.Aminos
+        for PeptideObject in ORF.peptides:
+            PeptideString += PeptideObject.aminos
         #2. Count the small aminos
         Count = 0
         for Letter in PeptideString:
@@ -252,32 +277,6 @@ class SequenceComplexityFilter(Filter):
             return 1 # delete ME
         return 0 #keep ME
             
-    def RemoveExclusivelyLowMWPeptides(self, ORF):
-        """
-        Parameters: an ORF object that is filled with peptides
-        Return: None
-        Description: This looks for peptides that are just
-        LowMW residues and removes them entirely.  They are crappy
-        annotations and I don't want to see them!
-        """
-        Count = len(ORF.PeptideLocationList)
-        DeleteList = []
-        for Index in range (Count):
-            PeptideObject = ORF.PeptideLocationList[Index]
-            Saved = 0
-            #now cycle through and see if it's only G and A
-            for Letter in PeptideObject.Aminos:
-                if not Letter in self.GA:
-                    Saved = 1
-                    break
-            if not Saved:
-                DeleteList.append(Index)
-        #now we have to go through the peptides in reverse order when deleting, so that
-        #we dont' screw up our numbering, if we delete index=1, what was at index2 will now be at index1
-        DeleteList.reverse()
-        for Index in DeleteList:
-            del ORF.PeptideLocationList[Index] 
-        
 
 
 def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):

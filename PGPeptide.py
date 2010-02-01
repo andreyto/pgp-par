@@ -62,16 +62,48 @@ class GenomicLocation(object):
                 return (myStart, otherStop)
 
 class LocatedPeptide(object):
-    def __init__(self,location):
+    def __init__(self,location=None):
         self.location = location
         self.name = None
-        self.amino = None
+        self.aminos = None
         self.bestScore = None
         self.spectrumCount = 0
-        self.unique = None
+        self.isUnique = None
 
     def isTryptic(self):
         # TBD
         return False
 
+class LocatedProtein(object):
+    def __init__(self,location):
+        self.location = location
+        self.name = None
+        
+class OpenReadingFrame(object):
+    def __init__(self):
+        self.location = None
+        self.peptides = []
+        self.annotatedProtein = None
+        self.name = None
+        self.aaseq = None
+        self.naseq = None
 
+    def numPeptides(self):
+        'Returns the number of peptides in the ORF.'
+        return len(self.peptides)
+
+    def addRawPeptides(self,peptideList):
+        'Adds a list of peptide sequences without location.'
+        for pep in peptideList:
+            pepObj = LocatedPeptide()
+            pepObj.aminos = pep
+            self.peptides.append( pepObj )
+
+    def filterPeptides( self, filterFunc ):
+        'Takes a filter function returning True or False for a LocatedPeptide object' 
+        self.peptides = filter( filterFunc, self.peptides)
+
+    def peptideIter( self ):
+        'An iterator for the peptides. Usage: for pep in orf.peptideIter():'
+        for pep in self.peptides:
+            yield pep
