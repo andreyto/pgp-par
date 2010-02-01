@@ -51,7 +51,7 @@ class Test(unittest.TestCase):
                 
         #now make the encapsulating ORF
         ORF = PGPeptide.OpenReadingFrame()
-        ORF.peptides = [self.P1, self.P2, self.P3, self.P4]
+        ORF.addLocatedPeptides([self.P1, self.P2, self.P3, self.P4])
         
         #now run the filter
         ORF.filterPeptides( Filter.lowComplexFilter )
@@ -61,7 +61,7 @@ class Test(unittest.TestCase):
         #now because it's easy, we want to test the identity of the peptides left, just
         #to make sure
         AcceptablePeptides = ["AGGAGQWEIUPIUFGBVA", "AGGAGGQHGGGAG"]
-        for Peptide in ORF.peptides:
+        for Peptide in ORF.peptideIter():
             self.assert_(Peptide.aminos in AcceptablePeptides)
             
     def testMinPeptide(self):
@@ -80,9 +80,9 @@ class Test(unittest.TestCase):
         ORF1 = PGPeptide.OpenReadingFrame()
         ORF2 = PGPeptide.OpenReadingFrame()
         ORF5 = PGPeptide.OpenReadingFrame()
-        ORF1.peptides = ListOf1
-        ORF2.peptides = ListOf2
-        ORF5.peptides = ListOf5
+        ORF1.addLocatedPeptides( ListOf1 )
+        ORF2.addLocatedPeptides( ListOf2 )
+        ORF5.addLocatedPeptides( ListOf5 )
         
         #now we run the tests
         self.assertEqual(FilterRequire1.apply(ORF0), 1) # 1 says DELETEME NOW
@@ -104,9 +104,9 @@ class Test(unittest.TestCase):
         #so only P1 and P3 are unique.
         ListOfBad = [self.P2, self.P4]
         ORFHasUnique = PGPeptide.OpenReadingFrame()
-        ORFHasUnique.peptides = ListOf5
+        ORFHasUnique.addLocatedPeptides( ListOf5 )
         ORFLacksUnique = PGPeptide.OpenReadingFrame()
-        ORFLacksUnique.peptides = ListOfBad
+        ORFLacksUnique.addLocatedPeptides( ListOfBad )
         
         self.assertEqual(Filter.apply(ORFHasUnique), 0)
         self.assertEqual(Filter.apply(ORFLacksUnique), 1)

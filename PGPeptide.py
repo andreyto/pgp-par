@@ -82,7 +82,7 @@ class LocatedProtein(object):
 class OpenReadingFrame(object):
     def __init__(self):
         self.location = None
-        self.peptides = []
+        self.__peptides = []
         self.annotatedProtein = None
         self.name = None
         self.aaseq = None
@@ -90,20 +90,24 @@ class OpenReadingFrame(object):
 
     def numPeptides(self):
         'Returns the number of peptides in the ORF.'
-        return len(self.peptides)
+        return len(self.__peptides)
+
+    def addLocatedPeptides(self,peptideList):
+        'Adds a list of LocatedPeptide objects to the ORF.'
+        self.__peptides.extend( peptideList )
 
     def addRawPeptides(self,peptideList):
         'Adds a list of peptide sequences without location.'
         for pep in peptideList:
             pepObj = LocatedPeptide()
             pepObj.aminos = pep
-            self.peptides.append( pepObj )
+            self.__peptides.append( pepObj )
 
     def filterPeptides( self, filterFunc ):
         'Takes a filter function returning True or False for a LocatedPeptide object' 
-        self.peptides = filter( filterFunc, self.peptides)
+        self.__peptides = filter( filterFunc, self.__peptides)
 
     def peptideIter( self ):
         'An iterator for the peptides. Usage: for pep in orf.peptideIter():'
-        for pep in self.peptides:
+        for pep in self.__peptides:
             yield pep
