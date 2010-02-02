@@ -390,6 +390,7 @@ PMTolerance,3.0
 
         inspectDBs = os.path.join( archiveDir, 'Databases', dbSubDir )
         Common = 'Common.RS.trie'
+        sixSuffix = sixFrame + suffix
         for root, dirs, files in os.walk( inspectDBs ):
             # Special case for the common contaminants file, should always be there
             if not foundCommon:
@@ -398,13 +399,14 @@ PMTolerance,3.0
                     shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir ) 
                     foundCommon = True
 
-            fnafiles = [x for x in files if x.endswith(suffix)]
+            fnafiles = [x for x in files if
+                    x.endswith(suffix) and not x.endswith(sixSuffix) ]
 
             for fasta in fnafiles:
                 fullFastaPath = os.path.join( root, fasta )
                 fastaPrefix = fasta[0:-len(suffix)]
 
-                dest   = fastaPrefix + sixFrame + suffix
+                dest   = fastaPrefix + sixSuffix
                 rstrie = fastaPrefix + sixFrame + '.RS.trie'
                 archRStrie = os.path.join( root, rstrie )
                 if not os.path.exists( dest ):
