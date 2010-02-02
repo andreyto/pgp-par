@@ -258,6 +258,7 @@ PMTolerance,3.0
         ########
         print "qsub -P %s -cwd -j y -o 'output/$TASK_ID.log' -t 1-%i %s/sgeInspect.sh" % (
             self.gridEnv.projectCode, len(JobList), sys.path[0] )
+        print "Remember to cd to %s before running qsub." % self.projectDir
         ########
         return JobList
 
@@ -399,8 +400,8 @@ PMTolerance,3.0
                     shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir ) 
                     foundCommon = True
 
-            fnafiles = [x for x in files if
-                    x.endswith(suffix) and not x.endswith(sixSuffix) ]
+            fnafiles = [x for x in files if x.endswith(suffix)
+                                    and not x.endswith(sixSuffix) ]
 
             for fasta in fnafiles:
                 fullFastaPath = os.path.join( root, fasta )
