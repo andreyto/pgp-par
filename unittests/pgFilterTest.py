@@ -91,6 +91,11 @@ class Test(unittest.TestCase):
         self.assertEqual(FilterRequire2.apply(ORF2), 0) 
         self.assertEqual(FilterRequire5.apply(ORF5), 0) 
 
+        # Also test the FilterList
+        filters = PGORFFilters.FilterList([FilterRequire5])
+        keep = filters.ApplyAllFilters( { 'ORF5': ORF5, 'ORF2': ORF2 })
+        self.assertEqual( 1, len(keep) )
+        self.assertEqual( 'ORF5', keep.keys()[0] )
 
     def testUnique(self):
         """Name: testUnique
