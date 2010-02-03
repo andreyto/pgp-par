@@ -62,13 +62,15 @@ class GenomicLocation(object):
                 return (myStart, otherStop)
 
 class LocatedPeptide(object):
-    def __init__(self,location=None):
+    def __init__(self,Aminos, location=None):
         self.location = location
         self.name = None
-        self.aminos = None
+        self.aminos = Aminos
         self.bestScore = None
         self.spectrumCount = 0
         self.isUnique = None
+        self.TrypticNTerm = None
+        self.TrypticCTerm = None
 
     def isTryptic(self):
         # TBD

@@ -77,6 +77,7 @@ class FinderClass():
             
         else :
             self.LoadResultsFromGFF(self.MappedGFFResults)
+        return
         ##now map all the peptides
         self.MapPredictedProteins()
         self.CreateORFs()
@@ -327,6 +328,7 @@ class FinderClass():
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
             GenomicLocations = self.ORFPeptideMapper.MapMe(Aminos, PValue)
+            continue
             if self.UniquenessFlag and (len(GenomicLocations) > 1):
                 continue #skip out on adding it to the list
             self.AllLocations.extend(GenomicLocations)

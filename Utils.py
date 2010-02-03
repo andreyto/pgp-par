@@ -897,5 +897,8 @@ def checkConfigPath(path):
     alt = os.path.join(sys.path[0],path)
     if os.path.exists(alt):
         return alt
-    
+    alt = os.path.join( "..",path)
+    if os.path.exists(alt):
+        return alt
+   
     raise IOError("Can't open %s or %s" % (path,alt))

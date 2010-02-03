@@ -5,7 +5,7 @@ do all of this activity, regardless of the genome.
 
 Usage: You can call the following two methods.  nothing else.
 LoadDatabases(DBPaths)
-MapMe(AminoAcidSequencs)
+MapMe(AminoAcidSequence)
 
 NOTE: because this is genomic mapping, the database must have the standard
 notion of a genomic context. you can get this by using the SixFrameFasta.py
@@ -13,8 +13,8 @@ script to create your database.
 
 NOTE: this is a utility, and not executable from the command line
 
-In the past, scripts like GetGenomeCoordinatesForTAIR did something like this
-but that was pretty specialized, and we hope to just make it simple here
+NOTE: this is strictly for bacterial peptides that map unspliced.  There
+is a separate program eukPeptideMapper that deals with the headache of splicing
 """
 
 import sys
@@ -22,6 +22,7 @@ import os
 import traceback
 import SelectProteins
 import GenomicLocations
+import PGPeptide
 
 
 class PeptideMappingClass:
@@ -30,14 +31,22 @@ class PeptideMappingClass:
         self.CurrentAminos = ""
         
     def LoadDatabases(self, DBPaths):
+        """
+        Parameters: a list of paths to databases.  these should be 6 frame translations
+        Return: none
+        Description: load up databases in preparation for searching
+        """
         self.DatabasePaths = DBPaths
         self.ProteinPicker = SelectProteins.ProteinSelector()
         self.ProteinPicker.LoadMultipleDB(self.DatabasePaths)
 
     def MapMe(self, Aminos, PValue, WarnNoMatch = 0):
-        """Given an amino acid sequence, return (potentially multiple)
-        GenomicLocationForPeptide object(s).
-        This method parses information out of the protein header 
+        """
+        Parameters: an amino acid string, the best score (pvalue)
+        Return: a list of LocatedPeptideObjects (possible list of len 1)
+        Description: This is the method that takes amino acids and maps
+        them into dna sequence space.
+        NOTE: This method parses information out of the protein header 
         if it was created using the SixFrameFasta.py (or has the exact 
         same format). 
         
@@ -51,49 +60,81 @@ class PeptideMappingClass:
         InfoBits[3] = StartNucleotide of the ORF
         InfoBits[4] = Strand
         """
-        ReturnLocations = []
+        ReturnList = [] # the list of PGPeptide.LocatedPeptide objects
         self.CurrentAminos = Aminos #only used for printing in case or error
-        DBLocations = self.ProteinPicker.FindPeptideLocations(Aminos)
-        if (len(DBLocations) < 1) and WarnNoMatch:
+        #1. First find the location(s) of the aminos in the ORF database
+        ProteinLocations = self.ProteinPicker.FindPeptideLocations(Aminos)
+        if (len(ProteinLocations) < 1) and WarnNoMatch:
+            #sometimes we don't care that there's no match.  Like for trypsin.  it's 
+            #not part of our 6frame bacteria, but it was in the inspect search
             print "Peptide %s was not found in the database"%Aminos
-            
-        for (ProteinID, PeptideStartAA) in DBLocations:
+        #2. now go through the process of converting protein space to nucleotide space    
+        for (ProteinID, PeptideStartAA) in ProteinLocations:
             ## PeptideStartAA is the start position within the amino acid sequence
             #1. parse out the features of the protein name (fasta header)
-            Location = GenomicLocations.GenomicLocationForPeptide()
             ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
             ### CRAP ! the fame proteins are XXX.Protein1, so the . screws up the splitting
             ## Total hack below.  Find a better splitter than . and redo the sixframefasta.py
             if ProteinName.find("XXX.") == 0:
                 ProteinName = ProteinName.replace("XXX.", "XXX")
             InfoBits = ProteinName.split(".")
-            #chromosome, strand
-            Location.ProteinName = InfoBits[0]
-            Location.Chromosome = InfoBits[1].replace("Chr:", "")
-            Location.Strand = InfoBits[4].replace("Strand", "")
-            Location.Aminos = Aminos
-            Location.Score = PValue
-            ORFStartNucleotide = int(InfoBits[3].replace("StartNuc", ""))
-            ##can get complicated below, because of spliced stuff, which I am not
-            ##going to do now.  Not in the least. But the method structure is
-            ##here, so it can be expanded upon without really killing the code
-            self.SetStartStop(Location, Aminos, PeptideStartAA, ORFStartNucleotide)
-            self.SetFrame(Location, InfoBits[2])
-            if (len(DBLocations) == 1):
-                Location.Unique = 1 #default set to zero in the constructor, so we set to 1 if unique
+            
+            ProteinName = InfoBits[0]
+            Chromosome = InfoBits[1].replace("Chr:", "")
+            Strand = InfoBits[4].replace("Strand", "")
+            Frame = int(InfoBits[2].replace("Frame", ""))
+            
+            ORFStartNucleotide = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide
+            (Start, Stop) = self.GetStartStop(Aminos, PeptideStartAA, ORFStartNucleotide, Strand)
+            SimpleLocation = PGPeptide.GenomicLocation(Start, Stop, Strand)
+            SimpleLocation.chromosome = Chromosome
+            SimpleLocation.frame = Frame
+            
+            #now that we have a Location, let's get our Located Peptide Object up and running
+            Peptide = PGPeptide.LocatedPeptide(Aminos, SimpleLocation)
+            Peptide.bestScore = PValue
+            #now we check the letter before us to see if it's tryptic
+            ORFSequence = self.ProteinPicker.ProteinSequences[ProteinID]
+            PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
+            if PrefixOfPeptide in ["R", "K"]:
+                Peptide.TrypticNTerm = 1
+            if Aminos[-1] in ["R", "K"]:
+                Peptide.TrypticCTerm = 1
+            if len(ProteinLocations) == 1:
+                Peptide.isUnique = 1
+
             #append to list
-            ReturnLocations.append(Location)
+            ReturnList.append(Peptide)
             
-        return ReturnLocations
-            
-    def SetFrame(self, Location, FrameString):
-        """Currently this only works for the single exon version.  I have not figured out
-        how to work this for multi, so pretty small method
+        return ReturnList
+
+
+    def GetStartStop(self, Aminos, PeptideStartAA, ORFStartNucleotide, Strand):
         """
-        Frame = int(FrameString.replace("Frame", ""))
-        Location.StartFrame = Frame
-        Location.StopFrame = Frame
+        Parameters: amino acid string, index of aminos within protein, index of ORF within dna
+        Return: start and stop of aminos on the dna
+        Description: Using the supplied offsets, we get nucleotide coordinates for the amino
+        acid sequence.  It is important to reiterate, that start < stop.  ALWAYS.  The words start
+        and stop do not in any way refer to 5' or 3'.
+        """
+        PeptideStartNucleotide = -1 #set as impossible values for sanity check below
+        PeptideStopNucleotide = -1
+        if (Strand == "-"):
+            (PeptideStartNucleotide, PeptideStopNucleotide) = self.GetCoordsRevStrand(Aminos, PeptideStartAA, ORFStartNucleotide)
+        else:
+            #now the position.  We first get the protein start nuc, and then offset to the peptide start
+            PeptideStartOffset = PeptideStartAA * 3 # because StartLocation is the start in amino acid space
+            PeptideStartNucleotide = PeptideStartOffset + ORFStartNucleotide
+            PeptideStopNucleotide = PeptideStartNucleotide + (len(Aminos) * 3) - 1 # we do a minus one because the bases are inclusive
             
+        if (PeptideStartNucleotide < 0) or (PeptideStopNucleotide < 0):
+            ##SNAFU!!!!!!
+            print "ERROR: PeptideMapper:GetStartStop"
+            print "##### Can't find peptide start or stop for %s"%self.CurrentAminos
+            return
+        return(PeptideStartNucleotide, PeptideStopNucleotide) 
+
+
             
     def SetStartStop(self, Location, Aminos, PeptideStartAA, ORFStartNucleotide):
         """This is we start having some seemingly duplicate code.  It was important
@@ -137,9 +178,3 @@ class PeptideMappingClass:
         #them back in the reverse order
         return (PeptideStopNucleotide, PeptideStartNucleotide)
 
-    def ClusterPeptidesOnGenome(self, PeptideList, MaxInterpeptideLen):
-        """Given some set of peptides which are GenomicLocation objects (could be in a ORF, or random 
-        group, or whatever), we find those which are clustered together (according to the criteria).  
-        We return the the peptide list, dictionary of [clusterpos]->num peps in cluster.
-        NOTE MaxInterpeptideLen is given in nucleotides
-        """
