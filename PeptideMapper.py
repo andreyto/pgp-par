@@ -37,25 +37,12 @@ class PeptideMappingClass:
         self.ProteinPicker = SelectProteins.ProteinSelector()
         self.ProteinPicker.LoadMultipleDB(self.DatabasePaths)
 
-    def MapMe(self, Aminos, PValue, WarnNoMatch = 0):
+    def MapPeptide(self, Aminos, PValue, WarnNoMatch = 0):
         """
         Parameters: an amino acid string, the best score (pvalue)
         Return: a list of LocatedPeptide objects (possible list of len 1)
         Description: This is the method that takes amino acids and maps
         them into dna sequence space.
-        NOTE: This method parses information out of the protein header 
-        if it was created using the SixFrameFasta.py (or has the exact 
-        same format). 
-        
-        WARNING: Don't include a period '.' in your name. we use that to split
-        
-        Protein256370.Chr:Chr1.Frame1.StartNuc831372.Strand-
-        XXX.Protein157841.Chr:Chr1.Frame1.StartNuc4033167.Strand+
-        InfoBits[0] = protein unique id
-        InfoBits[1] = chromosome
-        InfoBits[2] = Frame
-        InfoBits[3] = StartNucleotide of the ORF
-        InfoBits[4] = Strand
         """
         ReturnList = [] # the list of PGPeptide.LocatedPeptide objects
         self.CurrentAminos = Aminos #only used for printing in case or error
@@ -69,28 +56,13 @@ class PeptideMappingClass:
         for (ProteinID, PeptideStartAA) in ProteinLocations:
             ## PeptideStartAA is the start position within the amino acid sequence
             #1. parse out the features of the protein name (fasta header)
-            ProteinName = self.ProteinPicker.ProteinNames[ProteinID]
-            ### CRAP ! the fame proteins are XXX.Protein1, so the . screws up the splitting
-            ## Total hack below.  Find a better splitter than . and redo the sixframefasta.py
-            if ProteinName.find("XXX.") == 0:
-                ProteinName = ProteinName.replace("XXX.", "XXX")
-            InfoBits = ProteinName.split(".")
-            
-            ProteinName = InfoBits[0]
-            Chromosome = InfoBits[1].replace("Chr:", "")
-            Strand = InfoBits[4].replace("Strand", "")
-            Frame = int(InfoBits[2].replace("Frame", ""))
-            
-            ORFStartNucleotide = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide
-            (Start, Stop) = self.GetStartStop(Aminos, PeptideStartAA, ORFStartNucleotide, Strand)
-            SimpleLocation = PGPeptide.GenomicLocation(Start, Stop, Strand)
-            SimpleLocation.chromosome = Chromosome
-            SimpleLocation.frame = Frame
-            
+            ORFFastaLine = self.ProteinPicker.ProteinNames[ProteinID]
+            ParsedORFInfo = PGPeptide.ORFFastaHeader(ORFFastaLine)
+            SimpleLocation = self.MapNucleotideLocation(ParsedORFInfo, PeptideStartAA, len(Aminos))
             #now that we have a Location, let's get our Located Peptide Object up and running
             Peptide = PGPeptide.LocatedPeptide(Aminos, SimpleLocation)
             Peptide.bestScore = PValue
-            Peptide.proteinName = self.ProteinPicker.ProteinNames[ProteinID]
+            Peptide.proteinName = ParsedORFInfo.ORFName
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.ProteinPicker.ProteinSequences[ProteinID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
@@ -107,7 +79,64 @@ class PeptideMappingClass:
         return ReturnList
 
 
-    def GetStartStop(self, Aminos, PeptideStartAA, ORFStartNucleotide, Strand):
+    def MapProtein(self, Sequence, ProteinName, WarnNonSingleMatch = 1):
+        """
+        Parameters: the protein sequence
+        Return: a list of LocatedProtein objects (likely list of len 1)
+        Description: this method takes a protein sequence, and puts it onto the
+        DNA within the bounds of a single Open reading frame.
+        
+        WARNING: not meant for any mutli-orf proteins, like ribosomal frame shifts
+        or self splicing introns.
+        
+        NOTE: because of the alternate start sites, we have a bit of a problem, in that most proteins
+        don't map to the six frame translation, specifically the initial M.  See the following example
+            RDVLNRVMYYIILARFINYRLISLSCRSKRMRIFQGVVCGMALFLA  (six frame translation)
+                  MMYYIILARFINYRLISLSCRSKRMRIFQGVVCGMALFLA  (protein sequence)
+        to remedy this, we are going to axe off the initial M, and then kludge back
+        the start site of the mapping
+
+        """
+        SearchableSequence = Sequence[1:] # see the problem in the NOTE
+        self.CurrentAminos = Sequence #for error printing
+        ProteinLocations = self.ProteinPicker.FindPeptideLocations(SearchableSequence)
+        if len(ProteinLocations) == 0:
+            if WarnNonSingleMatch:
+                print "WARNING: protein %s does not map to any ORF"%ProteinName
+            return None #can't find it, why waste time
+        #now here we wonder what to do with proteins that map to multiple ORFs.  I think today
+        # that I will just say with an iron fist, that these suck, and should be treated badly
+        #we will take the first location. HACK
+        (ORFID, ProteinStartAA) = ProteinLocations[0]
+        ORFFastaLine = self.ProteinPicker.ProteinNames[ORFID]
+        ParsedORFInfo = PGPeptide.ORFFastaHeader(ORFFastaLine)
+        SimpleLocation = self.MapNucleotideLocation(ParsedORFInfo, ProteinStartAA, len(SearchableSequence))
+        #now we make the protein
+        Protein = PGPeptide.LocatedProtein(SimpleLocation)
+        Protein.name = ProteinName
+        Protein.ORFName = ParsedORFInfo.ORFName
+        Protein.AddOneAminoAcidFivePrime() #adding back what we took off because of the NOTE
+        return Protein
+        
+        
+
+
+    def MapNucleotideLocation(self, ParsedORFInfo, StartInProteinSpace, LenAminos):
+        """
+        Parameters: the fasta line from a 6frame ORF, the index of the match start in protein space, the len of match
+        Return: a PGPeptide.GenomicLocation object
+        Description: we bust out the mapping of a sequence on to the dna in a single method, because
+        both proteins and peptides want to use this method, and they need other stuff different.
+        so shared code goes in one place, no?
+        """
+        (Start, Stop) = self.GetStartStop(LenAminos, StartInProteinSpace, ParsedORFInfo.Start, ParsedORFInfo.Strand)
+        SimpleLocation = PGPeptide.GenomicLocation(Start, Stop, ParsedORFInfo.Strand)
+        SimpleLocation.chromosome = ParsedORFInfo.Chromosome
+        SimpleLocation.frame = ParsedORFInfo.Frame
+        return SimpleLocation
+
+
+    def GetStartStop(self, LenAminos, PeptideStartAA, ORFStartNucleotide, Strand):
         """
         Parameters: amino acid string, index of aminos within protein, index of ORF within dna
         Return: start and stop of aminos on the dna
@@ -118,12 +147,12 @@ class PeptideMappingClass:
         PeptideStartNucleotide = -1 #set as impossible values for sanity check below
         PeptideStopNucleotide = -1
         if (Strand == "-"):
-            (PeptideStartNucleotide, PeptideStopNucleotide) = self.GetCoordsRevStrand(Aminos, PeptideStartAA, ORFStartNucleotide)
+            (PeptideStartNucleotide, PeptideStopNucleotide) = self.GetCoordsRevStrand(LenAminos, PeptideStartAA, ORFStartNucleotide)
         else:
             #now the position.  We first get the protein start nuc, and then offset to the peptide start
             PeptideStartOffset = PeptideStartAA * 3 # because StartLocation is the start in amino acid space
             PeptideStartNucleotide = PeptideStartOffset + ORFStartNucleotide
-            PeptideStopNucleotide = PeptideStartNucleotide + (len(Aminos) * 3) - 1 # we do a minus one because the bases are inclusive
+            PeptideStopNucleotide = PeptideStartNucleotide + (LenAminos * 3) - 1 # we do a minus one because the bases are inclusive
             
         if (PeptideStartNucleotide < 0) or (PeptideStopNucleotide < 0):
             ##SNAFU!!!!!!
@@ -132,7 +161,7 @@ class PeptideMappingClass:
             return
         return(PeptideStartNucleotide, PeptideStopNucleotide) 
 
-    def GetCoordsRevStrand(self, Aminos, PeptideStartAA, ORFStartNucleotide):
+    def GetCoordsRevStrand(self, LenAminos, PeptideStartAA, ORFStartNucleotide):
         """Separate method because doing math on the reverse strand is difficult.
         For the visually minded:  codons on the reverse listed below
         1   4   7   10  13  16  19
@@ -146,7 +175,7 @@ class PeptideMappingClass:
         """
         PeptideStartOffset = PeptideStartAA *3
         PeptideStartNucleotide = ORFStartNucleotide - PeptideStartOffset
-        PeptideStopNucleotide = PeptideStartNucleotide - (len(Aminos)*3) + 1
+        PeptideStopNucleotide = PeptideStartNucleotide - (LenAminos*3) + 1
         #now because this is on the reverse, and we requires start< stop, we send
         #them back in the reverse order
         return (PeptideStopNucleotide, PeptideStartNucleotide)

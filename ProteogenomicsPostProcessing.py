@@ -51,7 +51,7 @@ class FinderClass():
         self.ProteomeDatabasePaths = [] #possibly multiple
         self.ORFDatabasePaths = [] #possibly multiple
         self.AllPeptides = {} # AminoSequence -> best pvalue, nulled out in MapAllPeptides
-        self.AllLocations = [] #list of PeptideMapper.GenomicLocationForPeptide
+        self.AllLocatedPeptides = [] #list of PeptideMapper.GenomicLocationForPeptide
         self.AllPredictedProteins = {} #predictedProteinName ->GenomicLocationForPeptide Object, used in CreateORFs
         self.AllORFs = {} #ORF name -> GenomeLocationForORF object
         self.ProteomicallyObservedORFs = [] # this is populated when peptides are mapped, and deleted after ORF Objects are created
@@ -76,9 +76,10 @@ class FinderClass():
             
         else :
             self.LoadResultsFromGFF(self.MappedGFFResults)
-        return
+        
         ##now map all the peptides
         self.MapPredictedProteins()
+        return
         self.CreateORFs()
         #self.CheckComplexity()
         #return
@@ -211,18 +212,18 @@ class FinderClass():
             MappedORF = Location.ProteinName
             if not MappedORF in self.ProteomicallyObservedORFs:
                 self.ProteomicallyObservedORFs.append(MappedORF)
-            self.AllLocations.append(Location)
+            self.AllLocatedPeptides.append(Location)
 
     def WritePeptideGFFFile(self):
         """
         Parameters: None
         Return: None
-        Description: This takes the peptide objects from self.AllLocations and
+        Description: This takes the peptide objects from self.AllLocatedPeptides and
         makes a GFF File containing all of them.  
         """
         Handle = open(self.GFFOutputPath, "wb")
         GlobalLocationCount = 0
-        for Location in self.AllLocations:
+        for Location in self.AllLocatedPeptides:
             Line = Location.GetGFF3LineNew(GlobalLocationCount)
             Handle.write(Line)#remember the Line has its own newline
             GlobalLocationCount += 1
@@ -263,7 +264,7 @@ class FinderClass():
             ORFObject = GenomicLocations.GenomicLocationForORF(FastaLine, len(ORFSequence))
             self.AllORFs[ORFObject.ORFName] = ORFObject
             #now we go through and put all the protiens on the ORFS, then the peptides on the ORFs
-            for (ProteinName, ProteinObject) in self.AllPredictedProteins.items():
+            for (ProteinName, ProteinObject) in self.AllPredictedProttems():
                 if ProteinObject.ProteinName == ORFObject.ORFName:
                     ## here it might be easy to confuse the ProteinName and ProteinObject.ProteinName
                     ## remember that PRoteinObject.ProteinName was set when a protein sequence was mapped onto an ORF
@@ -273,7 +274,7 @@ class FinderClass():
                     ORFObject.ProteinPredictionName = ProteinName
                     break #we're done here
             #now that we've finished running through the protein list, we run through the peptide list
-            for Location in self.AllLocations:
+            for Location in self.AllLocatedPeptides:
                 #print "trying to get locations with name %s"%Location.ProteinName
                 if Location.ProteinName == ORFObject.ORFName:
                     ORFObject.PeptideLocationList.append(Location)
@@ -302,7 +303,7 @@ class FinderClass():
         """Go through the list in self.AllPeptides, and find the location for each
         peptide. It is true that we could have parsed this out of the Inspect file, but
         some peptides have multiple locations, so we have to look it up. This sets up
-        the self.AllLocations variable
+        the self.AllLocatedPeptides variable
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:MapAllPeptides"
@@ -313,10 +314,10 @@ class FinderClass():
             if (Count %1000) == 0 and self.Verbose:
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
-            LocatedPeptides = self.ORFPeptideMapper.MapMe(Aminos, PValue)
+            LocatedPeptides = self.ORFPeptideMapper.MapPeptide(Aminos, PValue)
             if self.UniquenessFlag and (len(LocatedPeptides) > 1):
                 continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
-            self.AllLocations.extend(LocatedPeptides)
+            self.AllLocatedPeptides.extend(LocatedPeptides)
             LocationCount += len(LocatedPeptides)
             
             #now put into the observedORF stuff
@@ -332,12 +333,6 @@ class FinderClass():
     def MapPredictedProteins(self):
         """This will look very much like MapAllPeptides, because really a predicted protein can fit into an 
         ORF just like a MS/MS peptide. So we do the same kind of thing. 
-        NOTE: because of the alternate start sites, we have a bit of a problem, in that most proteins
-        don't map to the six frame translation, specifically the initial M.  See the following example
-            RDVLNRVMYYIILARFINYRLISLSCRSKRMRIFQGVVCGMALFLA  (six frame translation)
-                  MMYYIILARFINYRLISLSCRSKRMRIFQGVVCGMALFLA  (protein sequence)
-       to remedy this, we are going to axe off the initial M, and then kludge back
-       the start site of the mapping
         
         """
         if self.Verbose:
@@ -349,20 +344,8 @@ class FinderClass():
         for ProteinID in PredictedProteinReader.ProteinPicker.ProteinNames.keys():
             ProteinName = PredictedProteinReader.ProteinPicker.ProteinNames[ProteinID]
             ProteinSequence = PredictedProteinReader.ProteinPicker.ProteinSequences[ProteinID]
-            #This is where it gets a bit tricky. see note in method comment for explanation of the weirdness
-            SearchableSequence = ProteinSequence[1:]
-            ProteinLocation = self.ORFPeptideMapper.MapMe(SearchableSequence, 1)
-            if len(ProteinLocation) == 0:
-                if self.VerboseWarnings:
-                    print "WARNING: protein %s does not map to any ORF"%ProteinName
-                continue #always
-            if len(ProteinLocation) > 1 and self.VerboseWarnings:
-                print "WARNING: Protein %s maps to multiple ORFs"%ProteinName
-            for Location in ProteinLocation: #potentially many
-                Location.AddOneAminoAcidFivePrime()
-                #Location.Aminos = ProteinSequence# replace the full sequence,because it got snipped in the beginning
-            
-            self.AllPredictedProteins[ProteinName] = ProteinLocation[0] #explicit assumption that there is only ONE
+            LocatedProtein = self.ORFPeptideMapper.MapProtein(ProteinSequence, ProteinName)
+            self.AllPredictedProteins[ProteinName] = LocatedProtein
         
     def ParseInspect(self, FilePath):
         """Here I parse out Inspect Results to get peptide annotations, 
