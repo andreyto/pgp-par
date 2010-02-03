@@ -29,8 +29,7 @@ Additional Parameters
 
 """
 
-import sys
-import os
+
 import getopt
 import traceback
 import InspectResults
@@ -91,7 +90,7 @@ class FinderClass():
         if self.SearchForMispredictions:
             self.FindMiscalls()
         if self.SearchForCleavage:
-           self.AnalyzeCleavage()
+            self.AnalyzeCleavage()
 
     def CheckComplexity(self):
         if self.Verbose:
@@ -132,7 +131,7 @@ class FinderClass():
             #print "\n"
             Name = ORF.ProteinPredictionName
             Start = ORF.ProteinPrediction.StartNucleotide 
-            #'Start' is the small number. ALWAYS.  5' refers to something genic, but start is always just the small number
+            #'Start' is the small number. ALWAYS.  5' refers t but start is always just the small number
             Stop = ORF.ProteinPrediction.StopNucleotide
             #these coords don't yet take the stop codon into account, which NCBI does
             if ORF.Strand == "+":
@@ -173,21 +172,9 @@ class FinderClass():
         FilteredORFs = FilterList.ApplyAllFilters(self.AllORFs)
         self.AllORFs = FilteredORFs
          
-        #first let's try the new filter
-        #for ORF in self.AllORFs.values():
-        #    Filter.apply(ORF)    
-        #for ORF in self.AllORFs.values():
-        #    PGORFFilters.FilterThisORF(ORF)
-        #DeleteMeList = []
-        #for (ORFName, ORF) in self.AllORFs.items():
-        #    if len(ORF.PeptideLocationList) == 0:
-        #        DeleteMeList.append(ORFName)
-        #can't delete from a list during the iteration.  so now we clean up
-        #for Name in DeleteMeList:
-        #    del self.AllORFs[Name]
         print "\t%s ORFs left after filtering"%len(self.AllORFs)
         if self.Verbose:
-            for (ORFName, ORF) in self.AllORFs.items():
+            for ORF in self.AllORFs.values():
                 ORF.PrintMe(0,1)
 
     def AnalyzeCleavage(self):
@@ -262,7 +249,6 @@ class FinderClass():
         """This function is to make ORF objects (GenomeLocationForORFs)
         We should put peptides and predictedProteins in here. 
         """
-        DebugString = "Protein9325"
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:CreateORFs"
         Count = 0
@@ -327,17 +313,17 @@ class FinderClass():
             if (Count %1000) == 0 and self.Verbose:
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
-            GenomicLocations = self.ORFPeptideMapper.MapMe(Aminos, PValue)
-            continue
-            if self.UniquenessFlag and (len(GenomicLocations) > 1):
-                continue #skip out on adding it to the list
-            self.AllLocations.extend(GenomicLocations)
-            LocationCount += len(GenomicLocations)
+            LocatedPeptides = self.ORFPeptideMapper.MapMe(Aminos, PValue)
+            if self.UniquenessFlag and (len(LocatedPeptides) > 1):
+                continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
+            self.AllLocations.extend(LocatedPeptides)
+            LocationCount += len(LocatedPeptides)
+            
             #now put into the observedORF stuff
-            for Location in GenomicLocations:
-                MappedORF = Location.ProteinName
-                if not MappedORF in self.ProteomicallyObservedORFs:
-                    self.ProteomicallyObservedORFs.append(MappedORF)
+            for Location in LocatedPeptides:
+                ORFName = Location.proteinName
+                if not ORFName in self.ProteomicallyObservedORFs:
+                    self.ProteomicallyObservedORFs.append(ORFName)
 
         self.AllPeptides = {}  # set to null just for the memory savings
         if self.Verbose:

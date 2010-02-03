@@ -52,8 +52,8 @@ import PeptideMapper
 class Test(unittest.TestCase):
     
 
-    def testMapping(self):
-        """Name: testMapping
+    def testMappingStartStop(self):
+        """Name: testMappingStartStop
         Description:Call out to the PeptideMapper methods to make sure that 
         they are working correctly 
 

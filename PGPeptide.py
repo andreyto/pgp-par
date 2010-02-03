@@ -50,13 +50,12 @@ class GenomicLocation(object):
             return None
         elif myStart <= otherStart:
             if otherStop < myStop:
-                # other is contained sub sequence
-                return (otherStart,otherStop)
+                # other is contained sub sequenc              return (otherStart,otherStop)
             else:
                 return (otherStart, myStop)
-        else: # myStart > otherStart
+        else: # mSta otherStart
             if myStop < otherStop:
-                # self is contained sub sequence
+            # self is contained sub sequence
                 return (myStart,myStop)
             else:
                 return (myStart, otherStop)
@@ -71,10 +70,29 @@ class LocatedPeptide(object):
         self.isUnique = None
         self.TrypticNTerm = None
         self.TrypticCTerm = None
+        self.proteinName = None
 
     def isTryptic(self):
         # TBD
         return False
+
+    def GetFivePrimeNucelotide(self):
+        """Just checks for the strand, and returns the 5' nucelotide
+        """
+        if self.location.strand == "-":
+            return self.location.stop
+        return self.location.start
+    
+    def GetThreePrimeNucleotide(self):
+        """Just checks for the strand, and returns the 5' nucelotide
+        """
+        if self.location.strand == "-":
+            return self.location.start
+        return self.location.stop
+    
+    def __str__(self):
+        return "%s in %s, unique=%s, %s"%(self.aminos, self.proteinName, self.isUnique, self.location)
+
 
 class LocatedProtein(object):
     def __init__(self,location):

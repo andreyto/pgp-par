@@ -17,11 +17,8 @@ NOTE: this is strictly for bacterial peptides that map unspliced.  There
 is a separate program eukPeptideMapper that deals with the headache of splicing
 """
 
-import sys
-import os
-import traceback
+
 import SelectProteins
-import GenomicLocations
 import PGPeptide
 
 
@@ -43,7 +40,7 @@ class PeptideMappingClass:
     def MapMe(self, Aminos, PValue, WarnNoMatch = 0):
         """
         Parameters: an amino acid string, the best score (pvalue)
-        Return: a list of LocatedPeptideObjects (possible list of len 1)
+        Return: a list of LocatedPeptide objects (possible list of len 1)
         Description: This is the method that takes amino acids and maps
         them into dna sequence space.
         NOTE: This method parses information out of the protein header 
@@ -93,6 +90,7 @@ class PeptideMappingClass:
             #now that we have a Location, let's get our Located Peptide Object up and running
             Peptide = PGPeptide.LocatedPeptide(Aminos, SimpleLocation)
             Peptide.bestScore = PValue
+            Peptide.proteinName = self.ProteinPicker.ProteinNames[ProteinID]
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.ProteinPicker.ProteinSequences[ProteinID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
@@ -133,31 +131,6 @@ class PeptideMappingClass:
             print "##### Can't find peptide start or stop for %s"%self.CurrentAminos
             return
         return(PeptideStartNucleotide, PeptideStopNucleotide) 
-
-
-            
-    def SetStartStop(self, Location, Aminos, PeptideStartAA, ORFStartNucleotide):
-        """This is we start having some seemingly duplicate code.  It was important
-        for me to separate the positive and negative strand stuff.  It just got really confusing
-        WARNING: Just got single exon mapping working!!
-        """
-        PeptideStartNucleotide = -1
-        PeptideStopNucleotide = -1
-        if (Location.Strand == "-"):
-            (PeptideStartNucleotide, PeptideStopNucleotide) = self.GetCoordsRevStrand(Aminos, PeptideStartAA, ORFStartNucleotide)
-        else:
-            #now the position.  We first get the protein start nuc, and then offset to the peptide start
-            PeptideStartOffset = PeptideStartAA * 3 # because StartLocation is the start in amino acid space
-            PeptideStartNucleotide = PeptideStartOffset + ORFStartNucleotide
-            PeptideStopNucleotide = PeptideStartNucleotide + (len(Aminos) * 3) - 1 # we do a minus one because the bases are inclusive
-            
-        if (PeptideStartNucleotide < 0) or (PeptideStopNucleotide < 0):
-            ##SNAFU!!!!!!
-            print "ERROR: PeptideMapper:GetStartStop"
-            print "##### Can't find peptide start or stop for %s"%self.CurrentAminos
-            return
-        Location.StartNucleotide = PeptideStartNucleotide
-        Location.StopNucleotide = PeptideStopNucleotide
 
     def GetCoordsRevStrand(self, Aminos, PeptideStartAA, ORFStartNucleotide):
         """Separate method because doing math on the reverse strand is difficult.
