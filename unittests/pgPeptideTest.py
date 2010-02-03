@@ -16,7 +16,7 @@ import PGPeptide
 class Test(unittest.TestCase):
 
     def testGenomicLocationOverlap(self):
-        "Test that GenomicLocation.overlap() correctly identifies several overlaps."
+        "GenomicLocation.overlap() correctly identifies several overlaps."
         p1 = PGPeptide.GenomicLocation(2,11,'+')
         p2 = PGPeptide.GenomicLocation(3,9,'+')
         p3 = PGPeptide.GenomicLocation(5,17,'-')
@@ -38,6 +38,15 @@ class Test(unittest.TestCase):
 
         res = p4.overlap( p3 )
         self.assertEqual( None, res )
+        
+    def testFrameAccessors(self):
+        'Verify correct behaviour of frame accessors'
+        loc = PGPeptide.GenomicLocation(1,10,'+')
+        loc.frame = 2
+        self.assertEqual( 2, loc.frame )
+        def raiseerror():
+            loc.frame = 5
+        self.assertRaises(ValueError, raiseerror)
 
 if __name__ == "__main__":
     unittest.main()
