@@ -23,20 +23,15 @@ class Test(unittest.TestCase):
         """
         #these first four are appropriate for a sequence complexity filter
 
-        self.P1 = PGPeptide.LocatedPeptide()
-        self.P1.aminos = "GGGGGGGGGGG"
+        self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG")
         self.P1.isUnique = 1 #isn't that amazing.  it's unique
-        self.P2 = PGPeptide.LocatedPeptide()
-        self.P2.aminos = "GGAGAGAGGGGAGAG"
-        self.P3 = PGPeptide.LocatedPeptide()
-        self.P3.aminos = "AGGAGQWEIUPIUFGBVA"
+        self.P2 = PGPeptide.LocatedPeptide("GGAGAGAGGGGAGAG")
+        self.P3 = PGPeptide.LocatedPeptide("AGGAGQWEIUPIUFGBVA")
         self.P3.isUnique = 1 # also unique
-        self.P4 = PGPeptide.LocatedPeptide()
-        self.P4.aminos = "AGGAGGQHGGGAG"
+        self.P4 = PGPeptide.LocatedPeptide("AGGAGGQHGGGAG")
         
         #these next are all tryptic at the c-term
-        self.P5 = PGPeptide.LocatedPeptide()
-        self.P5.aminos = "MSTAQWSTR"
+        self.P5 = PGPeptide.LocatedPeptide("MSTAQWSTR")
         
 
     def testSequenceComplexity_exclusivelyGA(self):
