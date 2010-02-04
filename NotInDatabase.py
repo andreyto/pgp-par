@@ -16,20 +16,19 @@ import sys
 import os
 import getopt
 import traceback
-import ResultsParser
+import InspectResults
 import SelectProteins
 from Utils import *
 Initialize()
 
 
-class CompileClass(ResultsParser.ResultsParser):
+class CompileClass():
     def __init__(self):
         self.ReferenceResults = None
         self.AllPeptideOutPath = None
         self.NovelPeptideOutPath = None
         self.MundanePeptideOutPath = None
         self.ReferenceDatabasePath = [] #possibly multiple
-        ResultsParser.ResultsParser.__init__(self)
         self.PeptideScores = {} # {Aminos} => pvalue
         self.BestPeptideLine = {}
         self.PValueCutoff = None
@@ -40,7 +39,7 @@ class CompileClass(ResultsParser.ResultsParser):
     def Main(self):
         self.ProteinPicker = SelectProteins.ProteinSelector()
         self.ProteinPicker.LoadMultipleDB(self.ReferenceDatabasePath)
-        self.ProcessResultsFiles(self.ReferenceResults, self.ParseReferenceFileCallback)
+        self.ParseInspect(self.ReferenceResults)
         self.FindInDatabase()
 
     def FindInDatabase(self):
@@ -76,36 +75,22 @@ class CompileClass(ResultsParser.ResultsParser):
         if self.MundanePeptideOutPath:
             MundaneOutHandle.close()
 
-    def ParseReferenceFileCallback(self, FilePath):
-        Handle = open(FilePath, "rb")
-        for Line in Handle.xreadlines():
-            #print "Parsing line %s"%Line
-            if Line[0] == "#":
-                continue # comment line or blank
-            if not Line.strip():
-                continue
-            Bits = list(Line.split("\t"))
-            Annotation = Bits[self.Columns.Annotation]
-            PValue = float(Bits[self.Columns.PValue])
-            if self.PValueCutoff: #if we want to look at this
-                if not PValue < self.PValueCutoff:
-                    continue #skip this dude
-            if self.LFDRCutoff:
-                LFDR = float(Bits[-1]) # not a typical column, not usually in there
-                ## TRICKERY ALERT.  if we have lfdr set, then we prefer the lfdr to the pvalue estimate
-                PValue = LFDR
-                if not LFDR < self.LFDRCutoff:
-                    continue
-            Peptide = GetPeptideFromModdedName(Annotation)
+    def ParseInspect(self, FilePath):
+        inspectParser = InspectResults.Parser( FilePath )
+        for result in inspectParser:
+            try:
+                Annotation = result.Annotation
+                Peptide = GetPeptideFromModdedName(Annotation)
+                Aminos = Peptide.Aminos
+                PValue = result.PValue
+            except:
+                traceback.print_exc()
+                continue # SNAFU
             if not self.PeptideScores.has_key(Peptide.Aminos):
                 self.PeptideScores[Peptide.Aminos] = PValue
-                self.BestPeptideLine[Peptide.Aminos] = Line
             else:
                 if PValue < self.PeptideScores[Peptide.Aminos]:
                     self.PeptideScores[Peptide.Aminos] = PValue
-                    self.BestPeptideLine[Peptide.Aminos] = Line
-                
-        Handle.close()
 
 
     def ParseCommandLine(self,Arguments):
