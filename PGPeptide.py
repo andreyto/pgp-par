@@ -5,6 +5,7 @@ class GenomicLocation(object):
         Stop must be > then start.
         """
         if start > stop:
+            print "you tried %s <? %s"%(start, stop)
             raise ValueError("Start > Stop")
 
         if not strand in ['+','-']:
@@ -29,7 +30,12 @@ class GenomicLocation(object):
         else:
             self.__start -= 3
            
-        
+    def AddOneAminoAcidThreePrime(self):
+        'This is accessed to add the stop codon for a protein'
+        if self.strand == "-":
+            self.__start -= 3
+        else:
+            self.__stop += 3
 
     @property
     def start(self):
@@ -84,7 +90,7 @@ class LocatedPeptide(object):
         self.isUnique = None
         self.TrypticNTerm = None
         self.TrypticCTerm = None
-        self.proteinName = None #this is actually the ORF Name.  as we put them into ORFs
+        self.ORFName = None #this is actually the ORF Name.  as we put them into ORFs
 
     def isTryptic(self):
         # TBD
@@ -105,14 +111,14 @@ class LocatedPeptide(object):
         return self.location.stop
     
     def __str__(self):
-        return "%s in %s, unique=%s, %s"%(self.aminos, self.proteinName, self.isUnique, self.location)
+        return "%s in %s, unique=%s, %s"%(self.aminos, self.ORFName, self.isUnique, self.location)
 
 
 class LocatedProtein(object):
     def __init__(self,location):
         self.location = location
-        self.name = None
-        self.ORFName = None
+        self.name = None #like asparagine synthase
+        self.ORFName = None #like Protein1233
         
     def AddOneAminoAcidFivePrime(self):
         """This is a very very ugly kludge.  to map proteins on to the ORFs, we remove the first amino acid
@@ -121,22 +127,80 @@ class LocatedProtein(object):
         and NOT associated with 5' or 3'.  
         """
         self.location.AddOneAminoAcidFivePrime()
-        return
+        
+    def AddStopCodon(self):
+        """Add the three nucs to the location object representing my stop codon, which is part of me
+        as far as NCBI is concerned
+        """
+        self.location.AddOneAminoAcidThreePrime()
+        
+    def GetStart(self):
+        return self.location.start
+
+    def GetStop(self):
+        return self.location.stop
+    def GetORFName(self):
+        return self.ORFName
+    
+    def __str__(self):
+        return "%s in %s, %s"%(self.name, self.ORFName, self.location)
         
         
 class OpenReadingFrame(object):
-    def __init__(self):
+    def __init__(self, FastaHeader, AASequence):
         self.location = None
-        self.__peptides = []
-        self.annotatedProtein = None
-        self.name = None
-        self.aaseq = None
+        self.__peptides = [] #LocatedPeptide objects
+        self.annotatedProtein = None # a LocatedProtein Object, can't have more than one. If there's a fight, longest one wins
+        self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
+        self.aaseq = AASequence
         self.naseq = None
+        ParsedHeader = ORFFastaHeader(FastaHeader)
+        self.name = ParsedHeader.ORFName
+        self.SetLocation(ParsedHeader, len(AASequence))
+        
+    def __str__(self):
+        return "%s as %s, %s"%(self.name, self.annotatedProtein, self.location)
+
+    def SetLocation(self, ParsedHeader, AALength):
+        """
+        Parameters: ORFFastaHeader object, length of the amino acids in the ORF
+        Return: none
+        Description: Fill in the information needed for the location object, create 
+        and assign object
+        """
+        FivePrime = ParsedHeader.Start
+        ThreePrime = -1 #set below
+        Strand = ParsedHeader.Strand
+        Chromosome = ParsedHeader.Chromosome
+        Frame = ParsedHeader.Frame
+        #now some math to figure out the stop nuc
+        if (Strand == "-"):
+            CodingThreePrime = FivePrime - (AALength * 3) + 1
+            ThreePrime = CodingThreePrime - 3 #three bases of the stop codon
+        else:
+            #now the position.  We first get the protein start nuc, and then offset to the peptide start
+            CodingThreePrime = FivePrime + (AALength * 3) - 1 # we do a minus one because the bases are inclusive
+            ThreePrime = CodingThreePrime + 3 # three bases of the stop codon are INCLUDED
+        if Strand == "+":
+            SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand)
+        else:
+            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand)
+        SimpleLocation.chromosome = Chromosome
+        SimpleLocation.frame = Frame
+        self.location = SimpleLocation
 
     def numPeptides(self):
         'Returns the number of peptides in the ORF.'
         return len(self.__peptides)
 
+    def addLocatedProtein(self, Protein):
+        self.annotatedProtein = Protein
+
+    def addLocatedPeptide(self, Peptide):
+        'Adds a single LocatedPeptide objects to the ORF.'
+        self.__peptides.append( Peptide )
+
+    
     def addLocatedPeptides(self,peptideList):
         'Adds a list of LocatedPeptide objects to the ORF.'
         self.__peptides.extend( peptideList )
@@ -179,6 +243,7 @@ class ORFFastaHeader(object):
         self.Start = None
         self.Frame = None
         self.Strand = None
+        self.String = Header
         self.Parse(Header)
         
     def Parse(self, String):

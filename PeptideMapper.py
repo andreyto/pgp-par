@@ -34,43 +34,45 @@ class PeptideMappingClass:
         Description: load up databases in preparation for searching
         """
         self.DatabasePaths = DBPaths
-        self.ProteinPicker = SelectProteins.ProteinSelector()
-        self.ProteinPicker.LoadMultipleDB(self.DatabasePaths)
+        self.ORFDB = SelectProteins.ProteinSelector()
+        self.ORFDB.LoadMultipleDB(self.DatabasePaths)
 
     def MapPeptide(self, Aminos, PValue, WarnNoMatch = 0):
         """
         Parameters: an amino acid string, the best score (pvalue)
         Return: a list of LocatedPeptide objects (possible list of len 1)
         Description: This is the method that takes amino acids and maps
-        them into dna sequence space.
+        them into dna sequence space.  I have tried very hard to label
+        things as ORF___ if they are from open reading frames, and protein___
+        if they are on actual predicted proteins.
         """
         ReturnList = [] # the list of PGPeptide.LocatedPeptide objects
         self.CurrentAminos = Aminos #only used for printing in case or error
         #1. First find the location(s) of the aminos in the ORF database
-        ProteinLocations = self.ProteinPicker.FindPeptideLocations(Aminos)
-        if (len(ProteinLocations) < 1) and WarnNoMatch:
+        LocationsInORFDB = self.ORFDB.FindPeptideLocations(Aminos)
+        if (len(LocationsInORFDB) < 1) and WarnNoMatch:
             #sometimes we don't care that there's no match.  Like for trypsin.  it's 
             #not part of our 6frame bacteria, but it was in the inspect search
             print "Peptide %s was not found in the database"%Aminos
         #2. now go through the process of converting protein space to nucleotide space    
-        for (ProteinID, PeptideStartAA) in ProteinLocations:
+        for (ORFID, PeptideStartAA) in LocationsInORFDB:
             ## PeptideStartAA is the start position within the amino acid sequence
             #1. parse out the features of the protein name (fasta header)
-            ORFFastaLine = self.ProteinPicker.ProteinNames[ProteinID]
+            ORFFastaLine = self.ORFDB.ProteinNames[ORFID]
             ParsedORFInfo = PGPeptide.ORFFastaHeader(ORFFastaLine)
             SimpleLocation = self.MapNucleotideLocation(ParsedORFInfo, PeptideStartAA, len(Aminos))
             #now that we have a Location, let's get our Located Peptide Object up and running
             Peptide = PGPeptide.LocatedPeptide(Aminos, SimpleLocation)
             Peptide.bestScore = PValue
-            Peptide.proteinName = ParsedORFInfo.ORFName
+            Peptide.ORFName = ParsedORFInfo.ORFName
             #now we check the letter before us to see if it's tryptic
-            ORFSequence = self.ProteinPicker.ProteinSequences[ProteinID]
+            ORFSequence = self.ORFDB.ProteinSequences[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
             if PrefixOfPeptide in ["R", "K"]:
                 Peptide.TrypticNTerm = 1
             if Aminos[-1] in ["R", "K"]:
                 Peptide.TrypticCTerm = 1
-            if len(ProteinLocations) == 1:
+            if len(LocationsInORFDB) == 1:
                 Peptide.isUnique = 1
 
             #append to list
@@ -81,8 +83,8 @@ class PeptideMappingClass:
 
     def MapProtein(self, Sequence, ProteinName, WarnNonSingleMatch = 1):
         """
-        Parameters: the protein sequence
-        Return: a list of LocatedProtein objects (likely list of len 1)
+        Parameters: the protein sequence, name of the protein (PROTEIN, not ORF)
+        Return: LocatedProtein object
         Description: this method takes a protein sequence, and puts it onto the
         DNA within the bounds of a single Open reading frame.
         
@@ -99,16 +101,16 @@ class PeptideMappingClass:
         """
         SearchableSequence = Sequence[1:] # see the problem in the NOTE
         self.CurrentAminos = Sequence #for error printing
-        ProteinLocations = self.ProteinPicker.FindPeptideLocations(SearchableSequence)
-        if len(ProteinLocations) == 0:
+        LocationsInORFDB = self.ORFDB.FindPeptideLocations(SearchableSequence)
+        if len(LocationsInORFDB) == 0:
             if WarnNonSingleMatch:
                 print "WARNING: protein %s does not map to any ORF"%ProteinName
             return None #can't find it, why waste time
         #now here we wonder what to do with proteins that map to multiple ORFs.  I think today
         # that I will just say with an iron fist, that these suck, and should be treated badly
         #we will take the first location. HACK
-        (ORFID, ProteinStartAA) = ProteinLocations[0]
-        ORFFastaLine = self.ProteinPicker.ProteinNames[ORFID]
+        (ORFID, ProteinStartAA) = LocationsInORFDB[0]
+        ORFFastaLine = self.ORFDB.ProteinNames[ORFID]
         ParsedORFInfo = PGPeptide.ORFFastaHeader(ORFFastaLine)
         SimpleLocation = self.MapNucleotideLocation(ParsedORFInfo, ProteinStartAA, len(SearchableSequence))
         #now we make the protein
@@ -116,6 +118,7 @@ class PeptideMappingClass:
         Protein.name = ProteinName
         Protein.ORFName = ParsedORFInfo.ORFName
         Protein.AddOneAminoAcidFivePrime() #adding back what we took off because of the NOTE
+        Protein.AddStopCodon()
         return Protein
         
         

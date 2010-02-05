@@ -33,9 +33,11 @@ Additional Parameters
 import getopt
 import traceback
 import InspectResults
-import PeptideMapper
 import GenomicLocations
+import PeptideMapper
+import PGPeptide
 import PGORFFilters
+import SelectProteins
 import PGCleavageAnalysis
 import BasicStats
 import GFFIO
@@ -79,8 +81,9 @@ class FinderClass():
         
         ##now map all the peptides
         self.MapPredictedProteins()
-        return
+        
         self.CreateORFs()
+        return
         #self.CheckComplexity()
         #return
         ## Now start the analyses
@@ -253,31 +256,24 @@ class FinderClass():
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:CreateORFs"
         Count = 0
-        TotalORFCount = len(self.ORFPeptideMapper.ProteinPicker.ProteinNames.keys())
-        for ID in self.ORFPeptideMapper.ProteinPicker.ProteinNames.keys():
-            FastaLine = self.ORFPeptideMapper.ProteinPicker.ProteinNames[ID]
-            #if FastaLine.find(DebugString) == -1:
-            #    continue
-            if not self.IsThisORFObserved(FastaLine):
+        TotalORFCount = len(self.ORFPeptideMapper.ORFDB.ProteinNames.keys())
+        for ID in self.ORFPeptideMapper.ORFDB.ProteinNames.keys():
+            FastaLine = self.ORFPeptideMapper.ORFDB.ProteinNames[ID]
+            if not self.IsThisORFObserved(FastaLine): #this is for saving space
+                #there are a LOT of ORFs in the six frame translation.  Most we don't care about
                 continue
-            ORFSequence = self.ORFPeptideMapper.ProteinPicker.ProteinSequences[ID]
-            ORFObject = GenomicLocations.GenomicLocationForORF(FastaLine, len(ORFSequence))
-            self.AllORFs[ORFObject.ORFName] = ORFObject
+            ORFSequence = self.ORFPeptideMapper.ORFDB.ProteinSequences[ID]
+            ORFObject = PGPeptide.OpenReadingFrame(FastaLine, ORFSequence)
+            self.AllORFs[ORFObject.name] = ORFObject
             #now we go through and put all the protiens on the ORFS, then the peptides on the ORFs
-            for (ProteinName, ProteinObject) in self.AllPredictedProttems():
-                if ProteinObject.ProteinName == ORFObject.ORFName:
-                    ## here it might be easy to confuse the ProteinName and ProteinObject.ProteinName
-                    ## remember that PRoteinObject.ProteinName was set when a protein sequence was mapped onto an ORF
-                    ## so really it should be called ORF Name, but that's they way things are
-                    ## ProteinName, a key from self.AllPredictedProteins is actually the name of the predicted protein from the genome annotation
-                    ORFObject.ProteinPrediction = ProteinObject
-                    ORFObject.ProteinPredictionName = ProteinName
-                    break #we're done here
+            for ProteinObject in self.AllPredictedProteins.values():
+                if ProteinObject.ORFName == ORFObject.name:
+                    ORFObject.addLocatedProtein(ProteinObject)
+                    break #we're done here because there can only be one protein in an ORF
             #now that we've finished running through the protein list, we run through the peptide list
             for Location in self.AllLocatedPeptides:
-                #print "trying to get locations with name %s"%Location.ProteinName
-                if Location.ProteinName == ORFObject.ORFName:
-                    ORFObject.PeptideLocationList.append(Location)
+                if Location.ORFName == ORFObject.name:
+                    ORFObject.addLocatedPeptide(Location)
             #now done assigning both proteins and peptides to this ORF
             Count += 1
             if (Count %1000) == 0 and self.Verbose:
@@ -322,9 +318,8 @@ class FinderClass():
             
             #now put into the observedORF stuff
             for Location in LocatedPeptides:
-                ORFName = Location.proteinName
-                if not ORFName in self.ProteomicallyObservedORFs:
-                    self.ProteomicallyObservedORFs.append(ORFName)
+                if not Location.ORFName in self.ProteomicallyObservedORFs:
+                    self.ProteomicallyObservedORFs.append(Location.ORFName)
 
         self.AllPeptides = {}  # set to null just for the memory savings
         if self.Verbose:
@@ -337,13 +332,11 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing::MapPredictedProteins"
-        PredictedProteinReader = PeptideMapper.PeptideMappingClass() #just to use the LoadDB parts.  
-        # I could do that here, but then I would be importing SelectProteins in this also, and why
-        # should I do that when i've already written the code elsewhere
-        PredictedProteinReader.LoadDatabases(self.ProteomeDatabasePaths)
-        for ProteinID in PredictedProteinReader.ProteinPicker.ProteinNames.keys():
-            ProteinName = PredictedProteinReader.ProteinPicker.ProteinNames[ProteinID]
-            ProteinSequence = PredictedProteinReader.ProteinPicker.ProteinSequences[ProteinID]
+        PredictedProteinReader = SelectProteins.ProteinSelector() #just to use the LoadDB parts.  
+        PredictedProteinReader.LoadMultipleDB(self.ProteomeDatabasePaths)
+        for ProteinID in PredictedProteinReader.ProteinNames.keys():
+            ProteinName = PredictedProteinReader.ProteinNames[ProteinID]
+            ProteinSequence = PredictedProteinReader.ProteinSequences[ProteinID]
             LocatedProtein = self.ORFPeptideMapper.MapProtein(ProteinSequence, ProteinName)
             self.AllPredictedProteins[ProteinName] = LocatedProtein
         
