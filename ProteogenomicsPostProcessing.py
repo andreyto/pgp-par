@@ -236,11 +236,19 @@ class FinderClass():
         Count = 0
         TotalORFCount = len(self.AllORFs)
         BagChecker = PGPrimaryStructure.PrimaryStructure()
+        NovelCount = 0
+        UnderPredictedCount = 0
         for ORF in self.AllORFs.values():
-            BagChecker.CheckStructure(ORF)
+            Status = BagChecker.CheckStructure(ORF)
+            if Status == "NOVEL":
+                NovelCount += 1
+            if Status == "UNDERPREDICTED":
+                UnderPredictedCount += 1
             Count +=1
             if (Count %1000) == 0 and self.Verbose:
                 print "Processed %s / %s ORF Objects"%(Count, TotalORFCount)
+        #done with loop
+        print "Processed %s. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
             
 
     def CreateORFs(self):

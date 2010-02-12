@@ -153,6 +153,12 @@ class LocatedProtein(object):
         as far as NCBI is concerned
         """
         self.location.AddOneAminoAcidThreePrime()
+
+    def GetFivePrimeNucleotide(self):
+        """Return the 5' nucleotide"""
+        if self.location.strand == "-":
+            return self.location.stop
+        return self.location.start
         
     def GetStart(self):
         return self.location.start
@@ -182,7 +188,11 @@ class OpenReadingFrame(object):
         self.GCObservedRegion = None
         
     def __str__(self):
-        return "%s as %s, %s peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), self.location)
+        NumUniquePeptides = 0
+        for Peptide in self.peptideIter():
+            if Peptide.isUnique:
+                NumUniquePeptides += 1
+        return "%s as %s, %s (%s) peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), NumUniquePeptides, self.location)
 
     def SetLocation(self, ParsedHeader, AALength):
         """
@@ -218,6 +228,9 @@ class OpenReadingFrame(object):
         Description: gets the translation of the entire open reading frame
         """
         return self.aaseq
+
+    def GetStrand(self):
+        return self.location.strand
     
     def GetObservedSequence(self):
         """Parameters: none
@@ -257,7 +270,9 @@ class OpenReadingFrame(object):
         return PeptideWinner
                 
                 
-                
+    def GetNucleotideStartOfTranslation(self):
+        """Returns the start of translation"""
+        return self.annotatedProtein.GetFivePrimeNucleotide()
     
     def numPeptides(self):
         'Returns the number of peptides in the ORF.'
