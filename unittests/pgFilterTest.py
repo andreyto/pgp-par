@@ -23,6 +23,8 @@ class Test(unittest.TestCase):
         """
         #these first four are appropriate for a sequence complexity filter
 
+        self.fastaLine = ">Protein0.Chr:NC_001263.Frame1.StartNuc1.Strand+" #needed for the construct or 
+        self.orfSeq = "THISISADUMMYSEQUENCEHOPEITWORKSOK"
         self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG")
         self.P1.isUnique = 1 #isn't that amazing.  it's unique
         self.P2 = PGPeptide.LocatedPeptide("GGAGAGAGGGGAGAG")
@@ -45,7 +47,7 @@ class Test(unittest.TestCase):
         Filter = PGORFFilters.SequenceComplexityFilter()
                 
         #now make the encapsulating ORF
-        ORF = PGPeptide.OpenReadingFrame()
+        ORF = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
         ORF.addLocatedPeptides([self.P1, self.P2, self.P3, self.P4])
         
         #now run the filter
@@ -71,10 +73,10 @@ class Test(unittest.TestCase):
         ListOf1 = [self.P5]
         ListOf2 = [self.P1, self.P4]
         ListOf5 = [self.P1, self.P2, self.P3, self.P4, self.P5] #brackets make a list Sam, parens make a tuple
-        ORF0 = PGPeptide.OpenReadingFrame() 
-        ORF1 = PGPeptide.OpenReadingFrame()
-        ORF2 = PGPeptide.OpenReadingFrame()
-        ORF5 = PGPeptide.OpenReadingFrame()
+        ORF0 = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq) 
+        ORF1 = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
+        ORF2 = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
+        ORF5 = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
         ORF1.addLocatedPeptides( ListOf1 )
         ORF2.addLocatedPeptides( ListOf2 )
         ORF5.addLocatedPeptides( ListOf5 )
@@ -103,9 +105,9 @@ class Test(unittest.TestCase):
         #now this is tricky, but important, if I don't declare something as unique, I assume that it is not
         #so only P1 and P3 are unique.
         ListOfBad = [self.P2, self.P4]
-        ORFHasUnique = PGPeptide.OpenReadingFrame()
+        ORFHasUnique = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
         ORFHasUnique.addLocatedPeptides( ListOf5 )
-        ORFLacksUnique = PGPeptide.OpenReadingFrame()
+        ORFLacksUnique = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
         ORFLacksUnique.addLocatedPeptides( ListOfBad )
         
         self.assertEqual(Filter.apply(ORFHasUnique), 0)
