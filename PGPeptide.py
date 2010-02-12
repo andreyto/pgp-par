@@ -92,11 +92,31 @@ class LocatedPeptide(object):
         self.TrypticCTerm = None
         self.ORFName = None #this is actually the ORF Name.  as we put them into ORFs
 
+    def SetTryptic(self, Prefix):
+        """Parmeters: the prefix of the peptide (letter immediately before)
+        Return: None
+        Description: This function sets the two tryptic variables, n and c term
+        """
+        TrypticLetters = ["R", "K"]
+        if Prefix in TrypticLetters:
+            self.TrypticNTerm = 1
+        if self.aminos[-1] in TrypticLetters:
+            self.TrypticCTerm = 1
+            
+    
     def isTryptic(self):
-        # TBD
+        """Parameters: None
+        Return: true/falst on whether a peptide is tryptic
+        Description: current implementation is that any tryptic
+        endpoint will do.
+        """
+        if self.TrypticCTerm:
+            return True
+        if self.TrypticNTerm:
+            return True
         return False
 
-    def GetFivePrimeNucelotide(self):
+    def GetFivePrimeNucleotide(self):
         """Just checks for the strand, and returns the 5' nucelotide
         """
         if self.location.strand == "-":
@@ -157,9 +177,12 @@ class OpenReadingFrame(object):
         ParsedHeader = ORFFastaHeader(FastaHeader)
         self.name = ParsedHeader.ORFName
         self.SetLocation(ParsedHeader, len(AASequence))
+        self.GCWholeORF = None
+        self.GCPredictedProtein = None
+        self.GCObservedRegion = None
         
     def __str__(self):
-        return "%s as %s, %s"%(self.name, self.annotatedProtein, self.location)
+        return "%s as %s, %s peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), self.location)
 
     def SetLocation(self, ParsedHeader, AALength):
         """
@@ -189,12 +212,64 @@ class OpenReadingFrame(object):
         SimpleLocation.frame = Frame
         self.location = SimpleLocation
 
+    def GetTranslation(self):
+        """Parameters: none
+        Return: Amino acid translation of the ORF
+        Description: gets the translation of the entire open reading frame
+        """
+        return self.aaseq
+    
+    def GetObservedSequence(self):
+        """Parameters: none
+        Return: amino acid sequence 
+        Description: We want to get the sequence that we have evidence as
+        being translated.  This is from the first peptide through the stop
+        """
+        #1. get the first peptide, in order
+        FirstPeptide = self.GetFivePrimePeptide()
+        #2. map it to the aaseq
+        FirstResidue = self.aaseq.find(FirstPeptide.aminos)
+        #3. return the slice
+        return self.aaseq[FirstResidue:]
+
+    def GetFivePrimePeptide(self):
+        """Parameters: None
+        Return: the five prime most peptide
+        Description: cycle through the peptides and return the one closest
+        to the start
+        """
+        PeptideWinner = None
+        FivePrimeWinner = None
+        for Peptide in self.peptideIter():
+            if not PeptideWinner:
+                PeptideWinner = Peptide
+                FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
+                continue
+            if self.location.strand == "+":
+                #if + strand, get the smallest
+                if Peptide.GetFivePrimeNucleotide() < FivePrimeWinner:
+                    PeptideWinner = Peptide
+                    FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
+            else: # if - strand, get the biggest 
+                if Peptide.GetFivePrimeNucleotide() > FivePrimeWinner:
+                    PeptideWinner = Peptide
+                    FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
+        return PeptideWinner
+                
+                
+                
+    
     def numPeptides(self):
         'Returns the number of peptides in the ORF.'
         return len(self.__peptides)
 
     def addLocatedProtein(self, Protein):
         self.annotatedProtein = Protein
+        
+    def GetLocatedProtein(self):
+        if self.annotatedProtein:
+            return self.annotatedProtein
+        return None
 
     def addLocatedPeptide(self, Peptide):
         'Adds a single LocatedPeptide objects to the ORF.'

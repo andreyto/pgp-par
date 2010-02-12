@@ -68,10 +68,7 @@ class PeptideMappingClass:
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.ORFDB.ProteinSequences[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
-            if PrefixOfPeptide in ["R", "K"]:
-                Peptide.TrypticNTerm = 1
-            if Aminos[-1] in ["R", "K"]:
-                Peptide.TrypticCTerm = 1
+            Peptide.SetTryptic(PrefixOfPeptide)
             if len(LocationsInORFDB) == 1:
                 Peptide.isUnique = 1
 
@@ -104,7 +101,7 @@ class PeptideMappingClass:
         LocationsInORFDB = self.ORFDB.FindPeptideLocations(SearchableSequence)
         if len(LocationsInORFDB) == 0:
             if WarnNonSingleMatch:
-                print "WARNING: protein %s does not map to any ORF"%ProteinName
+                print "WARNING: protein %s does not map to any ORF. No LocatedProtein created"%ProteinName
             return None #can't find it, why waste time
         #now here we wonder what to do with proteins that map to multiple ORFs.  I think today
         # that I will just say with an iron fist, that these suck, and should be treated badly

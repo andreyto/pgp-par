@@ -154,8 +154,8 @@ class TrypticFilter(Filter):
         the ORF
         """
         Save = 0
-        for Peptide in ORF.PeptideLocationList:
-            if Peptide.Tryptic: # == 1 
+        for Peptide in ORF.peptideIter():
+            if Peptide.isTryptic(): # == 1 
                 Save = 1
                 break
         if Save:

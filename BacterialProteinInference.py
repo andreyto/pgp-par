@@ -16,17 +16,16 @@ Additional Options
  
 """
 
-import sys
-import os
+
 import getopt
 import traceback
-import ResultsParser
+import InspectResults
 import SelectProteins
 from Utils import *
 Initialize()
 
 
-class FinderClass(ResultsParser.ResultsParser):
+class FinderClass():
     def __init__(self):
         self.ReferenceResults = None
         self.OutputPath = "RenameYourOutput.txt"
@@ -37,12 +36,12 @@ class FinderClass(ResultsParser.ResultsParser):
         self.NameToID = {}
         self.SpectrumCount = 0
         self.MinPeptides = 2
-        ResultsParser.ResultsParser.__init__(self)
+        
         
     def Main(self):
         self.ProteinPicker = SelectProteins.ProteinSelector()
         self.ProteinPicker.LoadMultipleDB(self.DatabasePaths)
-        self.ProcessResultsFiles(self.ReferenceResults, self.ParseInspectCallback)
+        self.ParseInspect(self.ReferenceResults)
         print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
         Proteins = self.PutPeptidesOnProteins()
         print "I found %s proteins (with 1 or more peptides)"%len(Proteins)
@@ -129,40 +128,38 @@ class FinderClass(ResultsParser.ResultsParser):
                 PeptideObjectInProtein[ProteinName].append(self.AllPeptides[Aminos])
         return PeptideObjectInProtein
         
-    def ParseInspectCallback(self, FilePath):
+    def ParseInspect(self, FilePath):
         """Called by the ResultsParser.ProcessResultsFiles
         Here I parse out Inspect Results to get peptide annotations, 
         Putting them in a hash for safe keeping
         """
-        Handle = open(FilePath, "rb")
-        for Line in Handle.xreadlines():
-            #print "Parsing line %s"%Line
-            if Line[0] == "#":
-                continue # comment line
-            if not Line.strip():
-                continue
-            Bits = list(Line.split("\t"))
+        inspectParser = InspectResults.Parser( FilePath )
+        for result in inspectParser:
             try:
-                Annotation = Bits[self.Columns.Annotation]
+                Annotation = result.Annotation
                 Peptide = GetPeptideFromModdedName(Annotation)
                 Aminos = Peptide.Aminos
-                PValue = float(Bits[self.Columns.PValue])
+                PValue = result.PValue
             except:
                 traceback.print_exc()
                 continue # SNAFU
             #here's some hacking that needs to be fixed.  I currently want to filter stuff by lfdr, but
             #that may not always be present
-            if len(Bits) < self.Columns.LFDR: #meaning that I don't have the column in question
+            if result.LFDR == None: #meaning that I don't have the column in question
                 if PValue > self.PValueLimit: #substitute pvalue for LFDR
                     continue
             else:
-                LFDR = float(Bits[self.Columns.LFDR])
+                LFDR = result.LFDR
+                PValue = LFDR
                 if LFDR > self.PValueLimit:
                     continue
-            if not self.AllPeptides.has_key(Peptide.Aminos):
+            if not self.AllPeptides.has_key(Aminos):
                 self.AllPeptides[Aminos] = Peptide
+            else:
+                if PValue <  self.AllPeptides[Aminos]:
+                    self.AllPeptides[Aminos] = Peptide
             self.SpectrumCount += 1
-        Handle.close()
+
 
 
     def ParseCommandLine(self,Arguments):
