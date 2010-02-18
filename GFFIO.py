@@ -1,98 +1,68 @@
 """GFFIO.py
-This auxiliary set of classes/functions is to be used for input/output
+This auxiliary set of classes is to be used for input/output
 related needs with the GFF3 format.
 
 NOTE: this is a utility, and not executable from the command line
 
 """
 
-import sys
-import os
-import traceback
+class File(object):
+    def __init__(self, handle):
+        self.handle  = handle
 
-def MakeGFFLineFromDictionary(Dictionary, Verbose = 0):
-    """
-    Parameters: a dictionary with data for the GFF line.  
-    Return: A string in GFF3 format
-    Description: This is a simple GFF interfacing method, meant to make a line of 
-    text appropriate for GFF3.  You are to give a dictionary with values that go into
-    the line.  If any of the values are missing, then we return a blank line. Your fault.
-    NOTE: this string is a single line, including the newline.
-    """
-    ### check all the necessary elements
-    RequiredKeys = ["seqid", "source", "type", "start", "end", "score", "strand", "phase", "attributes"]
-    for Key in RequiredKeys:
-        if not Dictionary.has_key(Key):
-            if Verbose:
-                print "Error GFFIO::MakeGFFLineFromDictionary. Input parameter Dictionary incomplete"
-            return ""
-    #now it should be minimally compliant
-    String = ""
-    String += "%s\t"%Dictionary["seqid"]
-    String += "%s\t"%Dictionary["source"]
-    String += "%s\t"%Dictionary["type"]
-    String += "%s\t"%Dictionary["start"]
-    String += "%s\t"%Dictionary["end"]
-    String += "%s\t"%Dictionary["score"]
-    String += "%s\t"%Dictionary["strand"]
-    String += "%s\t"%Dictionary["phase"]
-    AttributeDictionary = Dictionary["attributes"]
-        #attributes is a dictionary with potentially many values. I put stuff in, following this order
-        #ID, Name, other crap
-    AttributeString = ""
-    AttributeString += "ID=%s"%AttributeDictionary["ID"]
-    AttributeString += ";Name=%s"%AttributeDictionary["Name"]
-    AttributeKeys = AttributeDictionary.keys()
-    for Key in AttributeKeys:
-        if not Key in ["ID", "Name"]:
-            AttributeString += ";%s=%s"%(Key,AttributeDictionary[Key])
-    String += "%s\n"%AttributeString
-    return String
-    
-def ParseGFFLine(FileLine):
-    """Parameters: String line of GFF
-    Return: Dictionary filled with values
-    Description: Take a GFF line and parse it out into the dictionary. You
-    can do whatever you want with the dictionary.  The format should be invariant
-    """    
-    # it is possible that this line is a comment line, starting with a hash #.
-    if not FileLine.strip():
-        return None 
-    if FileLine[0] in ["#", "\n", ""]:
-        return None
-    String = FileLine.strip()
-    Bits = String.split("\t")
-    Dictionary = {}
-    Dictionary["seqid"] = Bits[0]
-    Dictionary["source"]= Bits[1]
-    Dictionary["type"]  = Bits[2]
-    Dictionary["start"] = int(Bits[3])
-    Dictionary["end"]   = int(Bits[4])
-    Dictionary["score"] = float(Bits[5])
-    Dictionary["strand"]= Bits[6]
-    Dictionary["phase"] = int(Bits[7])
-    Dictionary["attributes"] = {}
-    AttributesString = Bits[8]
-    AttributesPairs = AttributesString.split(";")
-    for Pair in AttributesPairs:
-        (Key, Value) = Pair.split("=")
-        Dictionary["attributes"][Key] = Value
-        #print "%s, %s"%(Key, Value)
-    return Dictionary
-        
+    def __iter__(self):
+        for line in self.handle.xreadlines():
+            if line[0] in ["#", "\n", ""]:
+                continue
+            yield Record(line)
 
-class GFFColumns:  # see big comment below, these are zero indexed.
-    Chr = 0
-    Source = 1 #"Proteomics" or "Inspect" or "6frame"
-    Type = 2
-    Start = 3
-    Stop = 4
-    Score = 5
-    Strand = 6
-    Phase = 7
-    Attributes = 8
-        
-        
+    def close(self):
+        self.handle.close()
+
+    def write(self,record):
+        attributes = '.'
+        if len(record.attributes) > 0:
+            # Attributes is a dictionary, which we join into key=value
+            # pairs with each separated by a ;
+            pairs = [(p[0],str(p[1])) for p in record.attributes.items()]
+            attributes = ";".join(["=".join(x) for x in pairs]) 
+
+        self.handle.write("\t".join([
+            record.seqid,
+            record.source,
+            record.type,
+            str(record.start),
+            str(record.end),
+            str(record.score),
+            record.strand,
+            str(record.phase),
+            attributes
+            ]) + "\n")
+
+class Record(object):
+    def __init__(self, gffline="\t".join(list('.'*9)) ):
+        """Parameters: String line of GFF
+        Return: GFFIO.Record object filled with values
+        Description: Take a GFF line and parse it out into the object. You
+        can do whatever you want with the object.  The format should be invariant
+        """    
+        cols = gffline.strip().split("\t")
+        self.seqid = cols[0]
+        self.source= cols[1]
+        self.type  = cols[2]
+        self.start = cols[3] == '.' and '.' or int(cols[3])
+        self.end   = cols[4] == '.' and '.' or int(cols[4])
+        self.score = cols[5] == '.' and '.' or float(cols[5])
+        self.strand= cols[6]
+        self.phase = cols[7] == '.' and '.' or int(cols[7])
+        self.attributes = {}
+        for Pair in cols[8].split(";"):
+            if '.' == Pair:
+                continue
+            (Key, Value) = Pair.split("=")
+            self.attributes[Key] = Value
+
+
 """
 Methods for reading or writing the GFF3 format
 
@@ -185,4 +155,3 @@ These tags have predefined meanings:
     Name   Display name for the feature.  This is the name to be
            displayed to the user. Here use the peptide sequence
 """
-        
