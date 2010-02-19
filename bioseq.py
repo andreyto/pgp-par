@@ -6,6 +6,7 @@ Also support classes for doing sequence IO.
 '''
 
 import os, re
+from StringIO import StringIO
 
 class Sequence(object):
     '''
@@ -22,38 +23,22 @@ class Sequence(object):
         self.seq = seq
         self.desc = desc
             
-class FlatFileReader(object):
+class FlatFileIO(object):
     '''
-    A parent class for all the classes that read flat files to
-    inherit from. Children should always be iterable.
+    A parent class for all the classes that do IO to flat files.
+    Children should always be iterable.
     '''        
-    def __init__(self,infile):
-        if type(infile) is file:
-            self.io = infile
+    def __init__(self, fileForIO, mode='r'):
+        if type(fileForIO) is file:
+            self.io = fileForIO
 
-        elif type(infile) is str:
-            self.name = infile
-            self.io = open( infile, 'r')
+        elif type(fileForIO) is str:
+            self.name = fileForIO
+            self.io = open( fileForIO, mode)
+        elif isinstance(fileForIO, StringIO):
+            self.io = fileForIO
         else:
-            raise TypeError
-
-    def __del__(self):
-        self.io.close()
-
-class FlatFileWriter(object):
-    '''
-    A parent class for all the classes that write flat files to
-    inherit from.
-    '''        
-    def __init__(self,outfile):
-        if type(outfile) is file:
-            self.io = outfile
-
-        elif type(outfile) is str:
-            self.name = outfile
-            self.io = open( outfile, 'w')
-        else:
-            raise TypeError
+            raise TypeError("Need string or io handle, got %s" % type(fileForIO))
         
     def __del__(self):
         self.io.close()
@@ -68,7 +53,7 @@ class FlatFileWriter(object):
         for i in seqList:
             self.write(i)
 
-class FastaReader(FlatFileReader):
+class FastaReader(FlatFileIO):
     '''
     A class that iterates through fasta files and produces Sequence objects.
     '''
@@ -100,13 +85,13 @@ class FastaReader(FlatFileReader):
 
         raise StopIteration
     
-class FastaOut(FlatFileWriter):
+class FastaOut(FlatFileIO):
     '''
     A class that takes Sequence objects and writes them out in fasta format 
     to the given file. Includes a linesize accessor.
     '''
     def __init__(self,out):
-        FlatFileWriter.__init__(self, out)
+        FlatFileIO.__init__(self, out, mode='w')
         self.linesize = 80
         
     def write(self,seq):

@@ -6,18 +6,14 @@ NOTE: this is a utility, and not executable from the command line
 
 """
 
-class File(object):
-    def __init__(self, handle):
-        self.handle  = handle
+from bioseq import FlatFileIO
 
+class File(FlatFileIO):
     def __iter__(self):
-        for line in self.handle.xreadlines():
+        for line in self.io.xreadlines():
             if line[0] in ["#", "\n", ""]:
                 continue
             yield Record(line)
-
-    def close(self):
-        self.handle.close()
 
     def write(self,record):
         attributes = '.'
@@ -27,7 +23,7 @@ class File(object):
             pairs = [(p[0],str(p[1])) for p in record.attributes.items()]
             attributes = ";".join(["=".join(x) for x in pairs]) 
 
-        self.handle.write("\t".join([
+        self.io.write("\t".join([
             record.seqid,
             record.source,
             record.type,
