@@ -265,7 +265,7 @@ class SequenceComplexityFilter(Filter):
         return
         #1. Get a big string of all the peptides in the ORF
         PeptideString = ""
-        for PeptideObject in ORF.peptides:
+        for PeptideObject in ORF.peptideIter():
             PeptideString += PeptideObject.aminos
         #2. Count the small aminos
         Count = 0
