@@ -368,7 +368,14 @@ class ORFFastaHeader(object):
        
 
 class GFF(GFFIO.File):
+    'This class creates OpenReadingFrame objects from GFF files.'
+
     def generateORFs(self, sequenceFile, definitionParser=ORFFastaHeader):
+        '''Parameters: A sequence file supported by SequenceIO and
+        optionally a Class for parsing the sequence accession.
+        Return: Dictionary of OpenReadingFrame objects, and their LocatedPeptides
+        Description: Reads the peptides from the GFF, and the ORFs from the sequence file
+        '''
         seqReader = bioseq.SequenceIO( sequenceFile )
         observedORFs = {}
         
