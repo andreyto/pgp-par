@@ -50,13 +50,23 @@ class Record(object):
         self.end   = cols[4] == '.' and '.' or int(cols[4])
         self.score = cols[5] == '.' and '.' or float(cols[5])
         self.strand= cols[6]
-        self.phase = cols[7] == '.' and '.' or int(cols[7])
+        self.__phase = cols[7] == '.' and '.' or int(cols[7])
         self.attributes = {}
         for Pair in cols[8].split(";"):
             if '.' == Pair:
                 continue
             (Key, Value) = Pair.split("=")
             self.attributes[Key] = Value
+
+    @property
+    def phase(self):
+        return self.__phase
+
+    @phase.setter
+    def phase(self,value):
+        if not value in [0,1,2]:
+            raise ValueError("Phase must be 0, 1, or 2.")
+        self.__phase = value
 
 
 """

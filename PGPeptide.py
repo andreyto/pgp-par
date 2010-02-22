@@ -1,3 +1,13 @@
+import GFFIO
+
+class GFF(GFFIO.File):
+    def populateORF(self,orf):
+        for gffRec in self:
+            location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
+            # Peptide is encoded as the name, since it's generally short 
+            peptide = LocatedPeptide( gffRec.attributes['Name'], location) 
+            orf.addLocatedPeptide( peptide )
+
 
 class GenomicLocation(object):
     def __init__(self,start,stop,strand):
@@ -133,6 +143,14 @@ class LocatedPeptide(object):
     def __str__(self):
         return "%s in %s, unique=%s, %s"%(self.aminos, self.ORFName, self.isUnique, self.location)
 
+    def GetStart(self):
+        return self.location.start
+
+    def GetStop(self):
+        return self.location.stop
+
+    def Strand(self):
+        return self.location.strand
 
 class LocatedProtein(object):
     def __init__(self,location):

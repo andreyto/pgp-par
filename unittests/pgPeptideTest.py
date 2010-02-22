@@ -48,5 +48,30 @@ class Test(unittest.TestCase):
             loc.frame = 5
         self.assertRaises(ValueError, raiseerror)
 
+    def testReadGFF(self):
+        'Reading ORF peptides from a GFF file.'
+        GFF = 'membrane.NC_004837.gff'
+        gffReader = PGPeptide.GFF( GFF )
+        orf = PGPeptide.OpenReadingFrame(
+                'Protein256370.Chr:Chr1.Frame1.StartNuc831372.Strand-',
+                'ABOGUSTESTORF')
+        gffReader.populateORF( orf )
+        i = 0
+        for peptide in orf.peptideIter():
+            i += 1
+            if i == 1:
+                self.assertEqual( peptide.aminos, 'PNFEANSITIALPHYVDLPGR' )
+                self.assertEqual( peptide.GetStart(), 5745 )
+                self.assertEqual( peptide.GetStop(), 5807 )
+                self.assertEqual( peptide.Strand(), '-' )
+            elif i == 104:
+                self.assertEqual( peptide.aminos, 'YYGTVINAGY' )
+                self.assertEqual( peptide.GetStart(), 7394 )
+                self.assertEqual( peptide.GetStop(), 7423 )
+                self.assertEqual( peptide.Strand(), '+' )
+
+        self.assertEqual( 104, i )
+        self.assertEqual( orf.numPeptides(), i )
+
 if __name__ == "__main__":
     unittest.main()
