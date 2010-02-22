@@ -1,13 +1,5 @@
 import GFFIO
-
-class GFF(GFFIO.File):
-    def populateORF(self,orf):
-        for gffRec in self:
-            location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
-            # Peptide is encoded as the name, since it's generally short 
-            peptide = LocatedPeptide( gffRec.attributes['Name'], location) 
-            orf.addLocatedPeptide( peptide )
-
+import bioseq
 
 class GenomicLocation(object):
     def __init__(self,start,stop,strand):
@@ -191,16 +183,20 @@ class LocatedProtein(object):
         
         
 class OpenReadingFrame(object):
-    def __init__(self, FastaHeader, AASequence):
+    def __init__(self, FastaHeader=None, AASequence=None, name=None):
         self.location = None
         self.__peptides = [] #LocatedPeptide objects
         self.annotatedProtein = None # a LocatedProtein Object, can't have more than one. If there's a fight, longest one wins
         self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
         self.aaseq = AASequence
         self.naseq = None
-        ParsedHeader = ORFFastaHeader(FastaHeader)
-        self.name = ParsedHeader.ORFName
-        self.SetLocation(ParsedHeader, len(AASequence))
+        if FastaHeader:
+            ParsedHeader = ORFFastaHeader(FastaHeader)
+            self.name = ParsedHeader.ORFName
+            self.SetLocation(ParsedHeader, len(AASequence))
+        if name:
+            self.name = name
+
         self.GCWholeORF = None
         self.GCPredictedProtein = None
         self.GCObservedRegion = None
@@ -316,8 +312,7 @@ class OpenReadingFrame(object):
     def addRawPeptides(self,peptideList):
         'Adds a list of peptide sequences without location.'
         for pep in peptideList:
-            pepObj = LocatedPeptide()
-            pepObj.aminos = pep
+            pepObj = LocatedPeptide(pep)
             self.__peptides.append( pepObj )
 
     def filterPeptides( self, filterFunc ):
@@ -371,3 +366,31 @@ class ORFFastaHeader(object):
         self.Frame = int(InfoBits[2].replace("Frame", ""))
         self.Start = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide
        
+
+class GFF(GFFIO.File):
+    def generateORFs(self, sequenceFile, definitionParser=ORFFastaHeader):
+        seqReader = bioseq.SequenceIO( sequenceFile )
+        observedORFs = {}
+        
+        for gffRec in self:
+            protein = gffRec.attributes['Parent']
+            if not observedORFs.has_key( protein ):
+                observedORFs[ protein ] = OpenReadingFrame(name=protein)
+
+            location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
+            # Peptide is encoded as the name, since it's generally short 
+            peptide = LocatedPeptide( gffRec.attributes['Name'], location) 
+            peptide.bestScore = gffRec.score
+
+            orf = observedORFs[ protein ]
+            orf.addLocatedPeptide( peptide )
+
+        for seq in seqReader:
+            seqDef = definitionParser( seq.acc )
+            orfName = seqDef.ORFName
+            if observedORFs.has_key( orfName ):
+                orf = observedORFs[ orfName ]
+                orf.aaseq = seq.seq
+                orf.SetLocation( seqDef, len(seq.seq))
+
+        return observedORFs

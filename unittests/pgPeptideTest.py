@@ -51,27 +51,49 @@ class Test(unittest.TestCase):
     def testReadGFF(self):
         'Reading ORF peptides from a GFF file.'
         GFF = 'membrane.NC_004837.gff'
+        SixFrame = 'NC_004837.6frame.fa'
+
         gffReader = PGPeptide.GFF( GFF )
-        orf = PGPeptide.OpenReadingFrame(
-                'Protein256370.Chr:Chr1.Frame1.StartNuc831372.Strand-',
-                'ABOGUSTESTORF')
-        gffReader.populateORF( orf )
+
+        orfDict = gffReader.generateORFs( SixFrame )
+
+        self.assertEqual( 2, len(orfDict) )
+        orf229 = orfDict['Protein229']
+        orf453 = orfDict['Protein453']
+        self.assertEqual( 68, orf229.numPeptides())
+        self.assertEqual( 36, orf453.numPeptides())
+
         i = 0
-        for peptide in orf.peptideIter():
+        for peptide in orf453.peptideIter():
             i += 1
             if i == 1:
                 self.assertEqual( peptide.aminos, 'PNFEANSITIALPHYVDLPGR' )
                 self.assertEqual( peptide.GetStart(), 5745 )
                 self.assertEqual( peptide.GetStop(), 5807 )
                 self.assertEqual( peptide.Strand(), '-' )
-            elif i == 104:
+                self.assertEqual( peptide.bestScore, 0.00564015792442 )
+            elif i == 36:
+                self.assertEqual( peptide.aminos, 'TVETGQEKDGVK' )
+                self.assertEqual( peptide.GetStart(), 5571 )
+                self.assertEqual( peptide.GetStop(), 5606 )
+                self.assertEqual( peptide.Strand(), '-' )
+                self.assertEqual( peptide.bestScore, 0.00465920088483 )
+
+        i = 0
+        for peptide in orf229.peptideIter():
+            i += 1
+            if i == 1:
+                self.assertEqual( peptide.aminos, 'YYGTVINAGYYVTPNAK' )
+                self.assertEqual( peptide.GetStart(), 7394 )
+                self.assertEqual( peptide.GetStop(), 7444 )
+                self.assertEqual( peptide.Strand(), '+' )
+                self.assertEqual( peptide.bestScore, 0.00465920088483 )
+            elif i == 68:
                 self.assertEqual( peptide.aminos, 'YYGTVINAGY' )
                 self.assertEqual( peptide.GetStart(), 7394 )
                 self.assertEqual( peptide.GetStop(), 7423 )
                 self.assertEqual( peptide.Strand(), '+' )
-
-        self.assertEqual( 104, i )
-        self.assertEqual( orf.numPeptides(), i )
+                self.assertEqual( peptide.bestScore, 0.016171175805 )
 
 if __name__ == "__main__":
     unittest.main()
