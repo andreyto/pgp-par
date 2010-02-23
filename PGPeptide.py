@@ -208,6 +208,9 @@ class OpenReadingFrame(object):
                 NumUniquePeptides += 1
         return "%s as %s, %s (%s) peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), NumUniquePeptides, self.location)
 
+    def Chromosome(self):
+        return self.location.chromosome
+
     def SetLocation(self, ParsedHeader, AALength):
         """
         Parameters: ORFFastaHeader object, length of the amino acids in the ORF
@@ -387,6 +390,7 @@ class GFF(GFFIO.File):
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
             # Peptide is encoded as the name, since it's generally short 
             peptide = LocatedPeptide( gffRec.attributes['Name'], location) 
+            peptide.name = gffRec.attributes['ID']
             peptide.bestScore = gffRec.score
 
             orf = observedORFs[ protein ]
@@ -401,3 +405,19 @@ class GFF(GFFIO.File):
                 orf.SetLocation( seqDef, len(seq.seq))
 
         return observedORFs
+
+    def writeORFPeptides(self, orf):
+        gffRec = GFFIO.Record()
+        gffRec.source = 'Proteomics'
+        gffRec.type = 'polypeptide'
+        gffRec.seqid = orf.Chromosome()
+        gffRec.attributes['Parent'] = orf.name
+
+        for peptide in orf.peptideIter():
+            gffRec.start = peptide.GetStart()
+            gffRec.end   = peptide.GetStop()
+            gffRec.score = peptide.bestScore
+            gffRec.strand= peptide.Strand()
+            gffRec.attributes['Name'] = peptide.aminos
+            gffRec.attributes['ID'] = peptide.name
+            self.write( gffRec )

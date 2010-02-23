@@ -15,6 +15,9 @@ import PGPeptide
 
 class Test(unittest.TestCase):
 
+    GFF = 'membrane.NC_004837.gff'
+    SixFrame = 'NC_004837.6frame.fa'
+
     def testGenomicLocationOverlap(self):
         "GenomicLocation.overlap() correctly identifies several overlaps."
         p1 = PGPeptide.GenomicLocation(2,11,'+')
@@ -50,12 +53,9 @@ class Test(unittest.TestCase):
 
     def testReadGFF(self):
         'Reading ORF peptides from a GFF file.'
-        GFF = 'membrane.NC_004837.gff'
-        SixFrame = 'NC_004837.6frame.fa'
 
-        gffReader = PGPeptide.GFF( GFF )
-
-        orfDict = gffReader.generateORFs( SixFrame )
+        gffReader = PGPeptide.GFF( Test.GFF )
+        orfDict   = gffReader.generateORFs( Test.SixFrame )
 
         self.assertEqual( 2, len(orfDict) )
         orf229 = orfDict['Protein229']
@@ -94,6 +94,35 @@ class Test(unittest.TestCase):
                 self.assertEqual( peptide.GetStop(), 7423 )
                 self.assertEqual( peptide.Strand(), '+' )
                 self.assertEqual( peptide.bestScore, 0.016171175805 )
+
+    def testRoundTripGFF(self):
+        'Reading then writing ORF peptides from a GFF file.'
+
+        gffReader = PGPeptide.GFF( Test.GFF )
+        orfDict   = gffReader.generateORFs( Test.SixFrame )
+
+        gffOut = 't.gff'
+        gffWriter = PGPeptide.GFF( gffOut, 'w' )
+        for orf in orfDict.values():
+            gffWriter.writeORFPeptides( orf )
+
+        gffWriter.close()
+        gffReader = PGPeptide.GFF( gffOut )
+        orfs2   = gffReader.generateORFs( Test.SixFrame )
+        for name,orf2 in orfs2.items():
+            orf1 = orfDict[name]
+            self.assertEqual( orf1.name, orf2.name )
+            self.assertEqual( orf1.numPeptides(), orf2.numPeptides() )
+            
+            for peps in zip(orf1.peptideIter(), orf2.peptideIter()):
+                self.assertEqual( peps[0].aminos,     peps[1].aminos)
+                self.assertEqual( peps[0].bestScore , peps[1].bestScore)
+                self.assertEqual( peps[0].GetStart(), peps[1].GetStart())
+                self.assertEqual( peps[0].GetStop(),  peps[1].GetStop())
+                self.assertEqual( peps[0].Strand(),   peps[1].Strand())
+                self.assertEqual( peps[0].name,       peps[1].name)
+
+        os.remove( gffOut )
 
 if __name__ == "__main__":
     unittest.main()
