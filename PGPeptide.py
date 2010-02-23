@@ -16,7 +16,6 @@ class GenomicLocation(object):
         self.__start = start
         self.__stop = stop
         self.__frame = None
-        self.chromosome = None
         self.strand = strand
         
     def __str__(self):
@@ -190,6 +189,7 @@ class OpenReadingFrame(object):
         self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
         self.aaseq = AASequence
         self.naseq = None
+        self.chromosome = None
         if FastaHeader:
             ParsedHeader = ORFFastaHeader(FastaHeader)
             self.name = ParsedHeader.ORFName
@@ -207,9 +207,6 @@ class OpenReadingFrame(object):
             if Peptide.isUnique:
                 NumUniquePeptides += 1
         return "%s as %s, %s (%s) peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), NumUniquePeptides, self.location)
-
-    def Chromosome(self):
-        return self.location.chromosome
 
     def SetLocation(self, ParsedHeader, AALength):
         """
@@ -235,7 +232,7 @@ class OpenReadingFrame(object):
             SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand)
         else:
             SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand)
-        SimpleLocation.chromosome = Chromosome
+        self.chromosome = Chromosome
         SimpleLocation.frame = Frame
         self.location = SimpleLocation
 
@@ -382,10 +379,18 @@ class GFF(GFFIO.File):
         seqReader = bioseq.SequenceIO( sequenceFile )
         observedORFs = {}
         
+        gffChrs = {}
+        # Read in the peptides from the GFF file, creating ORFs as needed
         for gffRec in self:
             protein = gffRec.attributes['Parent']
-            if not observedORFs.has_key( protein ):
-                observedORFs[ protein ] = OpenReadingFrame(name=protein)
+            accession = gffRec.seqid
+            key = (accession, protein)
+            if not observedORFs.has_key( key ):
+                observedORFs[ key ] = OpenReadingFrame(name=protein)
+                observedORFs[ key ].chromosome = accession
+                # Record the observed accessions, to check against the sequence input
+                if not gffChrs.has_key( accession ):
+                    gffChrs[ accession ] = True
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
             # Peptide is encoded as the name, since it's generally short 
@@ -393,16 +398,27 @@ class GFF(GFFIO.File):
             peptide.name = gffRec.attributes['ID']
             peptide.bestScore = gffRec.score
 
-            orf = observedORFs[ protein ]
+            orf = observedORFs[ key ]
             orf.addLocatedPeptide( peptide )
 
+        seqChrs = {}
+        # Read in only the needed ORFs from the sequence file
         for seq in seqReader:
             seqDef = definitionParser( seq.acc )
-            orfName = seqDef.ORFName
-            if observedORFs.has_key( orfName ):
-                orf = observedORFs[ orfName ]
+            chr = seqDef.Chromosome
+            if not seqChrs.has_key( chr ):
+                seqChrs[chr] = True
+
+            key = (seqDef.ORFName, chr)
+            if observedORFs.has_key( key ):
+                orf = observedORFs[ key ]
                 orf.aaseq = seq.seq
                 orf.SetLocation( seqDef, len(seq.seq))
+
+        # Verify that a sequence existed for each ORF referenced in the GFF
+        for chr in gffChrs:
+            if not seqChrs.has_key( chr ):
+                raise KeyError("Sequence %s is not in %s"%(chr,sequenceFile))
 
         return observedORFs
 
@@ -410,7 +426,7 @@ class GFF(GFFIO.File):
         gffRec = GFFIO.Record()
         gffRec.source = 'Proteomics'
         gffRec.type = 'polypeptide'
-        gffRec.seqid = orf.Chromosome()
+        gffRec.seqid = orf.chromosome
         gffRec.attributes['Parent'] = orf.name
 
         for peptide in orf.peptideIter():

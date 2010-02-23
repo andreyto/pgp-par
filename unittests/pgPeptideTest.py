@@ -58,8 +58,8 @@ class Test(unittest.TestCase):
         orfDict   = gffReader.generateORFs( Test.SixFrame )
 
         self.assertEqual( 2, len(orfDict) )
-        orf229 = orfDict['Protein229']
-        orf453 = orfDict['Protein453']
+        orf229 = orfDict[('Plasmid1','Protein229')]
+        orf453 = orfDict[('Plasmid1','Protein453')]
         self.assertEqual( 68, orf229.numPeptides())
         self.assertEqual( 36, orf453.numPeptides())
 
