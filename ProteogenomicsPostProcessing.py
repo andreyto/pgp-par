@@ -69,6 +69,7 @@ class FinderClass():
         self.SearchForCleavage = 1
         self.OutputPeptidesToGFF = 0
         self.GFFOutputPath = "RenameYourOutput.gff"
+        self.NucleotideDatabasePath = None
         
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths)
@@ -235,7 +236,7 @@ class FinderClass():
             print "ProteogenomicsPostProcessing.py:FindMiscalls"
         Count = 0
         TotalORFCount = len(self.AllORFs)
-        BagChecker = PGPrimaryStructure.PrimaryStructure()
+        BagChecker = PGPrimaryStructure.PrimaryStructure(self.OutputPath, self.NucleotideDatabasePath)
         NovelCount = 0
         UnderPredictedCount = 0
         for ORF in self.AllORFs.values():
@@ -249,6 +250,9 @@ class FinderClass():
                 print "Processed %s / %s ORF Objects"%(Count, TotalORFCount)
         #done with loop
         print "Processed %s. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
+        print "Named %s, hypothetical %s"%(BagChecker.NamedCount, BagChecker.HypotheticalCount)
+        BagChecker.OutputGCFiles()
+        BagChecker.OutputLenFiles()
             
 
     def CreateORFs(self):
@@ -390,7 +394,7 @@ class FinderClass():
             self.SpectrumCount += 1
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMG:W")
+        (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMG:Wn:")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -415,10 +419,16 @@ class FinderClass():
                 self.ProteomeDatabasePaths.append( Value)
             if Option == "-o":
                 if not os.path.exists(Value):
-                    print "** Error: couldn't find database file '%s'\n\n"%Value
+                    print "** Error: couldn't find openreadingframe database file '%s'\n\n"%Value
                     print UsageInfo
                     sys.exit(1)
                 self.ORFDatabasePaths.append( Value)
+            if Option == "-n":
+                if not os.path.exists(Value):
+                    print "**Error: Could not find nucloetide database file %s\n\n"%Value
+                    print UsageInfo
+                    sys.exit(1)
+                self.NucleotideDatabasePath= Value
             if Option == "-w":
                 self.OutputPath = Value
             if Option == "-u":

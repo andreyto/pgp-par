@@ -116,7 +116,7 @@ class SequenceIO(object):
         self.mode = mode == 'w' and 1 or 0
         
         ext = os.path.splitext(fileName)[1].lower()
-        if ext in ['.fa','.fasta','.fsa']:
+        if ext in ['.fa','.fasta','.fsa', '.fna', '.faa']:
             self.handle = SequenceIO.FormatTable['fasta'][self.mode](fileName)
     
     def __iter__(self):

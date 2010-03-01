@@ -6,6 +6,9 @@ evidences
 NOTE: this is a utility, and not executable from the command line
 
 """
+import os
+import bioseq
+import string
 
 class PrimaryStructure:
     """Class PrimaryStructure: This is an analysis object to help
@@ -15,12 +18,30 @@ class PrimaryStructure:
         -
     Functions: CheckStructure(PGPeptide.OpenReadingFrame)
     """
-    def __init__(self):
+    def __init__(self, OutputPath, NucleotidePath):
         """Parameters: none 
         Return: none
         Description: trivial constructor 
         """        
-        pass
+        #open a file handle to print out stuff
+        (Path, Ext) = os.path.splitext(OutputPath)
+        self.OutputStub = Path
+        NovelPath = "%s.%s"%(self.OutputStub, "novel.txt")
+        self.NovelHandle = open(NovelPath, "wb")
+        self.HypotheticalCount =0
+        self.NamedCount = 0
+        self.NovelGC = []
+        self.NotNovelGC = []
+        self.NovelLen = []
+        self.NotNovelLen = []
+        #set up the nucleotide fasta streamer
+        self.NucleotideFastaPath = NucleotidePath
+        self.DNAReader = bioseq.SequenceIO(self.NucleotideFastaPath)
+        #HUGE HACK. today we know that this will be used for single Chromosome DNA fasta files, so there will 
+        #only be one entry in the fasta to iterate over
+        self.DNA = None
+        for seq in self.DNAReader: # the object DNAReader has an __iter__ function which makes it iteratable
+            self.DNA = seq #the seq object, sequence itself is in seq.seq
         
     def CheckStructure(self, ORF):
         """
@@ -29,11 +50,68 @@ class PrimaryStructure:
         Description: various QA/QC checks
         """
         Novel = self.IsItNovel(ORF)
+
         if Novel:
             return "NOVEL"
+        ProteinName = ORF.annotatedProtein.name
+        Location = ProteinName.find("hypothetical")
+        if Location == -1:
+            self.NamedCount += 1
+        else:
+            self.HypotheticalCount += 1
         UnderPredicted = self.IsItUnderPredicted(ORF)
         if UnderPredicted:
             return "UNDERPREDICTED"
+
+    def CalculateGC(self, Sequence):
+        """Parameters: DNA sequence
+        Return: integer percent GC, eg 45 for 45%
+        Description: count g and c
+        """
+        GCCount =0
+        TotalCount = len(Sequence)
+        for Letter in Sequence:
+            if Letter in ["G", "C", "g", "c"]:
+                GCCount += 1
+        Fraction = GCCount / float (TotalCount)
+        Percent = int (Fraction *100)
+        return Percent
+            
+    def OutputGCFiles(self):
+        """
+        Parameters: None
+        Return: None
+        Description: I have spent some time in the Novel checker to 
+        save the GC content of the observed sequences.  This Function
+        will take these lists and put them out to a file
+        """
+        
+        NovelPath = "%s.%s"%(self.OutputStub, "GC.novel.txt")
+        Handle = open(NovelPath, "wb")
+        String = "\t".join(map(str, self.NovelGC))
+        Handle.write(String)
+        Handle.close()
+        
+        NotNovelPath = "%s.%s"%(self.OutputStub, "GC.notnovel.txt")
+        Handle = open(NotNovelPath, "wb")
+        String = "\t".join(map(str, self.NotNovelGC))
+        Handle.write(String)
+        Handle.close()
+        
+
+    def OutputLenFiles(self):
+        NovelPath = "%s.%s"%(self.OutputStub, "len.novel.txt")
+        Handle = open(NovelPath, "wb")
+        String = "\t".join(map(str, self.NovelLen))
+        Handle.write(String)
+        Handle.close()
+        
+        NotNovelPath = "%s.%s"%(self.OutputStub, "len.notnovel.txt")
+        Handle = open(NotNovelPath, "wb")
+        String = "\t".join(map(str, self.NotNovelLen))
+        Handle.write(String)
+        Handle.close()
+        
         
     def IsItNovel(self, ORF):
         """
@@ -47,13 +125,28 @@ class PrimaryStructure:
         remember why I put that in there, and don't have any really solid
         research compelling me to do so.
         """
+        #One quick thing here before we start the novelty.
+        # I want to get the GC content , and store that separately
+        #for the Novel ones and the normal ones
+        (Start, Stop) = ORF.GetObservedDNACoords()
+        Sequence = self.DNA.seq[Start:Stop]
+        GC = self.CalculateGC(Sequence)
+
+        #now on with the novelty, I swear
         PredictedProtein = ORF.GetLocatedProtein()
         if PredictedProtein:
+            self.NotNovelGC.append(GC)
+            self.NotNovelLen.append(len(Sequence)/3) #div by three because it's protein length that I care about
             return False #there is something here, so no it's not novel
+        #put in the GC quickly
+        self.NovelGC.append(GC)
+        self.NovelLen.append(len(Sequence)/3)
         #well, if we get here, then we have something interesting
         #let's try and get the observed sequence.  That's firstpeptide->stop
         ObservedSequence = ORF.GetObservedSequence()
         print "I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence)
+        Fasta = "Observed.%s"%ORF.name
+        self.NovelHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
         return True
         
     def IsItUnderPredicted(self, ORF):

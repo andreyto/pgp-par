@@ -38,6 +38,11 @@ class GenomicLocation(object):
         else:
             self.__stop += 3
 
+    def GetThreePrime(self):
+        if self.strand == "+":
+            return self.__stop
+        return self.__start
+
     @property
     def start(self):
         'Lesser coordinate on the sequence.'
@@ -245,6 +250,19 @@ class OpenReadingFrame(object):
 
     def GetStrand(self):
         return self.location.strand
+
+    def GetObservedDNACoords(self):
+        """Parameters: NOne
+        Return: tuple (start, stop) where start<stop
+        Description: get the DNA coordinates of the observed sequence, 
+        from the first peptide to the stop codon
+        """
+        FirstPeptide = self.GetFivePrimePeptide()
+        FivePrime = FirstPeptide.GetFivePrimeNucleotide()
+        ThreePrime = self.location.GetThreePrime()
+        if self.location.strand == "+":
+            return (FivePrime, ThreePrime)
+        return (ThreePrime, FivePrime)
     
     def GetObservedSequence(self):
         """Parameters: none
