@@ -32,7 +32,7 @@ class FlatFileIO(object):
         if type(fileForIO) is file:
             self.io = fileForIO
 
-        elif type(fileForIO) is str:
+        elif type(fileForIO) is str: #assumes this is the path for a file to open .  mode default is read.  
             self.name = fileForIO
             self.io = open( fileForIO, mode)
         elif isinstance(fileForIO, StringIO):

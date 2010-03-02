@@ -9,6 +9,9 @@ NOTE: this is a utility, and not executable from the command line
 from bioseq import FlatFileIO
 
 class File(FlatFileIO):
+    
+    ### inherits the constructor from FlatFileIO ###
+    
     def __iter__(self):
         for line in self.io.xreadlines():
             if line[0] in ["#", "\n", ""]:
@@ -36,7 +39,7 @@ class File(FlatFileIO):
             ]) + "\n")
 
 class Record(object):
-    def __init__(self, gffline="\t".join(list('.'*9)) ):
+    def __init__(self, gffline="\t".join(list('.'*9)) ): #default assign = nine dots separated by tabs === semantic NULL
         """Parameters: String line of GFF
         Return: GFFIO.Record object filled with values
         Description: Take a GFF line and parse it out into the object. You
@@ -46,7 +49,7 @@ class Record(object):
         self.seqid = cols[0]
         self.source= cols[1]
         self.type  = cols[2]
-        self.start = cols[3] == '.' and '.' or int(cols[3])
+        self.start = cols[3] == '.' and '.' or int(cols[3]) #analog to C-style ? :
         self.end   = cols[4] == '.' and '.' or int(cols[4])
         self.score = cols[5] == '.' and '.' or float(cols[5])
         self.strand= cols[6]

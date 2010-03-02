@@ -385,8 +385,10 @@ class ORFFastaHeader(object):
         self.Start = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide
        
 
-class GFF(GFFIO.File):
-    'This class creates OpenReadingFrame objects from GFF files.'
+class GFFPeptide(GFFIO.File):
+    'This class reads/writes GFF stuff that pertains specifically to our PGPeptide Implementation.'
+    
+    ### Inherits the constructor of the GFFIO.File ###
 
     def generateORFs(self, sequenceFile, definitionParser=ORFFastaHeader):
         '''Parameters: A sequence file supported by SequenceIO and
@@ -441,7 +443,7 @@ class GFF(GFFIO.File):
         return observedORFs
 
     def writeORFPeptides(self, orf):
-        gffRec = GFFIO.Record()
+        gffRec = GFFIO.Record() #create empty record.  add values below then write each one
         gffRec.source = 'Proteomics'
         gffRec.type = 'polypeptide'
         gffRec.seqid = orf.chromosome

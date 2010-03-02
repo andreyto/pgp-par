@@ -54,7 +54,7 @@ class Test(unittest.TestCase):
     def testReadGFF(self):
         'Reading ORF peptides from a GFF file.'
 
-        gffReader = PGPeptide.GFF( Test.GFF )
+        gffReader = PGPeptide.GFFPeptide( Test.GFF )
         orfDict   = gffReader.generateORFs( Test.SixFrame )
 
         self.assertEqual( 2, len(orfDict) )
@@ -98,16 +98,16 @@ class Test(unittest.TestCase):
     def testRoundTripGFF(self):
         'Reading then writing ORF peptides from a GFF file.'
 
-        gffReader = PGPeptide.GFF( Test.GFF )
+        gffReader = PGPeptide.GFFPeptide( Test.GFF )
         orfDict   = gffReader.generateORFs( Test.SixFrame )
 
         gffOut = 't.gff'
-        gffWriter = PGPeptide.GFF( gffOut, 'w' )
+        gffWriter = PGPeptide.GFFPeptide( gffOut, 'w' )
         for orf in orfDict.values():
             gffWriter.writeORFPeptides( orf )
 
         gffWriter.close()
-        gffReader = PGPeptide.GFF( gffOut )
+        gffReader = PGPeptide.GFFPeptide( gffOut )
         orfs2   = gffReader.generateORFs( Test.SixFrame )
         for name,orf2 in orfs2.items():
             orf1 = orfDict[name]

@@ -220,9 +220,12 @@ class FinderClass():
         Description: This takes the peptide objects from self.AllLocatedPeptides and
         makes a GFF File containing all of them.  
         """
-        Handle = open(self.GFFOutputPath, "wb")
+        GFFOut = GFFIO.File(self.GFFOutputPath)
         GlobalLocationCount = 0
-        for Location in self.AllLocatedPeptides:
+        for ORF in self.AllORFs: # we cycle through the ORFs, because that's what
+            #is guaranteed to be filtered
+            for Peptide in ORF.peptideIter: #peptideIter is a cool iterater we coded into the object. it returns peptides
+                GFFRecord = GFFIO.GetRecordFromPeptide(Peptide, ORF.chromosome)
             Line = Location.GetGFF3LineNew(GlobalLocationCount)
             Handle.write(Line)#remember the Line has its own newline
             GlobalLocationCount += 1
