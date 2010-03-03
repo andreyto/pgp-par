@@ -26,6 +26,7 @@ class PeptideMappingClass:
     def __init__(self):
         self.DatabasePaths = [] #possibly multiple
         self.CurrentAminos = ""
+        self.UniquePeptideCount =0
         
     def LoadDatabases(self, DBPaths):
         """
@@ -65,6 +66,8 @@ class PeptideMappingClass:
             Peptide = PGPeptide.LocatedPeptide(Aminos, SimpleLocation)
             Peptide.bestScore = PValue
             Peptide.ORFName = ParsedORFInfo.ORFName
+            Peptide.name = "Peptide%s"%self.UniquePeptideCount
+            self.UniquePeptideCount += 1
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.ORFDB.ProteinSequences[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]

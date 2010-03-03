@@ -193,11 +193,13 @@ class FinderClass():
 
     def LoadResultsFromGFF(self, GFFFile):
         """Parameters: GFF file path
-        Return: None
+        Return: None, but we populate ORF objects
         Description: Take a gff file of peptides mapped to the genome, and use
         that to populate our results, as opposed to parsing Inspect results
         and mapping them (which takes time)
         """
+        GFFReader = PGPeptide.GFFPeptide( GFFFile )
+        ORFDict   = GFFReader.generateORFs( Test.SixFrame )
         Handle = open (GFFFile, "rb")
         for Line in Handle.xreadlines():
             Dictionary = GFFIO.ParseGFFLine(Line)
@@ -220,16 +222,12 @@ class FinderClass():
         Description: This takes the peptide objects from self.AllLocatedPeptides and
         makes a GFF File containing all of them.  
         """
-        GFFOut = GFFIO.File(self.GFFOutputPath)
-        GlobalLocationCount = 0
-        for ORF in self.AllORFs: # we cycle through the ORFs, because that's what
-            #is guaranteed to be filtered
-            for Peptide in ORF.peptideIter: #peptideIter is a cool iterater we coded into the object. it returns peptides
-                GFFRecord = GFFIO.GetRecordFromPeptide(Peptide, ORF.chromosome)
-            Line = Location.GetGFF3LineNew(GlobalLocationCount)
-            Handle.write(Line)#remember the Line has its own newline
-            GlobalLocationCount += 1
-        Handle.close()
+        GFFOut = PGPeptide.GFFPeptide(self.GFFOutputPath, "w") #creates my GFF converter. 'w' parameter is for writing
+        
+        for ORF in self.AllORFs.values(): # we cycle through the ORFs, writing all their located peptides
+            GFFOut.writeORFPeptides(ORF)
+            #print "%s"%ORF
+        GFFOut.close()
         
     def FindMiscalls(self):
         """This function goes through the ORFs and calls their method for

@@ -26,8 +26,10 @@ class PrimaryStructure:
         #open a file handle to print out stuff
         (Path, Ext) = os.path.splitext(OutputPath)
         self.OutputStub = Path
-        NovelPath = "%s.%s"%(self.OutputStub, "novel.txt")
-        self.NovelHandle = open(NovelPath, "wb")
+        NovelFastaPath = "%s.%s"%(self.OutputStub, "novel.faa")
+        self.NovelFastaHandle = open(NovelFastaPath, "wb")
+        NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
+        self.NovelInfoHandle = open(NovelInfoPath, "wb")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -130,7 +132,12 @@ class PrimaryStructure:
         #for the Novel ones and the normal ones
         (Start, Stop) = ORF.GetObservedDNACoords()
         Sequence = self.DNA.seq[Start:Stop]
-        GC = self.CalculateGC(Sequence)
+        if Sequence:
+            GC = self.CalculateGC(Sequence)
+        else:
+            print "WARNING: cannot extract observed sequence for %s (%s, %s)"%(ORF.name, Start, Stop)
+            GC = 0
+        
 
         #now on with the novelty, I swear
         PredictedProtein = ORF.GetLocatedProtein()
@@ -144,9 +151,10 @@ class PrimaryStructure:
         #well, if we get here, then we have something interesting
         #let's try and get the observed sequence.  That's firstpeptide->stop
         ObservedSequence = ORF.GetObservedSequence()
-        print "I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence)
+        self.NovelInfoHandle.write("I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence))
+        #print "I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence)
         Fasta = "Observed.%s"%ORF.name
-        self.NovelHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
+        self.NovelFastaHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
         return True
         
     def IsItUnderPredicted(self, ORF):
