@@ -198,8 +198,8 @@ class FinderClass():
         that to populate our results, as opposed to parsing Inspect results
         and mapping them (which takes time)
         """
-        GFFReader = PGPeptide.GFFPeptide( GFFFile )
-        ORFDict   = GFFReader.generateORFs( Test.SixFrame )
+        #GFFReader = PGPeptide.GFFPeptide( GFFFile )
+        #ORFDict   = GFFReader.generateORFs( Test.SixFrame )
         Handle = open (GFFFile, "rb")
         for Line in Handle.xreadlines():
             Dictionary = GFFIO.ParseGFFLine(Line)
@@ -241,6 +241,7 @@ class FinderClass():
         NovelCount = 0
         UnderPredictedCount = 0
         for ORF in self.AllORFs.values():
+            
             Status = BagChecker.CheckStructure(ORF)
             if Status == "NOVEL":
                 NovelCount += 1

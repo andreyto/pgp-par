@@ -19,7 +19,55 @@ class GenomicLocation(object):
         self.strand = strand
         
     def __str__(self):
-        return "%d,%d %s%d" % (self.start,self.stop,self.strand,self.frame)
+        """Parameters: None
+        Return: the string version of this object
+        Description: This method is used to stringify a GenomicLocation object
+        that means that you can do
+        print "%s"%GenomicLocationObject
+        and get a meaningful print out
+        """
+        return "%d,%d %s%d" % (self.start, self.stop, self.strand, self.frame)
+    
+    def __cmp__(self, other):
+        """Parameters: Another GenomicLocation object
+        Return: -1, 0, 1 following the cmp standards
+        Description: this does a strict NUMERICAL sort of the objects.  If 
+        starts are equal, then return the smaller stop. By defining this 
+        function, we can use a simple call to sort() on a list of 
+        GenomicLocation objects and it will happen. This has nothing to 
+        do with 5' or 3' sorting. NOTHING.
+        """
+        Value = cmp(self.start, other.start)
+        if Value == 0: #this is checked out just in case
+            return cmp(self.stop, other.stop)
+        return Value
+    
+    def SortFivePrime(self, other):
+        """Parameters: antother GenomeLocation object
+        Return: -1, 0, 1 following the cmp standards
+        Description: This does a biological sort of the objects, returning
+        such that a 5' peptide should appear first. It is designed to be
+        
+        NOTE: We ASSUME that the two locations are on the same strand, 
+        because otherwise 5' would be meaning less and you would be 
+        stupid for calling this function
+        """
+        #here's the switch on strandedness, 
+        if self.strand == "+":
+            #this can just be a simple thing
+            return self.__cmp__(other)
+        #now here' the hard part
+        #return negative if self is 5' of other
+        if self.stop > other.stop:
+            return -1
+        if self.stop == other.stop:
+            #they are equal, so let's check the 3' end. The convention will mirror
+            #what a numerical sort does on + strand stuff.
+            if self.start > other.start:
+                return -1
+            if self.start == other.start:
+                return 0
+        return 1
 
     def AddOneAminoAcidFivePrime(self):
         'This is accessed to add a single amino acid to the front of a protein.'
@@ -137,7 +185,25 @@ class LocatedPeptide(object):
         return self.location.stop
     
     def __str__(self):
+        """Parameters: None
+        Return: the string version of this object
+        Description: This method is used to stringify a GenomicLocation object
+        that means that you can do
+        print "%s"%GenomicLocationObject
+        and get a meaningful print out
+        """        
         return "%s in %s, unique=%s, %s"%(self.aminos, self.ORFName, self.isUnique, self.location)
+    
+    def __cmp__(self, other):
+        """Parameters: Another GenomicLocation object
+        Return: -1, 0, 1 following the cmp standards
+        Description: this does a strict NUMERICAL sort of the objects.  If 
+        starts are equal, then return the smaller stop. By defining this 
+        function, we can use a simple call to sort() on a list of 
+        GenomicLocation objects and it will happen. This has nothing to 
+        do with 5' or 3' sorting. NOTHING.
+        """        
+        return cmp(self.location, other.location)
 
     def GetStart(self):
         return self.location.start
@@ -257,7 +323,7 @@ class OpenReadingFrame(object):
         Description: get the DNA coordinates of the observed sequence, 
         from the first peptide to the stop codon
         """
-        FirstPeptide = self.GetFivePrimePeptide()
+        FirstPeptide = self.GetFivePrimePeptide() #note here that we are not using the uniqueness filter
         FivePrime = FirstPeptide.GetFivePrimeNucleotide()
         ThreePrime = self.location.GetThreePrime()
         if self.location.strand == "+":
@@ -271,36 +337,29 @@ class OpenReadingFrame(object):
         being translated.  This is from the first peptide through the stop
         """
         #1. get the first peptide, in order
-        FirstPeptide = self.GetFivePrimePeptide()
+        FirstPeptide = self.GetFivePrimePeptide() #note here that we are not using the Uniqueness filter
         #2. map it to the aaseq
         FirstResidue = self.aaseq.find(FirstPeptide.aminos)
         #3. return the slice
         return self.aaseq[FirstResidue:]
 
-    def GetFivePrimePeptide(self):
-        """Parameters: None
+    def GetFivePrimePeptide(self, Unique = 0):
+        """Parameters: None required.  Optional Unique parameter 
         Return: the five prime most peptide
         Description: cycle through the peptides and return the one closest
-        to the start
+        to the start. If you specify Unique = 1, then you are specifying 
+        that you want the 5' most UNIQUELY MAPPING peptide.  Non-uniquely
+        mapping peptides will be passed over
         """
-        PeptideWinner = None
-        FivePrimeWinner = None
+        #1. Sort the list of peptides
+        #self.__peptides.sort(LocatedPeptide.SortScore)
+        self.__peptides.sort(cmp=lambda x,y: x.location.SortFivePrime(y.location))
+        #2. walk through and find the first one that is unique
         for Peptide in self.peptideIter():
-            if not PeptideWinner:
-                PeptideWinner = Peptide
-                FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
-                continue
-            if self.location.strand == "+":
-                #if + strand, get the smallest
-                if Peptide.GetFivePrimeNucleotide() < FivePrimeWinner:
-                    PeptideWinner = Peptide
-                    FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
-            else: # if - strand, get the biggest 
-                if Peptide.GetFivePrimeNucleotide() > FivePrimeWinner:
-                    PeptideWinner = Peptide
-                    FivePrimeWinner = Peptide.GetFivePrimeNucleotide()
-        return PeptideWinner
-                
+            if not Unique: #you don't care about uniqueness
+                return Peptide #just return right off the bat
+            if Peptide.isUnique:
+                return Peptide                
                 
     def GetNucleotideStartOfTranslation(self):
         """Returns the start of translation"""

@@ -30,6 +30,8 @@ class PrimaryStructure:
         self.NovelFastaHandle = open(NovelFastaPath, "wb")
         NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
         self.NovelInfoHandle = open(NovelInfoPath, "wb")
+        UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
+        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "wb")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -167,7 +169,10 @@ class PrimaryStructure:
         site upstream to use
         """
         #1. we get the nuc of the 5' peptide
-        FirstObservedPeptide = ORF.GetFivePrimePeptide()
+        FirstObservedPeptide = ORF.GetFivePrimePeptide(Unique=1) #here we care about uniqueness
+        if not FirstObservedPeptide:
+            print "Hey dummy, there are no unique peptides for %s"%ORF
+            return False
         FirstObservedNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         StartCodon = ORF.GetNucleotideStartOfTranslation()
         Strand = ORF.GetStrand()
@@ -177,18 +182,21 @@ class PrimaryStructure:
             if FirstObservedNucleotide + 3 < StartCodon: # do the plus three
                 #because we want more than a single amino acid upstream.
                 UpstreamExtent = StartCodon - FirstObservedNucleotide
-                print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
+                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
         else:
             if FirstObservedNucleotide > StartCodon + 3:
                 UpstreamExtent = FirstObservedNucleotide - StartCodon
-                print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
+                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
                 
         #3. Is the actual start codon observed as a L or V, instead of M
         if FirstObservedNucleotide == StartCodon:
             FirstObservedAminoAcid = FirstObservedPeptide.aminos[0]
             if not FirstObservedAminoAcid == "M":
-                print "Peptide %s is at the start codon of protein %s\n\n"%(FirstObservedPeptide, ORF)
+                self.UnderpredictionInfoHandle.write("Peptide %s is at the start codon of protein in %s\n\n"%(FirstObservedPeptide, ORF))
+                #print "Peptide %s is at the start codon of protein %s\n\n"%(FirstObservedPeptide, ORF)
                 return True
         

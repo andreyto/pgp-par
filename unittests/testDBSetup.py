@@ -23,7 +23,7 @@ class Test(unittest.TestCase):
     def test6Frame(self):
         "Test that the 6 frame translation works the same as the old run by hand." 
         translate = SixFrameFasta.AbacusClass()
-        translate.ParseCommandLine(["-r",Test.IN,"-w",Test.OUT,"-c","Plasmid1"])
+        translate.ParseCommandLine(["-r",Test.IN,"-w",Test.OUT,"-c","NC_004837"])
         translate.Main()       
         self.assert_(filecmp.cmp(Test.OUT,Test.SIX))
         os.remove(Test.OUT)
