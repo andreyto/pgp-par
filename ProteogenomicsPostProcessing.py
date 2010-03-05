@@ -48,9 +48,9 @@ Initialize()
 
 class FinderClass():
     def __init__(self):
-        self.ReferenceResults = None
-        self.MappedGFFResults = None #alternate input form, mostly used to shunt mapping, because that takes so long
-        self.OutputPath = "RenameYourOutput.txt"
+        self.InspectResultsPath = None #Peptide/Spectrum Matches from Inspect
+        self.GFFInputPath = None #alternate input form, mostly used to shunt mapping, because that takes so long
+        self.OutputPath = "RenameYourOutput.txt" #really a stub for output, as it gets modified to *.novel.faa, *.novel.info, etc.
         self.ProteomeDatabasePaths = [] #possibly multiple
         self.ORFDatabasePaths = [] #possibly multiple
         self.AllPeptides = {} # AminoSequence -> best pvalue, nulled out in MapAllPeptides
@@ -72,19 +72,18 @@ class FinderClass():
         self.NucleotideDatabasePath = None
         
     def Main(self):
-        self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths)
-        if self.ReferenceResults:
-            self.ParseInspect( self.ReferenceResults )
+        self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
+        #1. we map peptides, either from Inspect, or from pre-mapped GFFs
+        if self.InspectResultsPath:
+            self.ParseInspect( self.InspectResultsPath )
             print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
             self.MapAllPeptides()
             
         else :
-            self.LoadResultsFromGFF(self.MappedGFFResults)
+            self.LoadResultsFromGFF(self.GFFInputPath)
         
-        ##now map all the peptides
         self.MapPredictedProteins()
         self.CreateORFs()
-        ## Now start the analyses
         self.FilterORFs()
         
         if self.OutputPeptidesToGFF:
@@ -170,7 +169,6 @@ class FinderClass():
         SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
-        #FilterList = PGORFFilters.FilterList(( MinPeptide, Uniqueness ))
         FilterList = PGORFFilters.FilterList((SequenceComplexity, Uniqueness, MinPeptide)) # an anonymous list
         FilteredORFs = FilterList.ApplyAllFilters(self.AllORFs)
         self.AllORFs = FilteredORFs
@@ -406,13 +404,13 @@ class FinderClass():
                     print "** Error: couldn't find results file '%s'\n\n"%Value
                     print UsageInfo
                     sys.exit(1)
-                self.ReferenceResults = Value
+                self.InspectResultsPath = Value
             if Option == "-g":
                 if not os.path.exists(Value):
                     print "** Error: couldn't find results file '%s'\n\n"%Value
                     print UsageInfo
                     sys.exit(1)
-                self.MappedGFFResults = Value
+                self.GFFInputPath = Value
             if Option == "-d":
                 if not os.path.exists(Value):
                     print "** Error: couldn't find database file '%s'\n\n"%Value
