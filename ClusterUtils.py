@@ -49,7 +49,7 @@ class ClusterEnv:
 class JCVIGridEnv(ClusterEnv):
     def __init__(self, projectName=None):
         ClusterEnv.__init__(self)
-        self.ScratchDir = "/usr/local/projects/PGP/run/%s/" % self.USER_NAME
+        self.ScratchDir = "/usr/local/depot/projects/PGP/run/%s/" % self.USER_NAME
 #        self.ScratchDir = "/tmp/t/%s/" % self.USER_NAME
         if projectName:
             self.ScratchDir = os.path.join( self.ScratchDir,

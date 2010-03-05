@@ -13,7 +13,7 @@ $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 rundir=$PWD
 inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt 
 rescoreOut=${inspectOut/.txt/.res}
-PepNovoDir=/usr/local/projects/PGP/ptest
+PepNovoDir=/usr/local/depot/projects/PGP/productionPepNovo
 
 mzxml=`awk -F, '/spectra/ {print $2}' $inspectIn`
 specCnt=`echo $spectra | wc -l`
