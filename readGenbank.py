@@ -12,7 +12,7 @@ orfFasta = sys.argv[2]
 
 def checkTimeAndMem(oldtime,cnt):
     t = os.times()[4]
-    fd = open("/proc/%d/status"%os.getpid())
+    fd = open("/proc/self/status")
     mem = ''
     for line in fd.xreadlines():
         if line.startswith('VmSize:'):
@@ -48,9 +48,12 @@ for gb_rec in SeqIO.parse(open(gbFile), 'genbank'):
 timecheck = checkTimeAndMem(timecheck,count)
 
 hitByOrf = set()
+
 orfReader = bioseq.SequenceIO(orfFasta)
 for orfSeq in orfReader:
-    tmpOrf    = PGPeptide.OpenReadingFrame(orfSeq.acc, orfSeq.seq)
+
+    tmpOrf    = PGPeptide.OpenReadingFrame( orfSeq.acc, orfSeq.seq )
+
     if tmpOrf.name.startswith('XXX'): # Skip the decoy ORFs
         continue
     if acc != tmpOrf.chromosome:
@@ -60,11 +63,25 @@ for orfSeq in orfReader:
 
     if endToCDS.has_key( orfThreePrime ):
         f = endToCDS[ orfThreePrime ]
-        hitByOrf.add( f.qualifiers['locus_tag'][0] )
+        orfStart = tmpOrf.location.start
+        orfStop  = tmpOrf.location.stop
+
+        prot5Prime = f.location.start.position + 1 # +1 is back to 1 based
+        if f.strand == -1:
+            prot5Prime = f.location.end.position
+
         print f
         print orfSeq.seq
-        print "Orf begin %d end %d" % (tmpOrf.location.start, tmpOrf.location.stop )
+        print "Orf begin %d end %d" % (orfStart, orfStop)
         print f.extract( nucs )
+
+        locus = f.qualifiers['locus_tag'][0]
+        if len(f.sub_features) > 0:
+            print "Skipping complex feature %s." % locus
+        elif prot5Prime >= orfStart and prot5Prime <= orfStop:
+            hitByOrf.add( locus )
+        else:
+            print "5' out of range %d" % prot5Prime
     else:
         print "No CDS end found at %d" % tmpOrf.location.stop
 
