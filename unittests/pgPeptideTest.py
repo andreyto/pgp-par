@@ -112,6 +112,7 @@ class Test(unittest.TestCase):
         for name,orf2 in orfs2.items():
             orf1 = orfDict[name]
             self.assertEqual( orf1.name, orf2.name )
+            self.assertEqual( orf1.chromosome, orf2.chromosome )
             self.assertEqual( orf1.numPeptides(), orf2.numPeptides() )
             
             for peps in zip(orf1.peptideIter(), orf2.peptideIter()):
@@ -123,6 +124,19 @@ class Test(unittest.TestCase):
                 self.assertEqual( peps[0].name,       peps[1].name)
 
         os.remove( gffOut )
+
+    def testChromsomeGBInput(self):
+        'Reading and mapping ORFs to a genbank chromsome'
+
+        gbkFile  = '../PGP.Regression.Test/NC_004088.gbk'
+        sixFrame = '../PGP.Regression.Test/NC_004088.6frame.RS.fasta'
+        chromReader = PGPeptide.GenbankChromosomeReader(gbkFile,sixFrame) 
+        chromDict = chromReader.locateOrfs()
+        self.assertEqual( 1, len(chromDict))
+        acc = 'NC_004088'
+        self.assertEqual( acc, chromDict.keys()[0] )
+        self.assertEqual( 4086, len( chromDict[acc].simpleOrfs ))
+
 
 if __name__ == "__main__":
     unittest.main()

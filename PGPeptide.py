@@ -1,6 +1,10 @@
+from Bio import SeqIO
 import GFFIO
 import bioseq
 
+
+###############################################################################
+        
 class GenomicLocation(object):
     def __init__(self,start,stop,strand):
         """Start and stop of a region on a sequence.
@@ -134,6 +138,9 @@ class GenomicLocation(object):
             else:
                 return (myStart, otherStop)
 
+
+###############################################################################
+        
 class LocatedPeptide(object):
     def __init__(self, Aminos, location=None):
         self.location = location
@@ -214,6 +221,9 @@ class LocatedPeptide(object):
     def Strand(self):
         return self.location.strand
 
+
+###############################################################################
+        
 class LocatedProtein(object):
     def __init__(self,location):
         self.location = location
@@ -251,6 +261,8 @@ class LocatedProtein(object):
     def __str__(self):
         return "%s in %s, %s"%(self.name, self.ORFName, self.location)
         
+
+###############################################################################
         
 class OpenReadingFrame(object):
     def __init__(self, FastaHeader=None, AASequence=None, name=None):
@@ -292,17 +304,16 @@ class OpenReadingFrame(object):
         Chromosome = ParsedHeader.Chromosome
         Frame = ParsedHeader.Frame
         #now some math to figure out the stop nuc
-        if (Strand == "-"):
+        if Strand == "-":
             CodingThreePrime = FivePrime - (AALength * 3) + 1
             ThreePrime = CodingThreePrime - 3 #three bases of the stop codon
+            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand)
         else:
             #now the position.  We first get the protein start nuc, and then offset to the peptide start
             CodingThreePrime = FivePrime + (AALength * 3) - 1 # we do a minus one because the bases are inclusive
             ThreePrime = CodingThreePrime + 3 # three bases of the stop codon are INCLUDED
-        if Strand == "+":
             SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand)
-        else:
-            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand)
+
         self.chromosome = Chromosome
         SimpleLocation.frame = Frame
         self.location = SimpleLocation
@@ -402,6 +413,8 @@ class OpenReadingFrame(object):
             yield pep
 
 
+###############################################################################
+
 class ORFFastaHeader(object):
     """This tiny class just holds and deals with the information encoded in an ORF fasta header
     as created by the SixFrameTranslation script.
@@ -442,8 +455,10 @@ class ORFFastaHeader(object):
         self.Strand = InfoBits[4].replace("Strand", "")
         self.Frame = int(InfoBits[2].replace("Frame", ""))
         self.Start = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide
-       
 
+
+###############################################################################
+        
 class GFFPeptide(GFFIO.File):
     'This class reads/writes GFF stuff that pertains specifically to our PGPeptide Implementation.'
     
@@ -484,20 +499,20 @@ class GFFPeptide(GFFIO.File):
         # Read in only the needed ORFs from the sequence file
         for seq in seqReader:
             seqDef = definitionParser( seq.acc )
-            chr = seqDef.Chromosome
-            if not seqChrs.has_key( chr ):
-                seqChrs[chr] = True
+            chrom = seqDef.Chromosome
+            if not seqChrs.has_key( chrom ):
+                seqChrs[chrom] = True
 
-            key = (seqDef.ORFName, chr)
+            key = (seqDef.ORFName, chrom)
             if observedORFs.has_key( key ):
                 orf = observedORFs[ key ]
                 orf.aaseq = seq.seq
                 orf.SetLocation( seqDef, len(seq.seq))
 
         # Verify that a sequence existed for each ORF referenced in the GFF
-        for chr in gffChrs:
-            if not seqChrs.has_key( chr ):
-                raise KeyError("Sequence %s is not in %s"%(chr,sequenceFile))
+        for chrom in gffChrs:
+            if not seqChrs.has_key( chrom ):
+                raise KeyError("Sequence %s is not in %s"%(chrom,sequenceFile))
 
         return observedORFs
 
@@ -516,3 +531,75 @@ class GFFPeptide(GFFIO.File):
             gffRec.attributes['Name'] = peptide.aminos
             gffRec.attributes['ID'] = peptide.name
             self.write( gffRec )
+
+
+###############################################################################
+        
+class Chromosome(object):
+    """A collection of ORFs and annotated proteins across a single large NA sequence."""
+    def __init__(self,accession=None,seq=None):
+        self.accession = accession
+        self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
+        self.simpleOrfs = [] # ORFs corresponding to a contiguous annotated protein
+        self.otherOrfs  = [] # ORFs that are complex in some way
+        self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
+
+
+###############################################################################
+
+class GenbankChromosomeReader(bioseq.FlatFileIO):
+    """Creates Chromosomes from a genbank file, and locates ORFs from a six 
+    frame sequence file onto their annotated proteins. Uses biopython
+    to parse the Genbank file.
+    """
+    def __init__(self, gbFile, sixFrameFile):
+        bioseq.FlatFileIO.__init__(self,gbFile)
+        self.orfReader = bioseq.SequenceIO(sixFrameFile)
+
+    def locateOrfs(self):
+        chromDict = {} # Mapping accession to the Chromosome object
+        for gb_rec in SeqIO.parse(self.io, 'genbank'):
+            chrom = Chromosome( gb_rec.name, gb_rec.seq )
+            chromDict[ gb_rec.name ] = chrom
+
+            # First read in all the CDS features from the genbank file
+            for feat in gb_rec.features:
+                if feat.type == 'CDS':
+                    if feat.strand == 1:
+                        chrom.endToCDS[ feat.location.end.position ] = feat
+                    else:
+                        # biopython 1.53 seems to use 0, or space based coords
+                        # so start is 1 less then what's in the genbank file
+                        chrom.endToCDS[ feat.location.start.position + 1 ] = feat
+
+        # Now read in the ORFs from the 6Frame file and match their
+        # ends with the ends of the annotated proteins
+        for orfSeq in self.orfReader:
+
+            tmpOrf = OpenReadingFrame( orfSeq.acc, orfSeq.seq )
+
+            if tmpOrf.name.startswith('XXX'): # Skip the decoy ORFs for now
+                continue
+
+            chrom = chromDict[ tmpOrf.chromosome ]
+            orfThreePrime = tmpOrf.location.GetThreePrime()
+
+            if chrom.endToCDS.has_key( orfThreePrime ):
+                cds = chrom.endToCDS[ orfThreePrime ]
+                orfStart = tmpOrf.location.start
+                orfStop  = tmpOrf.location.stop
+                # +1 is back to 1 based
+                prot5Prime = cds.location.start.position + 1
+                if cds.strand == -1:
+                    prot5Prime = cds.location.end.position
+
+                # separate simple ORF from complex ORFs for now
+                # not sure if we'll need to further separate complex ORFs
+                if len(cds.sub_features) > 0:
+                    chrom.otherOrfs.append( tmpOrf )
+                elif prot5Prime >= orfStart and prot5Prime <= orfStop:
+                    chrom.simpleOrfs.append( tmpOrf )
+                else:
+                    chrom.otherOrfs.append( tmpOrf )
+
+        return chromDict
