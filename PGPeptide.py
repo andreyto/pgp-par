@@ -558,11 +558,13 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
 
     def locateOrfs(self):
         chromDict = {} # Mapping accession to the Chromosome object
+        # First read in all the CDS features from the genbank file
         for gb_rec in SeqIO.parse(self.io, 'genbank'):
+            # Each gb record becomes it's own chromsome
             chrom = Chromosome( gb_rec.name, gb_rec.seq )
             chromDict[ gb_rec.name ] = chrom
 
-            # First read in all the CDS features from the genbank file
+            # Store the cds SeqFeatures in the chromsome indexed by 3' end
             for feat in gb_rec.features:
                 if feat.type == 'CDS':
                     if feat.strand == 1:
@@ -598,6 +600,16 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                 if len(cds.sub_features) > 0:
                     chrom.otherOrfs.append( tmpOrf )
                 elif prot5Prime >= orfStart and prot5Prime <= orfStop:
+                    # Create a LocatedProtein object for this protein
+                    locProt = LocatedProtein( GenomicLocation(
+                        cds.location.start.position + 1,
+                        cds.location.end.position,
+                        cds.strand == 1 and '+' or '-'
+                    ))
+                    locProt.name = cds.qualifiers['product']
+                    locProt.ORFName = tmpOrf.name
+                    # and add it to the ORF
+                    tmpOrf.addLocatedProtein( locProt )
                     chrom.simpleOrfs.append( tmpOrf )
                 else:
                     chrom.otherOrfs.append( tmpOrf )
