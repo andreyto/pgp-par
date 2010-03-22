@@ -540,8 +540,8 @@ class Chromosome(object):
     def __init__(self,accession=None,seq=None):
         self.accession = accession
         self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
-        self.simpleOrfs = [] # ORFs corresponding to a contiguous annotated protein
-        self.otherOrfs  = [] # ORFs that are complex in some way
+        self.simpleOrfs = {} # ORFs corresponding to a contiguous annotated protein
+        self.otherOrfs  = {} # ORFs that are complex in some way
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
 
@@ -610,8 +610,8 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     locProt.ORFName = tmpOrf.name
                     # and add it to the ORF
                     tmpOrf.addLocatedProtein( locProt )
-                    chrom.simpleOrfs.append( tmpOrf )
+                    chrom.simpleOrfs[ tmpOrf.name ] = tmpOrf
                 else:
-                    chrom.otherOrfs.append( tmpOrf )
+                    chrom.otherOrfs[ tmpOrf.name ] = tmpOrf
 
         return chromDict
