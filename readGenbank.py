@@ -46,10 +46,10 @@ gffReader = PGPeptide.GFFPeptide( pepGFF )
 gffReader.generateORFs( orfFasta, genome )
 
 for chromName,chrom in genome.chromosomes.items():
-    pepOrfNames  = set(chrom.pepOnlyOrfs.keys())
+    pepOrfNames  = chrom.pepOnlyOrfs.keys()
 
-    print "Num orfs from peptides %d, num simpleOrfs %d num pepOnlyOrfs %d " % (
-        chrom.numORFsWithPeptides(), len(chrom.simpleOrfs), len(pepOrfNames))
+    print "Chrom %s num orfs from peptides %d, num simpleOrfs %d num pepOnlyOrfs %d " % (
+        chromName,chrom.numORFsWithPeptides(), len(chrom.simpleOrfs), len(pepOrfNames))
 
     print pepOrfNames
 
