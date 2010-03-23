@@ -23,39 +23,34 @@ def checkTimeAndMem(oldtime,cnt):
     fd.close()
     return t
 
-endToCDS = {}
-
-count = 0
-timecheck = checkTimeAndMem( os.times()[4], count )
+timecheck = checkTimeAndMem( os.times()[4], 0 )
 
 chromReader = PGPeptide.GenbankChromosomeReader(gbFile,orfFasta) 
 genome = chromReader.locateOrfs()
 
-timecheck = checkTimeAndMem(timecheck,count)
+timecheck = checkTimeAndMem(timecheck,1)
 
 for chrom in genome.chromosomes.values():
     print "Chromosome %s" % chrom.accession
     print "Number of loci with simple ORF end hit %d" % len(chrom.simpleOrfs)
-    print "Number of loci as other(complex) ORFs %d" % len(chrom.otherOrfs)
+    print "Number of loci as complex ORFs %d" % len(chrom.complexOrfs)
     print "Complex orf loci:"
 
-    for orf in chrom.otherOrfs.values():
-        cds = chrom.endToCDS[ orf.location.GetThreePrime() ]
-        print cds.qualifiers['locus_tag'][0]
+    for orf in chrom.complexOrfs.values():
+        print orf.CDS.qualifiers['locus_tag'][0]
 
-timecheck = checkTimeAndMem(timecheck,count)
+timecheck = checkTimeAndMem(timecheck,2)
 
 
 gffReader = PGPeptide.GFFPeptide( pepGFF )
 gffReader.generateORFs( orfFasta, genome )
 
 for chromName,chrom in genome.chromosomes.items():
-    simpleOrfNames = set(chrom.simpleOrfs.keys())
-    otherOrfNames  = set(chrom.otherOrfs.keys())
+    pepOrfNames  = set(chrom.pepOnlyOrfs.keys())
 
-    print "Num orfs from peptides %d, num simpleOrfs %d num otherOrfs %d " % (
-        chrom.numORFsWithPeptides(), len(simpleOrfNames), len(otherOrfNames))
+    print "Num orfs from peptides %d, num simpleOrfs %d num pepOnlyOrfs %d " % (
+        chrom.numORFsWithPeptides(), len(chrom.simpleOrfs), len(pepOrfNames))
 
-    print otherOrfNames
+    print pepOrfNames
 
-timecheck = checkTimeAndMem(timecheck,count)
+timecheck = checkTimeAndMem(timecheck,3)

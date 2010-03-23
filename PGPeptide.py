@@ -283,6 +283,7 @@ class OpenReadingFrame(object):
         self.GCWholeORF = None
         self.GCPredictedProtein = None
         self.GCObservedRegion = None
+        self.CDS = None # biopython SeqFeature for the CDS record from a genbank file
         
     def __str__(self):
         NumUniquePeptides = 0
@@ -478,10 +479,10 @@ class GFFPeptide(GFFIO.File):
             chrom = genome.chromosomes[ gffRec.seqid ]
             orf = chrom.getOrf( protein ) 
             if not orf:
-                # ORF doesn't exist in chromosome, so add as an otherOrf
+                # ORF doesn't exist in chromosome, so add as an pepOnlyOrf
                 orf = OpenReadingFrame(name=protein)
                 orf.chromosome = gffRec.seqid
-                chrom.otherOrfs[ protein ] = orf
+                chrom.pepOnlyOrfs[ protein ] = orf
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
             # Peptide is encoded as the name, since it's generally short 
@@ -498,9 +499,9 @@ class GFFPeptide(GFFIO.File):
 
             if genome.chromosomes.has_key( chromName ):
                 chrom = genome.chromosomes[ chromName ]
-                # Simple ORFs should have protein's already, so only populate the otherOrfs
-                if chrom.otherOrfs.has_key( seqDef.ORFName ):
-                    orf = chrom.otherOrfs[ seqDef.ORFName ]
+                # Simple ORFs should have protein's already, so only populate the pepOnlyOrfs
+                if chrom.pepOnlyOrfs.has_key( seqDef.ORFName ):
+                    orf = chrom.pepOnlyOrfs[ seqDef.ORFName ]
                     orf.aaseq = seq.seq
                     orf.SetLocation( seqDef, len(seq.seq))
 
@@ -525,29 +526,34 @@ class GFFPeptide(GFFIO.File):
         
 class Chromosome(object):
     """A collection of ORFs and annotated proteins across a single large NA sequence.
-    Currently, ORFs are stored in two separate collections, simpleOrfs and otherOrfs.
+    Currently, ORFs are stored in three separate collections, simpleOrfs,
+    complexOrfs and pepOnlyOrfs.
     Simple ORFs correspond directly to a contiguous annotated protein.
-    Other ORFs are either complex, or supported only by peptides.
+    Complex ORFs are noncontiguous,
+    pepOnly ORFs are supported only by peptides.
     """
     def __init__(self,accession=None,seq=None):
         self.accession = accession
         self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
         self.simpleOrfs = {} # ORFs corresponding to a contiguous annotated protein
-        self.otherOrfs  = {} # ORFs that are complex in some way
+        self.complexOrfs= {} # complex ORFs  have no direct end to end protein map
+        self.pepOnlyOrfs= {} # ORFs created only via peptides
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
     def getOrf(self,protName):
         "Given an ORFName returns the orf regardless of simple or complex membership"
         if self.simpleOrfs.has_key( protName ):
             return self.simpleOrfs[ protName ]
-        elif self.otherOrfs.has_key( protName ):
-            return self.otherOrfs[ protName ]
+        elif self.complexOrfs.has_key( protName ):
+            return self.complexOrfs[ protName ]
+        elif self.pepOnlyOrfs.has_key( protName ):
+            return self.pepOnlyOrfs[ protName ]
         else:
             return None
 
     def numORFsWithPeptides(self):
-        i = 0
-        for orf in self.simpleOrfs.values() + self.otherOrfs.values():
+        i = len(self.pepOnlyOrfs)
+        for orf in self.simpleOrfs.values() + self.complexOrfs.values():
             if orf.numPeptides() > 0:
                 i += 1
         return i
@@ -603,6 +609,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
 
         # Now read in the ORFs from the 6Frame file and match their
         # ends with the ends of the annotated proteins
+        unusedOrfs = 0
         for orfSeq in self.orfReader:
 
             tmpOrf = OpenReadingFrame( orfSeq.acc, orfSeq.seq )
@@ -614,7 +621,8 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
             orfThreePrime = tmpOrf.location.GetThreePrime()
 
             if chrom.endToCDS.has_key( orfThreePrime ):
-                cds = chrom.endToCDS[ orfThreePrime ]
+                cds = chrom.endToCDS.pop( orfThreePrime )
+                tmpOrf.CDS = cds # Not sure if we really need this but keep around for a little while
                 orfStart = tmpOrf.location.start
                 orfStop  = tmpOrf.location.stop
                 # +1 is back to 1 based
@@ -638,8 +646,17 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     chrom.simpleOrfs[ tmpOrf.name ] = tmpOrf
 
                 elif len(cds.sub_features) > 0:
-                    chrom.otherOrfs[ tmpOrf.name ] = tmpOrf
+                    chrom.complexOrfs[ tmpOrf.name ] = tmpOrf
                 else:
-                    chrom.otherOrfs[ tmpOrf.name ] = tmpOrf
+                    chrom.complexOrfs[ tmpOrf.name ] = tmpOrf
+            else:
+                # ORF without a 3' mapping to a protein
+                unusedOrfs += 1
 
+        print "%d unused ORFs from 6frame fasta." % unusedOrfs
+        for acc,chrom in genome.chromosomes.items():
+            for cds in chrom.endToCDS.values():
+                print "Warning, unmapped protein %s on chrom %s" % (
+                        cds.qualifiers['locus_tag'][0], acc )
+                
         return genome

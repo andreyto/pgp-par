@@ -60,9 +60,9 @@ class Test(unittest.TestCase):
         chrom = genome.makeChromosome(acc)
         gffReader.generateORFs( Test.SixFrame, genome )
 
-        self.assertEqual( 2, len(chrom.otherOrfs) )
-        orf229 = chrom.otherOrfs['Protein229']
-        orf453 = chrom.otherOrfs['Protein453']
+        self.assertEqual( 2, len(chrom.pepOnlyOrfs) )
+        orf229 = chrom.pepOnlyOrfs['Protein229']
+        orf453 = chrom.pepOnlyOrfs['Protein453']
         self.assertEqual( 68, orf229.numPeptides())
         self.assertEqual( 36, orf453.numPeptides())
 
@@ -109,7 +109,7 @@ class Test(unittest.TestCase):
 
         gffOut = 't.gff'
         gffWriter = PGPeptide.GFFPeptide( gffOut, 'w' )
-        for orf in chrom.otherOrfs.values():
+        for orf in chrom.pepOnlyOrfs.values():
             gffWriter.writeORFPeptides( orf )
 
         gffWriter.close()
@@ -117,7 +117,7 @@ class Test(unittest.TestCase):
         chrom     = genome2.makeChromosome(acc)
         gffReader = PGPeptide.GFFPeptide( gffOut )
         gffReader.generateORFs( Test.SixFrame, genome2 )
-        for name,orf2 in chrom.otherOrfs.items():
+        for name,orf2 in chrom.pepOnlyOrfs.items():
             orf1 = genome1.chromosomes[acc].getOrf( name )
             self.assertEqual( orf1.name, orf2.name )
             self.assertEqual( orf1.chromosome, orf2.chromosome )
