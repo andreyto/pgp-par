@@ -464,27 +464,24 @@ class GFFPeptide(GFFIO.File):
     
     ### Inherits the constructor of the GFFIO.File ###
 
-    def generateORFs(self, sequenceFile, definitionParser=ORFFastaHeader):
-        '''Parameters: A sequence file supported by SequenceIO and
-        optionally a Class for parsing the sequence accession.
-        Return: Dictionary of OpenReadingFrame objects, and their LocatedPeptides
+    def generateORFs(self, sequenceFile, genome, definitionParser=ORFFastaHeader):
+        '''Parameters: A sequence file supported by SequenceIO, a Genome() object
+        to populate with OpenReadingFrame objects and their LocatedPeptides,
+        and optionally a class for parsing the sequence accession.
         Description: Reads the peptides from the GFF, and the ORFs from the sequence file
         '''
         seqReader = bioseq.SequenceIO( sequenceFile )
-        observedORFs = {}
         
-        gffChrs = {}
         # Read in the peptides from the GFF file, creating ORFs as needed
         for gffRec in self:
             protein = gffRec.attributes['Parent']
-            accession = gffRec.seqid
-            key = (accession, protein)
-            if not observedORFs.has_key( key ):
-                observedORFs[ key ] = OpenReadingFrame(name=protein)
-                observedORFs[ key ].chromosome = accession
-                # Record the observed accessions, to check against the sequence input
-                if not gffChrs.has_key( accession ):
-                    gffChrs[ accession ] = True
+            chrom = genome.chromosomes[ gffRec.seqid ]
+            orf = chrom.getOrf( protein ) 
+            if not orf:
+                # ORF doesn't exist in chromosome, so add as an otherOrf
+                orf = OpenReadingFrame(name=protein)
+                orf.chromosome = gffRec.seqid
+                chrom.otherOrfs[ protein ] = orf
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
             # Peptide is encoded as the name, since it's generally short 
@@ -492,29 +489,20 @@ class GFFPeptide(GFFIO.File):
             peptide.name = gffRec.attributes['ID']
             peptide.bestScore = gffRec.score
 
-            orf = observedORFs[ key ]
             orf.addLocatedPeptide( peptide )
 
-        seqChrs = {}
         # Read in only the needed ORFs from the sequence file
         for seq in seqReader:
             seqDef = definitionParser( seq.acc )
-            chrom = seqDef.Chromosome
-            if not seqChrs.has_key( chrom ):
-                seqChrs[chrom] = True
+            chromName = seqDef.Chromosome
 
-            key = (seqDef.ORFName, chrom)
-            if observedORFs.has_key( key ):
-                orf = observedORFs[ key ]
-                orf.aaseq = seq.seq
-                orf.SetLocation( seqDef, len(seq.seq))
-
-        # Verify that a sequence existed for each ORF referenced in the GFF
-        for chrom in gffChrs:
-            if not seqChrs.has_key( chrom ):
-                raise KeyError("Sequence %s is not in %s"%(chrom,sequenceFile))
-
-        return observedORFs
+            if genome.chromosomes.has_key( chromName ):
+                chrom = genome.chromosomes[ chromName ]
+                # Simple ORFs should have protein's already, so only populate the otherOrfs
+                if chrom.otherOrfs.has_key( seqDef.ORFName ):
+                    orf = chrom.otherOrfs[ seqDef.ORFName ]
+                    orf.aaseq = seq.seq
+                    orf.SetLocation( seqDef, len(seq.seq))
 
     def writeORFPeptides(self, orf):
         gffRec = GFFIO.Record() #create empty record.  add values below then write each one
@@ -536,7 +524,11 @@ class GFFPeptide(GFFIO.File):
 ###############################################################################
         
 class Chromosome(object):
-    """A collection of ORFs and annotated proteins across a single large NA sequence."""
+    """A collection of ORFs and annotated proteins across a single large NA sequence.
+    Currently, ORFs are stored in two separate collections, simpleOrfs and otherOrfs.
+    Simple ORFs correspond directly to a contiguous annotated protein.
+    Other ORFs are either complex, or supported only by peptides.
+    """
     def __init__(self,accession=None,seq=None):
         self.accession = accession
         self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
@@ -544,25 +536,60 @@ class Chromosome(object):
         self.otherOrfs  = {} # ORFs that are complex in some way
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
+    def getOrf(self,protName):
+        "Given an ORFName returns the orf regardless of simple or complex membership"
+        if self.simpleOrfs.has_key( protName ):
+            return self.simpleOrfs[ protName ]
+        elif self.otherOrfs.has_key( protName ):
+            return self.otherOrfs[ protName ]
+        else:
+            return None
+
+    def numORFsWithPeptides(self):
+        i = 0
+        for orf in self.simpleOrfs.values() + self.otherOrfs.values():
+            if orf.numPeptides() > 0:
+                i += 1
+        return i
+                
+###############################################################################
+        
+class Genome(object):
+    """A collection of Chromosome objects indexed by accession."""
+    def __init__(self,taxon=None):
+        self.taxon = taxon
+        self.chromosomes = {}
+
+    def numChromosomes(self):
+        return len(self.chromosomes)
+
+    def makeChromosome(self,accession,seq=None):
+        """Given an accession, creates a chromosome for it in the Genome and
+        returns the Chromosome object"""
+        if self.chromosomes.has_key( accession ):
+            raise RuntimeError("Trying to create Chromosome %s again."%accession)
+
+        chrom = Chromosome(accession,seq)
+        self.chromosomes[accession] = chrom
+        return chrom 
 
 ###############################################################################
 
 class GenbankChromosomeReader(bioseq.FlatFileIO):
-    """Creates Chromosomes from a genbank file, and locates ORFs from a six 
-    frame sequence file onto their annotated proteins. Uses biopython
-    to parse the Genbank file.
+    """Returns a single Genome object populated with Chromosomes from each
+    sequence in a genbank file, and locates ORFs from a six frame sequence file
+    onto their annotated proteins. Uses biopython to parse the Genbank file.
     """
     def __init__(self, gbFile, sixFrameFile):
         bioseq.FlatFileIO.__init__(self,gbFile)
         self.orfReader = bioseq.SequenceIO(sixFrameFile)
 
     def locateOrfs(self):
-        chromDict = {} # Mapping accession to the Chromosome object
+        genome = Genome()
         # First read in all the CDS features from the genbank file
         for gb_rec in SeqIO.parse(self.io, 'genbank'):
             # Each gb record becomes it's own chromsome
-            chrom = Chromosome( gb_rec.name, gb_rec.seq )
-            chromDict[ gb_rec.name ] = chrom
+            chrom = genome.makeChromosome( gb_rec.name, gb_rec.seq )
 
             # Store the cds SeqFeatures in the chromsome indexed by 3' end
             for feat in gb_rec.features:
@@ -583,7 +610,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
             if tmpOrf.name.startswith('XXX'): # Skip the decoy ORFs for now
                 continue
 
-            chrom = chromDict[ tmpOrf.chromosome ]
+            chrom = genome.chromosomes[ tmpOrf.chromosome ]
             orfThreePrime = tmpOrf.location.GetThreePrime()
 
             if chrom.endToCDS.has_key( orfThreePrime ):
@@ -597,9 +624,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
 
                 # separate simple ORF from complex ORFs for now
                 # not sure if we'll need to further separate complex ORFs
-                if len(cds.sub_features) > 0:
-                    chrom.otherOrfs.append( tmpOrf )
-                elif prot5Prime >= orfStart and prot5Prime <= orfStop:
+                if prot5Prime >= orfStart and prot5Prime <= orfStop:
                     # Create a LocatedProtein object for this protein
                     locProt = LocatedProtein( GenomicLocation(
                         cds.location.start.position + 1,
@@ -611,7 +636,10 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     # and add it to the ORF
                     tmpOrf.addLocatedProtein( locProt )
                     chrom.simpleOrfs[ tmpOrf.name ] = tmpOrf
+
+                elif len(cds.sub_features) > 0:
+                    chrom.otherOrfs[ tmpOrf.name ] = tmpOrf
                 else:
                     chrom.otherOrfs[ tmpOrf.name ] = tmpOrf
 
-        return chromDict
+        return genome

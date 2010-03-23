@@ -54,12 +54,15 @@ class Test(unittest.TestCase):
     def testReadGFF(self):
         'Reading ORF peptides from a GFF file.'
 
+        genome    = PGPeptide.Genome()
         gffReader = PGPeptide.GFFPeptide( Test.GFF )
-        orfDict   = gffReader.generateORFs( Test.SixFrame )
+        acc = 'NC_004837'
+        chrom = genome.makeChromosome(acc)
+        gffReader.generateORFs( Test.SixFrame, genome )
 
-        self.assertEqual( 2, len(orfDict) )
-        orf229 = orfDict[('NC_004837','Protein229')]
-        orf453 = orfDict[('NC_004837','Protein453')]
+        self.assertEqual( 2, len(chrom.otherOrfs) )
+        orf229 = chrom.otherOrfs['Protein229']
+        orf453 = chrom.otherOrfs['Protein453']
         self.assertEqual( 68, orf229.numPeptides())
         self.assertEqual( 36, orf453.numPeptides())
 
@@ -98,19 +101,24 @@ class Test(unittest.TestCase):
     def testRoundTripGFF(self):
         'Reading then writing ORF peptides from a GFF file.'
 
+        acc = 'NC_004837'
+        genome1   = PGPeptide.Genome()
+        chrom     = genome1.makeChromosome(acc)
         gffReader = PGPeptide.GFFPeptide( Test.GFF )
-        orfDict   = gffReader.generateORFs( Test.SixFrame )
+        gffReader.generateORFs( Test.SixFrame, genome1 )
 
         gffOut = 't.gff'
         gffWriter = PGPeptide.GFFPeptide( gffOut, 'w' )
-        for orf in orfDict.values():
+        for orf in chrom.otherOrfs.values():
             gffWriter.writeORFPeptides( orf )
 
         gffWriter.close()
+        genome2   = PGPeptide.Genome()
+        chrom     = genome2.makeChromosome(acc)
         gffReader = PGPeptide.GFFPeptide( gffOut )
-        orfs2   = gffReader.generateORFs( Test.SixFrame )
-        for name,orf2 in orfs2.items():
-            orf1 = orfDict[name]
+        gffReader.generateORFs( Test.SixFrame, genome2 )
+        for name,orf2 in chrom.otherOrfs.items():
+            orf1 = genome1.chromosomes[acc].getOrf( name )
             self.assertEqual( orf1.name, orf2.name )
             self.assertEqual( orf1.chromosome, orf2.chromosome )
             self.assertEqual( orf1.numPeptides(), orf2.numPeptides() )
@@ -126,16 +134,16 @@ class Test(unittest.TestCase):
         os.remove( gffOut )
 
     def testChromsomeGBInput(self):
-        'Reading and mapping ORFs to a genbank chromsome'
+        'Reading and mapping ORFs to a genbank chromosome'
 
         gbkFile  = '../PGP.Regression.Test/NC_004088.gbk'
         sixFrame = '../PGP.Regression.Test/NC_004088.6frame.RS.fasta'
         chromReader = PGPeptide.GenbankChromosomeReader(gbkFile,sixFrame) 
-        chromDict = chromReader.locateOrfs()
-        self.assertEqual( 1, len(chromDict))
+        genome = chromReader.locateOrfs()
+        self.assertEqual( 1, genome.numChromosomes())
         acc = 'NC_004088'
-        self.assertEqual( acc, chromDict.keys()[0] )
-        self.assertEqual( 4086, len( chromDict[acc].simpleOrfs ))
+        self.assertEqual( acc, genome.chromosomes.keys()[0] )
+        self.assertEqual( 4086, len( genome.chromosomes[acc].simpleOrfs ))
 
 
 if __name__ == "__main__":
