@@ -108,6 +108,10 @@ class Parser():
         if inputMirrorTo and not os.path.exists( inputMirrorTo ):
             os.makedirs( inputMirrorTo )
 
+    def __del__(self):
+        if self.outputMirrorInput:
+            self.mirrorOutHandle.close()
+
     def __createHandles__( self, FileName ):
         """Internal method that creates the input and optional
         output file handles for the iterator.
@@ -154,14 +158,17 @@ class Parser():
             for line in fileHandle:
                 if line[0] == '#':
                     self.header = line
+                    # maintain the comment lines in the mirrored output
+                    if self.outputMirrorInput:
+                        self.mirrorOutHandle.write( line )
                     continue
                 row = Row()
                 row.populateFromString(line)
                 yield row
 
             fileHandle.close()
-            if self.outputMirrorInput:
-                self.mirrorOutHandle.close()
+#           Can't close mirrorOutHandle here since it's needed to write the
+#           final record to. Guess we need to call close else where ie __del__
 
             # Don't parse every single file, that will take too long!
             if self.maxFiles != None and self.FileCount > self.maxFiles:
