@@ -4,7 +4,7 @@ import bioseq
 
 
 ###############################################################################
-        
+
 class GenomicLocation(object):
     def __init__(self,start,stop,strand):
         """Start and stop of a region on a sequence.
@@ -21,7 +21,7 @@ class GenomicLocation(object):
         self.__stop = stop
         self.__frame = None
         self.strand = strand
-        
+
     def __str__(self):
         """Parameters: None
         Return: the string version of this object
@@ -31,32 +31,32 @@ class GenomicLocation(object):
         and get a meaningful print out
         """
         return "%d,%d %s%d" % (self.start, self.stop, self.strand, self.frame)
-    
+
     def __cmp__(self, other):
         """Parameters: Another GenomicLocation object
         Return: -1, 0, 1 following the cmp standards
-        Description: this does a strict NUMERICAL sort of the objects.  If 
-        starts are equal, then return the smaller stop. By defining this 
-        function, we can use a simple call to sort() on a list of 
-        GenomicLocation objects and it will happen. This has nothing to 
+        Description: this does a strict NUMERICAL sort of the objects.  If
+        starts are equal, then return the smaller stop. By defining this
+        function, we can use a simple call to sort() on a list of
+        GenomicLocation objects and it will happen. This has nothing to
         do with 5' or 3' sorting. NOTHING.
         """
         Value = cmp(self.start, other.start)
         if Value == 0: #this is checked out just in case
             return cmp(self.stop, other.stop)
         return Value
-    
+
     def SortFivePrime(self, other):
         """Parameters: antother GenomeLocation object
         Return: -1, 0, 1 following the cmp standards
         Description: This does a biological sort of the objects, returning
         such that a 5' peptide should appear first. It is designed to be
-        
-        NOTE: We ASSUME that the two locations are on the same strand, 
-        because otherwise 5' would be meaning less and you would be 
+
+        NOTE: We ASSUME that the two locations are on the same strand,
+        because otherwise 5' would be meaning less and you would be
         stupid for calling this function
         """
-        #here's the switch on strandedness, 
+        #here's the switch on strandedness,
         if self.strand == "+":
             #this can just be a simple thing
             return self.__cmp__(other)
@@ -82,7 +82,7 @@ class GenomicLocation(object):
             self.__stop +=  3
         else:
             self.__start -= 3
-           
+
     def AddOneAminoAcidThreePrime(self):
         'This is accessed to add the stop codon for a protein'
         if self.strand == "-":
@@ -99,7 +99,7 @@ class GenomicLocation(object):
     def start(self):
         'Lesser coordinate on the sequence.'
         return self.__start
-    
+
 
     @property
     def stop(self):
@@ -127,7 +127,7 @@ class GenomicLocation(object):
             return None
         elif myStart <= otherStart:
             if otherStop < myStop:
-                # other is contained sub sequenc              
+                # other is contained sub sequenc
                 return (otherStart,otherStop)
             else:
                 return (otherStart, myStop)
@@ -140,7 +140,7 @@ class GenomicLocation(object):
 
 
 ###############################################################################
-        
+
 class LocatedPeptide(object):
     def __init__(self, Aminos, location=None):
         self.location = location
@@ -163,8 +163,8 @@ class LocatedPeptide(object):
             self.TrypticNTerm = 1
         if self.aminos[-1] in TrypticLetters:
             self.TrypticCTerm = 1
-            
-    
+
+
     def isTryptic(self):
         """Parameters: None
         Return: true/falst on whether a peptide is tryptic
@@ -183,14 +183,14 @@ class LocatedPeptide(object):
         if self.location.strand == "-":
             return self.location.stop
         return self.location.start
-    
+
     def GetThreePrimeNucleotide(self):
         """Just checks for the strand, and returns the 5' nucelotide
         """
         if self.location.strand == "-":
             return self.location.start
         return self.location.stop
-    
+
     def __str__(self):
         """Parameters: None
         Return: the string version of this object
@@ -198,18 +198,18 @@ class LocatedPeptide(object):
         that means that you can do
         print "%s"%GenomicLocationObject
         and get a meaningful print out
-        """        
+        """
         return "%s in %s, unique=%s, %s"%(self.aminos, self.ORFName, self.isUnique, self.location)
-    
+
     def __cmp__(self, other):
         """Parameters: Another GenomicLocation object
         Return: -1, 0, 1 following the cmp standards
-        Description: this does a strict NUMERICAL sort of the objects.  If 
-        starts are equal, then return the smaller stop. By defining this 
-        function, we can use a simple call to sort() on a list of 
-        GenomicLocation objects and it will happen. This has nothing to 
+        Description: this does a strict NUMERICAL sort of the objects.  If
+        starts are equal, then return the smaller stop. By defining this
+        function, we can use a simple call to sort() on a list of
+        GenomicLocation objects and it will happen. This has nothing to
         do with 5' or 3' sorting. NOTHING.
-        """        
+        """
         return cmp(self.location, other.location)
 
     def GetStart(self):
@@ -223,21 +223,21 @@ class LocatedPeptide(object):
 
 
 ###############################################################################
-        
+
 class LocatedProtein(object):
     def __init__(self,location):
         self.location = location
         self.name = None #like asparagine synthase
         self.ORFName = None #like Protein1233
-        
+
     def AddOneAminoAcidFivePrime(self):
         """This is a very very ugly kludge.  to map proteins on to the ORFs, we remove the first amino acid
         because if it's an alternate start site, the ORF has V, and the protein has M.  So now we need to add
         the ability to add back that one amino acid to our position.  Remember, start and stop are numerical order
-        and NOT associated with 5' or 3'.  
+        and NOT associated with 5' or 3'.
         """
         self.location.AddOneAminoAcidFivePrime()
-        
+
     def AddStopCodon(self):
         """Add the three nucs to the location object representing my stop codon, which is part of me
         as far as NCBI is concerned
@@ -249,7 +249,7 @@ class LocatedProtein(object):
         if self.location.strand == "-":
             return self.location.stop
         return self.location.start
-        
+
     def GetStart(self):
         return self.location.start
 
@@ -257,13 +257,13 @@ class LocatedProtein(object):
         return self.location.stop
     def GetORFName(self):
         return self.ORFName
-    
+
     def __str__(self):
         return "%s in %s, %s"%(self.name, self.ORFName, self.location)
-        
+
 
 ###############################################################################
-        
+
 class OpenReadingFrame(object):
     def __init__(self, FastaHeader=None, AASequence=None, name=None):
         self.location = None
@@ -284,7 +284,7 @@ class OpenReadingFrame(object):
         self.GCPredictedProtein = None
         self.GCObservedRegion = None
         self.CDS = None # biopython SeqFeature for the CDS record from a genbank file
-        
+
     def __str__(self):
         NumUniquePeptides = 0
         for Peptide in self.peptideIter():
@@ -296,7 +296,7 @@ class OpenReadingFrame(object):
         """
         Parameters: ORFFastaHeader object, length of the amino acids in the ORF
         Return: none
-        Description: Fill in the information needed for the location object, create 
+        Description: Fill in the information needed for the location object, create
         and assign object
         """
         FivePrime = ParsedHeader.Start
@@ -332,7 +332,7 @@ class OpenReadingFrame(object):
     def GetObservedDNACoords(self):
         """Parameters: NOne
         Return: tuple (start, stop) where start<stop
-        Description: get the DNA coordinates of the observed sequence, 
+        Description: get the DNA coordinates of the observed sequence,
         from the first peptide to the stop codon
         """
         FirstPeptide = self.GetFivePrimePeptide() #note here that we are not using the uniqueness filter
@@ -341,10 +341,10 @@ class OpenReadingFrame(object):
         if self.location.strand == "+":
             return (FivePrime, ThreePrime)
         return (ThreePrime, FivePrime)
-    
+
     def GetObservedSequence(self):
         """Parameters: none
-        Return: amino acid sequence 
+        Return: amino acid sequence
         Description: We want to get the sequence that we have evidence as
         being translated.  This is from the first peptide through the stop
         """
@@ -356,10 +356,10 @@ class OpenReadingFrame(object):
         return self.aaseq[FirstResidue:]
 
     def GetFivePrimePeptide(self, Unique = 0):
-        """Parameters: None required.  Optional Unique parameter 
+        """Parameters: None required.  Optional Unique parameter
         Return: the five prime most peptide
         Description: cycle through the peptides and return the one closest
-        to the start. If you specify Unique = 1, then you are specifying 
+        to the start. If you specify Unique = 1, then you are specifying
         that you want the 5' most UNIQUELY MAPPING peptide.  Non-uniquely
         mapping peptides will be passed over
         """
@@ -371,19 +371,19 @@ class OpenReadingFrame(object):
             if not Unique: #you don't care about uniqueness
                 return Peptide #just return right off the bat
             if Peptide.isUnique:
-                return Peptide                
-                
+                return Peptide
+
     def GetNucleotideStartOfTranslation(self):
         """Returns the start of translation"""
         return self.annotatedProtein.GetFivePrimeNucleotide()
-    
+
     def numPeptides(self):
         'Returns the number of peptides in the ORF.'
         return len(self.__peptides)
 
     def addLocatedProtein(self, Protein):
         self.annotatedProtein = Protein
-        
+
     def GetLocatedProtein(self):
         if self.annotatedProtein:
             return self.annotatedProtein
@@ -393,7 +393,7 @@ class OpenReadingFrame(object):
         'Adds a single LocatedPeptide objects to the ORF.'
         self.__peptides.append( Peptide )
 
-    
+
     def addLocatedPeptides(self,peptideList):
         'Adds a list of LocatedPeptide objects to the ORF.'
         self.__peptides.extend( peptideList )
@@ -405,7 +405,7 @@ class OpenReadingFrame(object):
             self.__peptides.append( pepObj )
 
     def filterPeptides( self, filterFunc ):
-        'Takes a filter function returning True or False for a LocatedPeptide object' 
+        'Takes a filter function returning True or False for a LocatedPeptide object'
         self.__peptides = filter( filterFunc, self.__peptides)
 
     def peptideIter( self ):
@@ -419,9 +419,9 @@ class OpenReadingFrame(object):
 class ORFFastaHeader(object):
     """This tiny class just holds and deals with the information encoded in an ORF fasta header
     as created by the SixFrameTranslation script.
-    
+
     WARNING: Don't include a period '.' in your name. we use that to split
-    
+
     Protein256370.Chr:Chr1.Frame1.StartNuc831372.Strand-
     XXX.Protein157841.Chr:Chr1.Frame1.StartNuc4033167.Strand+
     InfoBits[0] = protein unique id
@@ -439,7 +439,7 @@ class ORFFastaHeader(object):
         self.Strand = None
         self.String = Header
         self.Parse(Header)
-        
+
     def Parse(self, String):
         """Parameters: the fasta header line
         Return: none
@@ -450,7 +450,7 @@ class ORFFastaHeader(object):
         if String.find("XXX.") == 0:
             String = String.replace("XXX.", "XXX")
         InfoBits = String.split(".")
-        
+
         self.ORFName = InfoBits[0]
         self.Chromosome = InfoBits[1].replace("Chr:", "")
         self.Strand = InfoBits[4].replace("Strand", "")
@@ -459,10 +459,10 @@ class ORFFastaHeader(object):
 
 
 ###############################################################################
-        
+
 class GFFPeptide(GFFIO.File):
     'This class reads/writes GFF stuff that pertains specifically to our PGPeptide Implementation.'
-    
+
     ### Inherits the constructor of the GFFIO.File ###
 
     def generateORFs(self, sequenceFile, genome, definitionParser=ORFFastaHeader):
@@ -472,12 +472,12 @@ class GFFPeptide(GFFIO.File):
         Description: Reads the peptides from the GFF, and the ORFs from the sequence file
         '''
         seqReader = bioseq.SequenceIO( sequenceFile )
-        
+
         # Read in the peptides from the GFF file, creating ORFs as needed
         for gffRec in self:
             protein = gffRec.attributes['Parent']
             chrom = genome.chromosomes[ gffRec.seqid ]
-            orf = chrom.getOrf( protein ) 
+            orf = chrom.getOrf( protein )
             if not orf:
                 # ORF doesn't exist in chromosome, so add as an pepOnlyOrf
                 orf = OpenReadingFrame(name=protein)
@@ -485,8 +485,8 @@ class GFFPeptide(GFFIO.File):
                 chrom.pepOnlyOrfs[ protein ] = orf
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
-            # Peptide is encoded as the name, since it's generally short 
-            peptide = LocatedPeptide( gffRec.attributes['Name'], location) 
+            # Peptide is encoded as the name, since it's generally short
+            peptide = LocatedPeptide( gffRec.attributes['Name'], location)
             peptide.name = gffRec.attributes['ID']
             peptide.bestScore = gffRec.score
 
@@ -523,7 +523,7 @@ class GFFPeptide(GFFIO.File):
 
 
 ###############################################################################
-        
+
 class Chromosome(object):
     """A collection of ORFs and annotated proteins across a single large NA sequence.
     Currently, ORFs are stored in three separate collections, simpleOrfs,
@@ -557,9 +557,9 @@ class Chromosome(object):
             if orf.numPeptides() > 0:
                 i += 1
         return i
-                
+
 ###############################################################################
-        
+
 class Genome(object):
     """A collection of Chromosome objects indexed by accession."""
     def __init__(self,taxon=None):
@@ -577,7 +577,7 @@ class Genome(object):
 
         chrom = Chromosome(accession,seq)
         self.chromosomes[accession] = chrom
-        return chrom 
+        return chrom
 
 ###############################################################################
 
@@ -658,5 +658,5 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
             for cds in chrom.endToCDS.values():
                 print "Warning, unmapped protein %s on chrom %s" % (
                         cds.qualifiers['locus_tag'][0], acc )
-                
+
         return genome
