@@ -579,6 +579,12 @@ class Genome(object):
         self.chromosomes[accession] = chrom
         return chrom
 
+    def filterORFs(self, filterList):
+        "Takes a PGORFFilter.FilterList object and applies it to all simple ORFs"
+        for (name,chrom) in self.chromosomes.items():
+            filteredOrfDict = filterList.ApplyAllFilters( chrom.simpleOrfs )
+            chrom.simpleOrfs = filteredOrfDict
+
 ###############################################################################
 
 class GenbankChromosomeReader(bioseq.FlatFileIO):
