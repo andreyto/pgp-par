@@ -5,7 +5,7 @@ A generic sequence class for passing sequences around.
 Also support classes for doing sequence IO.
 '''
 
-import os, re
+import os, re, fileinput
 from StringIO import StringIO
 
 class Sequence(object):
@@ -22,12 +22,12 @@ class Sequence(object):
         self.acc = acc  
         self.seq = seq
         self.desc = desc
-            
+
 class FlatFileIO(object):
     '''
     A parent class for all the classes that do IO to flat files.
     Children should always be iterable.
-    '''        
+    '''
     def __init__(self, fileForIO, mode='r'):
         if type(fileForIO) is file:
             self.io = fileForIO
@@ -35,11 +35,15 @@ class FlatFileIO(object):
         elif type(fileForIO) is str: #assumes this is the path for a file to open .  mode default is read.  
             self.name = fileForIO
             self.io = open( fileForIO, mode)
+
+        elif isinstance(fileForIO, list): # combines a list of files together into 1
+            self.io = fileinput.input(fileForIO)
+
         elif isinstance(fileForIO, StringIO):
             self.io = fileForIO
         else:
             raise TypeError("Need string or io handle, got %s" % type(fileForIO))
-        
+
     def __del__(self):
         self.io.close()
 
@@ -60,7 +64,7 @@ class FastaReader(FlatFileIO):
     def __iter__(self):
         seq = None
         seqList = None
-        for line in self.io.xreadlines():
+        for line in self.io:
             line = line.rstrip()
             if line[0] == '>':
                 # Next defline, now done with previous seq, so yield it
@@ -84,7 +88,7 @@ class FastaReader(FlatFileIO):
             yield seq
 
         raise StopIteration
-    
+
 class FastaOut(FlatFileIO):
     '''
     A class that takes Sequence objects and writes them out in fasta format 
@@ -93,7 +97,7 @@ class FastaOut(FlatFileIO):
     def __init__(self,out):
         FlatFileIO.__init__(self, out, mode='w')
         self.linesize = 80
-        
+
     def write(self,seq):
         if seq.desc:
             self.io.write(">%s %s\n" % (seq.acc,seq.desc))
@@ -105,7 +109,7 @@ class FastaOut(FlatFileIO):
 
 class SequenceIO(object):
     FormatTable = {'fasta': (FastaReader,FastaOut)}
-    
+
     def __init__(self,fileName,mode='r'):
         '''
         Wrapper for all types of Sequence IO.
@@ -113,20 +117,22 @@ class SequenceIO(object):
         mode defaults to r for reading and use w for writing
         '''
         self.fileName = fileName
+        if isinstance(fileName, list):
+            self.fileName = fileName[0]
         self.mode = mode == 'w' and 1 or 0
-        
-        ext = os.path.splitext(fileName)[1].lower()
+
+        ext = os.path.splitext(self.fileName)[1].lower()
         if ext in ['.fa','.fasta','.fsa', '.fna', '.faa']:
             self.handle = SequenceIO.FormatTable['fasta'][self.mode](fileName)
-    
+
     def __iter__(self):
         return self.handle.__iter__()
-        
+
     def write(self,seqData):
         if type(seqData) is list:
             self.handle.multiWrite(seqData)
         else:
-            self.handle.write(seqData)                
+            self.handle.write(seqData)
 
     def close(self):
         self.handle.close()
