@@ -5,7 +5,7 @@ A generic sequence class for passing sequences around.
 Also support classes for doing sequence IO.
 '''
 
-import os, re, fileinput
+import os, re, fileinput, struct
 from StringIO import StringIO
 
 class Sequence(object):
@@ -56,6 +56,30 @@ class FlatFileIO(object):
     def writeMulti(self,seqList):
         for i in seqList:
             self.write(i)
+
+class TrieReader(FlatFileIO):
+    def __iter__(self):
+        seqs = self.io.read().split('*')
+        self.close()
+
+        IndexPath = os.path.splitext(self.name)[0] + ".index"
+        IndexFile = open(IndexPath, "rb")
+        BlockSize = struct.calcsize("<qi80s")
+        i = 0
+        while (1):
+            Block = IndexFile.read(BlockSize)
+            if not Block:
+                break
+            Info = struct.unpack("<qi80s", Block)
+            Name = Info[2]
+            NullPos = Name.find("\0")
+            if NullPos !=- 1:
+                Name = Name[:NullPos]
+            seq = Sequence( Name, seqs[i], Info[1] )
+            yield seq
+            i += 1
+
+        IndexFile.close()
 
 class FastaReader(FlatFileIO):
     '''
@@ -108,7 +132,8 @@ class FastaOut(FlatFileIO):
             self.io.write("%s\n" % seq.seq[i:i+self.linesize])
 
 class SequenceIO(object):
-    FormatTable = {'fasta': (FastaReader,FastaOut)}
+    FormatTable = {'fasta': (FastaReader,FastaOut),
+                   '.trie': (TrieReader,None) }
 
     def __init__(self,fileName,mode='r'):
         '''
@@ -124,6 +149,8 @@ class SequenceIO(object):
         ext = os.path.splitext(self.fileName)[1].lower()
         if ext in ['.fa','.fasta','.fsa', '.fna', '.faa']:
             self.handle = SequenceIO.FormatTable['fasta'][self.mode](fileName)
+        else:
+            self.handle = SequenceIO.FormatTable[ext][self.mode](fileName)
 
     def __iter__(self):
         return self.handle.__iter__()
