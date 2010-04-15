@@ -30,7 +30,8 @@ class GenomicLocation(object):
         print "%s"%GenomicLocationObject
         and get a meaningful print out
         """
-        return "%d,%d %s%d" % (self.start, self.stop, self.strand, self.frame)
+        #return "%d,%d %s%d" % (self.start, self.stop, self.strand, self.frame)
+        return "%d,%d %s" % (self.start, self.stop, self.strand)
 
     def __cmp__(self, other):
         """Parameters: Another GenomicLocation object
@@ -569,6 +570,12 @@ class Genome(object):
     def numChromosomes(self):
         return len(self.chromosomes)
 
+    def numSimpleOrfs(self):
+        count = 0
+        for (name,chrom) in self.chromosomes.items():
+            count += len(chrom.simpleOrfs)
+        return count
+
     def makeChromosome(self,accession,seq=None):
         """Given an accession, creates a chromosome for it in the Genome and
         returns the Chromosome object"""
@@ -578,6 +585,17 @@ class Genome(object):
         chrom = Chromosome(accession,seq)
         self.chromosomes[accession] = chrom
         return chrom
+
+    def getOrf(self,protName):
+        """Given an ORFName checks all Chromosomes for the orf regardless of
+        simple or complex membership.
+        """
+        for (name,chrom) in self.chromosomes.items():
+            orf = chrom.getOrf( protName )
+            if orf != None:
+                return orf
+        return None
+
 
     def filterORFs(self, filterList):
         "Takes a PGORFFilter.FilterList object and applies it to all simple ORFs"
@@ -645,7 +663,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                         cds.location.end.position,
                         cds.strand == 1 and '+' or '-'
                     ))
-                    locProt.name = cds.qualifiers['product']
+                    locProt.name = cds.qualifiers['product'][0]
                     locProt.ORFName = tmpOrf.name
                     # and add it to the ORF
                     tmpOrf.addLocatedProtein( locProt )

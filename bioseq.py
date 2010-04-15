@@ -37,7 +37,12 @@ class FlatFileIO(object):
             self.io = open( fileForIO, mode)
 
         elif isinstance(fileForIO, list): # combines a list of files together into 1
-            self.io = fileinput.input(fileForIO)
+            if len(fileForIO) == 1:
+                # Treat just like a single file
+                self.name = fileForIO[0]
+                self.io = open( fileForIO[0], mode)
+            else:
+                self.io = fileinput.input(fileForIO)
 
         elif isinstance(fileForIO, StringIO):
             self.io = fileForIO

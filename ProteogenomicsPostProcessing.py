@@ -50,6 +50,7 @@ class FinderClass():
     def __init__(self):
         self.InspectResultsPath = None #Peptide/Spectrum Matches from Inspect
         self.GFFInputPath = None #alternate input form, mostly used to shunt mapping, because that takes so long
+        self.GenbankPath  = None
         self.OutputPath = "RenameYourOutput.txt" #really a stub for output, as it gets modified to *.novel.faa, *.novel.info, etc.
         self.ProteomeDatabasePaths = [] #possibly multiple
         self.ORFDatabasePaths = [] #possibly multiple
@@ -70,26 +71,29 @@ class FinderClass():
         self.OutputPeptidesToGFF = 0
         self.GFFOutputPath = "RenameYourOutput.gff"
         self.NucleotideDatabasePath = None
-        
+
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
+        chromReader = PGPeptide.GenbankChromosomeReader(self.GenbankPath, self.ORFDatabasePaths)
+        genome = chromReader.locateOrfs()
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
         if self.InspectResultsPath:
             self.ParseInspect( self.InspectResultsPath )
             print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
-            self.MapAllPeptides()
-            
+            self.MapAllPeptides(genome) # modify to add too genome/chromsome
+
         else :
-            self.LoadResultsFromGFF(self.GFFInputPath)
-        
-        self.MapPredictedProteins()
-        self.CreateORFs()
-        self.FilterORFs()
-        
+            gffReader = PGPeptide.GFFPeptide( self.GFFInputPath )
+            gffReader.generateORFs( self.ORFDatabasePaths, genome )
+
+#        self.MapPredictedProteins()
+#        self.CreateORFs()
+        self.FilterORFs(genome)
+
         if self.OutputPeptidesToGFF:
             self.WritePeptideGFFFile()
         if self.SearchForMispredictions:
-            self.FindMiscalls()
+            self.FindMiscalls(genome)
         if self.SearchForCleavage:
             self.AnalyzeCleavage()
 
@@ -153,7 +157,7 @@ class FinderClass():
                 print "%s is on the overlapping list, and has peptide representation"%Name
 
 
-    def FilterORFs(self):
+    def FilterORFs(self,genome):
         """
         Parameters: None
         Return: None
@@ -162,18 +166,17 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FilterORFs"
-        
+            print "Genome has %d chroms totaling %d simple orfs." % (
+                genome.numChromosomes(), genome.numSimpleOrfs() )
+
         #this is the way we do filters.  We create all the filters that
         #we want to use, and then put them into th efilter list. It does the 
         #magic for us.
         SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
-        FilterList = PGORFFilters.FilterList((SequenceComplexity, Uniqueness, MinPeptide)) # an anonymous list
-        FilteredORFs = FilterList.ApplyAllFilters(self.AllORFs)
-        self.AllORFs = FilteredORFs
-         
-        print "\t%s ORFs left after filtering"%len(self.AllORFs)
+        FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, MinPeptide]) # an anonymous list
+        genome.filterORFs( FilterList )
 
     def AnalyzeCleavage(self):
         """
@@ -226,34 +229,36 @@ class FinderClass():
             GFFOut.writeORFPeptides(ORF)
             #print "%s"%ORF
         GFFOut.close()
-        
-    def FindMiscalls(self):
+
+    def FindMiscalls(self, genome):
         """This function goes through the ORFs and calls their method for
         determining if they were mispredicted. just a wrapper really
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FindMiscalls"
+            print "Genome has %d chroms totaling %d simple orfs." % (
+                genome.numChromosomes(), genome.numSimpleOrfs() )
         Count = 0
-        TotalORFCount = len(self.AllORFs)
         BagChecker = PGPrimaryStructure.PrimaryStructure(self.OutputPath, self.NucleotideDatabasePath)
         NovelCount = 0
         UnderPredictedCount = 0
-        for ORF in self.AllORFs.values():
-            
-            Status = BagChecker.CheckStructure(ORF)
-            if Status == "NOVEL":
-                NovelCount += 1
-            if Status == "UNDERPREDICTED":
-                UnderPredictedCount += 1
-            Count +=1
-            if (Count %1000) == 0 and self.Verbose:
-                print "Processed %s / %s ORF Objects"%(Count, TotalORFCount)
+        for (chromName, chrom) in genome.chromosomes.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items():
+
+                Status = BagChecker.CheckStructure(ORF)
+                if Status == "NOVEL":
+                    NovelCount += 1
+                if Status == "UNDERPREDICTED":
+                    UnderPredictedCount += 1
+                Count +=1
+                if (Count %1000) == 0 and self.Verbose:
+                    print "Processed %s ORF Objects" % (Count)
         #done with loop
         print "Processed %s. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
-        print "Named %s, hypothetical %s"%(BagChecker.NamedCount, BagChecker.HypotheticalCount)
-        BagChecker.OutputGCFiles()
-        BagChecker.OutputLenFiles()
-            
+#        print "Named %s, hypothetical %s"%(BagChecker.NamedCount, BagChecker.HypotheticalCount)
+#        BagChecker.OutputGCFiles()
+#        BagChecker.OutputLenFiles()
+
 
     def CreateORFs(self):
         """This function is to make ORF objects (GenomeLocationForORFs)
@@ -300,10 +305,10 @@ class FinderClass():
         if ORFName in self.ProteomicallyObservedORFs:
             return 1
         return 0
-                
-    def MapAllPeptides(self):
+
+    def MapAllPeptides(self,genome):
         """
-        Parameters: None
+        Parameters: Genome object to add peptides too
         Return: None
         Description: Go through self.AllPeptides, and find their location 
         within ORFs. We make LocatedProtein objects out of these. This sets 
@@ -315,6 +320,7 @@ class FinderClass():
             print "ProteogenomicsPostProcessing.py:MapAllPeptides"
         Count = 0
         LocationCount=0
+        inGenomeCount = 0
         for (Aminos, PValue) in self.AllPeptides.items():
             Count += 1
             if (Count %1000) == 0 and self.Verbose:
@@ -325,15 +331,22 @@ class FinderClass():
                 continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
             self.AllLocatedPeptides.extend(LocatedPeptides)
             LocationCount += len(LocatedPeptides)
-            
+
             #now put into the observedORF stuff
             for Location in LocatedPeptides:
+
+                orfInGenome = genome.getOrf( Location.ORFName )
+                if orfInGenome:
+                    inGenomeCount += 1
+                    orfInGenome.addLocatedPeptide( Location )
+
                 if not Location.ORFName in self.ProteomicallyObservedORFs:
                     self.ProteomicallyObservedORFs.append(Location.ORFName)
 
+
         self.AllPeptides = {}  # set to null just for the memory savings
         if self.Verbose:
-            print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations"%(Count, LocationCount)
+            print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in genome"%(Count, LocationCount,inGenomeCount)
 
     def MapPredictedProteins(self):
         """Parameters: None
@@ -394,7 +407,7 @@ class FinderClass():
             self.SpectrumCount += 1
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:g:d:w:uvi:o:p:CMG:Wn:")
+        (Options, Args) = getopt.getopt(Arguments, "b:r:g:d:w:uvi:o:p:CMG:Wn:")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -405,6 +418,12 @@ class FinderClass():
                     print UsageInfo
                     sys.exit(1)
                 self.InspectResultsPath = Value
+            if Option == "-b":
+                if not os.path.exists(Value):
+                    print "** Error: couldn't find input file '%s'\n\n"%Value
+                    print UsageInfo
+                    sys.exit(1)
+                self.GenbankPath = Value
             if Option == "-g":
                 if not os.path.exists(Value):
                     print "** Error: couldn't find results file '%s'\n\n"%Value
