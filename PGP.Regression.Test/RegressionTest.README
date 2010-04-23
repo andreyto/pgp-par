@@ -1,0 +1,35 @@
+Regression Test for the Proteogenomics Pipeline
+
+Regression tests are meant to test the entire code set, as opposed to unit tests which test
+only a small piece of code.  I have built in several regression tests that are an attempt
+to be comprehensive in the scope of things that we discover and deal with in the PGP code.
+
+
+Regression Test 1 - Yersinia Pestis Data on NC_004088
+- PSM Input: two inspect results files: A412F072.rescore.txt, and A704C037.rescore.txt
+                  FakeResults.Conflict.txt
+- Database Input: NC_004088.fna - the nucleotide sequence
+                  NC_004088.6frame.RS.trie - the six frame translation 
+                  NC_004088.trie - the predicted proteome
+
+- Run Details for file A412F072.rescore.txt - there are 3 proteins represented with 
+  14 peptides from 40 spectra.  One of these ORFs is undercalled
+
+- Run Details for file A704C037.rescore.txt - there are 4 proteins represented with
+  17 peptides from 27 spectra. One of these ORFs in novel
+
+- Run Details for file FakeResults.Conflict.txt - This file is made up.  The results
+  were handpicked to trigger problems.  
+  - First, there are three peptides which map to y1913, but are not tryptic, so they
+  should get killed with a filter and this open reading frame should not get analyzed 
+  - Second there are three peptides from butC, and in a shadow ORF there are two other
+  peptides, This should be a conflict.
+  - Third, there are three peptides from y1917, one of which has upstream sequence, but
+  there is no start codon available.  This should get pointed out as unresolvable.
+  - Fourth, there are three peptides which overlap hypothetical y2378 which has no
+  peptides.  This should get proposed as a novel/dubious pair.
+  - Fifth, there are three peptides which overlap the named, but unsupported y2379. This
+  should be brought up as questionable novel.
+  - Sixth, there are three peptides for y2380, and three in a conflicting frame.  This
+  should be brought up as a conflict.
+
