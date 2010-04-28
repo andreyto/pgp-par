@@ -122,9 +122,7 @@ class Test(unittest.TestCase):
             self.assertEqual(LocatedProtein.GetORFName(), self.ProteinORFLocation[Name])
 
     def testOpenReadingFrame_GetFivePrime(self):
-        """Name: testMappingOpenReadingFrame
-        Description: does the OpenReadingFrame get created correctly?
-        """
+        "Access 5' ORF peptide correctly."
         self.SetUpPeptides()
         ORFDatabases = ["NC_004837.6frame.trie",]
         Mapper = PeptideMapper.PeptideMappingClass()
