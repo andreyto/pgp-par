@@ -48,11 +48,10 @@ GenomicLocationForPeptide object, TVETGQEK
 import unittest
 import PeptideMapper
 import PGPeptide
-
-
+import bioseq
 
 class Test(unittest.TestCase):
-    
+
 
     def SetUpPeptides(self):
         """ reusable code to get peptides and coords
@@ -155,7 +154,41 @@ class Test(unittest.TestCase):
                 self.assertEqual(Peptide.aminos, "AGITAGYQETR")
             if ORF.name == "Protein453":
                 self.assertEqual(Peptide.aminos, "TEGTVSYEQK")    
-        
+
+    def testORFfromFasta(self):
+        'ORFs get created correctly from a 6frame fasta.'
+        reader = bioseq.SequenceIO( 'NC_004837.6frame.fa' )
+        genome = PGPeptide.Genome()
+        chrom = 'NC_004837'
+        genome.makeChromosome(chrom)
+        for seq in reader:
+            if 'Protein229.Chr:NC_004837.Frame2.StartNuc6656.Strand+' == seq.acc:
+                orf229 = PGPeptide.OpenReadingFrame(FastaHeader=seq.acc, AASequence=seq.seq)
+                self.assertEqual('+',orf229.GetStrand())
+                self.assertEqual(6656,orf229.location.start)
+                self.assertEqual(6656+(len(seq.seq)*3 # 3 nuc's per pep
+                                      - 1 # base based coords subtract 1 on length to dist
+                                      + 3 # include the stop codon
+                                      ),
+                                 orf229.location.stop)
+                self.assertEqual(chrom, orf229.chromosome)
+                self.assertEqual('Protein229', orf229.name)
+                genome.addSimpleOrf( chrom, orf229)
+
+            if 'Protein453.Chr:NC_004837.Frame3.StartNuc5900.Strand-' == seq.acc:
+                orf453 = PGPeptide.OpenReadingFrame(FastaHeader=seq.acc, AASequence=seq.seq)
+                self.assertEqual('-',orf453.GetStrand())
+                self.assertEqual(5900-(len(seq.seq)*3 # 3 nuc's per pep
+                                      - 1 # base based coords subtract 1 on length to dist
+                                      + 3 # include the stop codon
+                                      ),
+                                 orf453.location.start)
+                self.assertEqual(5900,orf453.location.stop)
+                self.assertEqual(chrom, orf453.chromosome)
+                self.assertEqual('Protein453', orf453.name)
+                genome.addSimpleOrf( chrom, orf453 )
+
+        self.assertEqual(2, genome.numSimpleOrfs())
 
 if __name__ == "__main__":
     unittest.main()

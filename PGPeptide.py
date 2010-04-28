@@ -541,6 +541,12 @@ class Chromosome(object):
         self.pepOnlyOrfs= {} # ORFs created only via peptides
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
+    def addSimpleOrf(self,orf):
+        if self.simpleOrfs.has_key( orf.name ):
+            raise KeyError("Duplicate orf %s in chrom %s"%(orf.name,self.accession))
+        else:
+            self.simpleOrfs[ orf.name ] = orf
+
     def getOrf(self,protName):
         "Given an ORFName returns the orf regardless of simple or complex membership"
         if self.simpleOrfs.has_key( protName ):
@@ -566,6 +572,9 @@ class Genome(object):
     def __init__(self,taxon=None):
         self.taxon = taxon
         self.chromosomes = {}
+
+    def addSimpleOrf(self,chromName, orf):
+        self.chromosomes[ chromName ].addSimpleOrf( orf )
 
     def numChromosomes(self):
         return len(self.chromosomes)
