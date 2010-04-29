@@ -186,7 +186,8 @@ class Test(unittest.TestCase):
                 self.assertEqual('Protein453', orf453.name)
                 genome.addOrf( orf453, 'Simple' )
 
-        self.assertEqual(2, genome.numSimpleOrfs())
+        self.assertEqual(2, genome.numOrfs())
+        self.assertEqual(2, genome.numOrfs('Simple'))
 
 if __name__ == "__main__":
     unittest.main()

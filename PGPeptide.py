@@ -502,14 +502,12 @@ class GFFPeptide(GFFIO.File):
 
     ### Inherits the constructor of the GFFIO.File ###
 
-    def generateORFs(self, sequenceFile, genome, definitionParser=ORFFastaHeader):
+    def generateORFs(self, sequenceFile, genome):
         '''Parameters: A sequence file supported by SequenceIO, a Genome() object
         to populate with OpenReadingFrame objects and their LocatedPeptides,
         and optionally a class for parsing the sequence accession.
         Description: Reads the peptides from the GFF, and the ORFs from the sequence file
         '''
-        seqReader = bioseq.SequenceIO( sequenceFile )
-
         # Read in the peptides from the GFF file, creating ORFs as needed
         for gffRec in self:
             protein = gffRec.attributes['Parent']
@@ -525,23 +523,9 @@ class GFFPeptide(GFFIO.File):
             peptide = LocatedPeptide( gffRec.attributes['Name'], location)
             peptide.name = gffRec.attributes['ID']
             peptide.bestScore = gffRec.score
-
             orf.addLocatedPeptide( peptide )
 
-        # Read in only the needed ORFs from the sequence file
-        for seq in seqReader:
-            seqDef = definitionParser( seq.acc )
-            chromName = seqDef.Chromosome
-
-            if genome.chromosomes.has_key( chromName ):
-                chrom = genome.chromosomes[ chromName ]
-                # Simple ORFs should have protein's already, so only populate the pepOnlyOrfs
-                if chrom.pepOnlyOrfs.has_key( seqDef.ORFName ):
-                    orf = chrom.pepOnlyOrfs[ seqDef.ORFName ]
-                    orf.aaseq = seq.seq
-                    orf.location = GenomicLocation.FromHeader( seqDef,
-                                                              len(seq.seq),
-                                                              addStop=True)
+        genome.addSeqToPepOnlyOrfs( sequenceFile )
 
     def writeORFPeptides(self, orf):
         gffRec = GFFIO.Record() #create empty record.  add values below then write each one
@@ -622,10 +606,15 @@ class Genome(object):
     def numChromosomes(self):
         return len(self.chromosomes)
 
-    def numSimpleOrfs(self):
+    def numOrfs(self,orfType='All'):
         count = 0
         for (name,chrom) in self.chromosomes.items():
-            count += len(chrom.simpleOrfs)
+            if orfType in ['All','Simple']:
+                count += len(chrom.simpleOrfs)
+            if orfType in ['All','PepOnly']:
+                count += len(chrom.pepOnlyOrfs)
+            if orfType in ['All','Complex']:
+                count += len(chrom.complexOrfs)
         return count
 
     def makeChromosome(self,accession,seq=None):
@@ -654,6 +643,22 @@ class Genome(object):
         for (name,chrom) in self.chromosomes.items():
             filteredOrfDict = filterList.ApplyAllFilters( chrom.simpleOrfs )
             chrom.simpleOrfs = filteredOrfDict
+
+    def addSeqToPepOnlyOrfs( self, sequenceFile, definitionParser=ORFFastaHeader):
+        seqReader = bioseq.SequenceIO( sequenceFile )
+        # Read in only the needed ORFs from the sequence file
+        for seq in seqReader:
+            seqDef = definitionParser( seq.acc )
+            chromName = seqDef.Chromosome
+
+            if self.chromosomes.has_key( chromName ):
+                chrom = self.chromosomes[ chromName ]
+                if chrom.pepOnlyOrfs.has_key( seqDef.ORFName ):
+                    orf = chrom.pepOnlyOrfs[ seqDef.ORFName ]
+                    orf.aaseq = seq.seq
+                    orf.location = GenomicLocation.FromHeader( seqDef,
+                                                              len(seq.seq),
+                                                              addStop=True)
 
 ###############################################################################
 

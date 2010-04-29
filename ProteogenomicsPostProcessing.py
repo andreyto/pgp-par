@@ -167,7 +167,7 @@ class FinderClass():
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FilterORFs"
             print "Genome has %d chroms totaling %d simple orfs." % (
-                genome.numChromosomes(), genome.numSimpleOrfs() )
+                genome.numChromosomes(), genome.numOrfs('Simple') )
 
         #this is the way we do filters.  We create all the filters that
         #we want to use, and then put them into th efilter list. It does the 
@@ -236,14 +236,14 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FindMiscalls"
-            print "Genome has %d chroms totaling %d simple orfs." % (
-                genome.numChromosomes(), genome.numSimpleOrfs() )
+            print "Genome has %d chroms totaling %d simple orfs, %d pepOnly." % (
+                genome.numChromosomes(), genome.numOrfs('Simple'), genome.numOrfs('PepOnly') )
         Count = 0
         BagChecker = PGPrimaryStructure.PrimaryStructure(self.OutputPath, self.NucleotideDatabasePath)
         NovelCount = 0
         UnderPredictedCount = 0
         for (chromName, chrom) in genome.chromosomes.items():
-            for (orfName,ORF) in chrom.simpleOrfs.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
 
                 Status = BagChecker.CheckStructure(ORF)
                 if Status == "NOVEL":
@@ -341,13 +341,15 @@ class FinderClass():
                     orfInGenome.addLocatedPeptide( Location )
                 else:
                     # ORF not in genome, create a Peptide only orf
-                    orf = OpenReadingFrame(name=Location.ORFName)
-                    orf.location = Location
+                    orf = PGPeptide.OpenReadingFrame(name=Location.ORFName)
+                    orf.location = Location.location
                     genome.addOrf( orf, 'PepOnly' )
+                    orf.addLocatedPeptide( Location )
 
                 if not Location.ORFName in self.ProteomicallyObservedORFs:
                     self.ProteomicallyObservedORFs.append(Location.ORFName)
 
+        genome.addSeqToPepOnlyOrfs( self.ORFDatabasePaths )
 
         self.AllPeptides = {}  # set to null just for the memory savings
         if self.Verbose:
@@ -472,7 +474,8 @@ class FinderClass():
                 self.GFFOutputPath = Value
             if Option == "-W":
                 self.VerboseWarnings =1
-        if not OptionsSeen.has_key("-w") or not OptionsSeen.has_key("-d") or not OptionsSeen.has_key("-o"):
+        #if not OptionsSeen.has_key("-w") or not OptionsSeen.has_key("-d") or not OptionsSeen.has_key("-o"):
+        if not OptionsSeen.has_key("-w") or not OptionsSeen.has_key("-o"):
             print UsageInfo
             sys.exit(1)
         if not OptionsSeen.has_key("-r")  and not OptionsSeen.has_key("-g"):
