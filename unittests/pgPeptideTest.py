@@ -61,8 +61,8 @@ class Test(unittest.TestCase):
         gffReader.generateORFs( Test.SixFrame, genome )
 
         self.assertEqual( 2, len(chrom.pepOnlyOrfs) )
-        orf229 = chrom.pepOnlyOrfs['Protein229']
-        orf453 = chrom.pepOnlyOrfs['Protein453']
+        orf229 = chrom.getOrf('Protein229')
+        orf453 = chrom.getOrf('Protein453')
         self.assertEqual( 68, orf229.numPeptides())
         self.assertEqual( 36, orf453.numPeptides())
 
@@ -109,6 +109,7 @@ class Test(unittest.TestCase):
 
         gffOut = 't.gff'
         gffWriter = PGPeptide.GFFPeptide( gffOut, 'w' )
+        chrom1Peps = chrom.numORFsWithPeptides()
         for orf in chrom.pepOnlyOrfs.values():
             gffWriter.writeORFPeptides( orf )
 
@@ -122,7 +123,7 @@ class Test(unittest.TestCase):
             self.assertEqual( orf1.name, orf2.name )
             self.assertEqual( orf1.chromosome, orf2.chromosome )
             self.assertEqual( orf1.numPeptides(), orf2.numPeptides() )
-            
+
             for peps in zip(orf1.peptideIter(), orf2.peptideIter()):
                 self.assertEqual( peps[0].aminos,     peps[1].aminos)
                 self.assertEqual( peps[0].bestScore , peps[1].bestScore)
@@ -131,6 +132,8 @@ class Test(unittest.TestCase):
                 self.assertEqual( peps[0].Strand(),   peps[1].Strand())
                 self.assertEqual( peps[0].name,       peps[1].name)
 
+        self.assertEqual( chrom1Peps, chrom.numORFsWithPeptides())
+
         os.remove( gffOut )
 
     def testChromsomeGBInput(self):
@@ -138,12 +141,13 @@ class Test(unittest.TestCase):
 
         gbkFile  = '../PGP.Regression.Test/NC_004088.gbk'
         sixFrame = '../PGP.Regression.Test/NC_004088.6frame.RS.fasta'
-        chromReader = PGPeptide.GenbankChromosomeReader(gbkFile,sixFrame) 
+        chromReader = PGPeptide.GenbankChromosomeReader(gbkFile,sixFrame)
         genome = chromReader.locateOrfs()
         self.assertEqual( 1, genome.numChromosomes())
         acc = 'NC_004088'
         self.assertEqual( acc, genome.chromosomes.keys()[0] )
         self.assertEqual( 4086, len( genome.chromosomes[acc].simpleOrfs ))
+        self.assertEqual( 0, genome.chromosomes[acc].numORFsWithPeptides())
 
 
 if __name__ == "__main__":

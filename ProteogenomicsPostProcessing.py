@@ -339,6 +339,11 @@ class FinderClass():
                 if orfInGenome:
                     inGenomeCount += 1
                     orfInGenome.addLocatedPeptide( Location )
+                else:
+                    # ORF not in genome, create a Peptide only orf
+                    orf = OpenReadingFrame(name=Location.ORFName)
+                    orf.location = Location
+                    genome.addOrf( orf, 'PepOnly' )
 
                 if not Location.ORFName in self.ProteomicallyObservedORFs:
                     self.ProteomicallyObservedORFs.append(Location.ORFName)

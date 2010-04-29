@@ -171,7 +171,7 @@ class Test(unittest.TestCase):
                                  orf229.location.stop)
                 self.assertEqual(chrom, orf229.chromosome)
                 self.assertEqual('Protein229', orf229.name)
-                genome.addSimpleOrf( chrom, orf229)
+                genome.addOrf( orf229, 'Simple' )
 
             if 'Protein453.Chr:NC_004837.Frame3.StartNuc5900.Strand-' == seq.acc:
                 orf453 = PGPeptide.OpenReadingFrame(FastaHeader=seq.acc, AASequence=seq.seq)
@@ -184,7 +184,7 @@ class Test(unittest.TestCase):
                 self.assertEqual(5900,orf453.location.stop)
                 self.assertEqual(chrom, orf453.chromosome)
                 self.assertEqual('Protein453', orf453.name)
-                genome.addSimpleOrf( chrom, orf453 )
+                genome.addOrf( orf453, 'Simple' )
 
         self.assertEqual(2, genome.numSimpleOrfs())
 

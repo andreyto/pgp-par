@@ -518,7 +518,7 @@ class GFFPeptide(GFFIO.File):
             if not orf:
                 # ORF doesn't exist in chromosome, so add as an pepOnlyOrf
                 orf = OpenReadingFrame(name=protein)
-                chrom.pepOnlyOrfs[ protein ] = orf
+                chrom.addOrf( orf, 'PepOnly' )
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand, gffRec.seqid)
             # Peptide is encoded as the name, since it's generally short
@@ -578,11 +578,17 @@ class Chromosome(object):
         self.pepOnlyOrfs= {} # ORFs created only via peptides
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
-    def addSimpleOrf(self,orf):
-        if self.simpleOrfs.has_key( orf.name ):
+    def addOrf(self,orf,orfType):
+        orfHash = self.simpleOrfs
+        if orfType == 'PepOnly':
+            orfHash = self.pepOnlyOrfs
+        elif orfType == 'Complex':
+            orfHash = self.complexOrfs
+
+        if orfHash.has_key( orf.name ):
             raise KeyError("Duplicate orf %s in chrom %s"%(orf.name,self.accession))
         else:
-            self.simpleOrfs[ orf.name ] = orf
+            orfHash[ orf.name ] = orf
 
     def getOrf(self,protName):
         "Given an ORFName returns the orf regardless of simple or complex membership"
@@ -610,8 +616,8 @@ class Genome(object):
         self.taxon = taxon
         self.chromosomes = {}
 
-    def addSimpleOrf(self,chromName, orf):
-        self.chromosomes[ chromName ].addSimpleOrf( orf )
+    def addOrf(self, orf, orfType):
+        self.chromosomes[ orf.chromosome ].addOrf( orf, orfType )
 
     def numChromosomes(self):
         return len(self.chromosomes)
@@ -713,12 +719,12 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     locProt.ORFName = tmpOrf.name
                     # and add it to the ORF
                     tmpOrf.addLocatedProtein( locProt )
-                    chrom.addSimpleOrf( tmpOrf )
+                    chrom.addOrf( tmpOrf, 'Simple' )
 
                 elif len(cds.sub_features) > 0:
-                    chrom.complexOrfs[ tmpOrf.name ] = tmpOrf
+                    chrom.addOrf( tmpOrf, 'Complex' )
                 else:
-                    chrom.complexOrfs[ tmpOrf.name ] = tmpOrf
+                    chrom.addOrf( tmpOrf, 'Complex' )
             else:
                 # ORF without a 3' mapping to a protein
                 unusedOrfs += 1
