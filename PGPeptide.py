@@ -10,9 +10,8 @@ class GenomicLocation(object):
         """Start and stop of a region on a sequence.
         Stop must be > then start.
         """
-        if start > stop:
-            print "you tried %s <? %s"%(start, stop)
-            raise ValueError("Start > Stop")
+        if start > stop or stop < 0 or start < 0:
+            raise ValueError("Start %d > Stop %d" % (start,stop))
 
         if not strand in ['+','-']:
             raise ValueError("strand must be + or -")
@@ -24,13 +23,14 @@ class GenomicLocation(object):
         self.chromosome = chromosome
 
     @classmethod
-    def FromHeader(self, ParsedHeader, AALength, aaOffset=0, addStop=False):
+    def FromHeader(self, ParsedHeader, AALength, offsetInAA=0, addStop=False):
         """
         Parameters: ORFFastaHeader object, length of the amino acids in the ORF
-        addStop is a boolean. On true it includes 1 extra codon at the 3' end.
-        aaOffset doesn't do anything yet
+        addStop: is a boolean. On true it includes 1 extra codon at the 3' end.
+        offsetInAA: offset location by this many peptides from the AA seq start
+
         Return: GenomicLocation instance
-        Description: Creates a GenomicLocation from the information in the header
+        Description: Make a GenomicLocation from the information in the header
         """
         FivePrime = ParsedHeader.Start
         ThreePrime = -1 #set below
@@ -41,14 +41,31 @@ class GenomicLocation(object):
         if addStop:
             offset3Prime = 3
 
-        #now some math to figure out the stop nuc
+        # now some math to figure out the stop nuc
+        # ie on minus strand subtract from start on + strand add
         if Strand == "-":
+            '''For the visually minded:  codons on the reverse listed below
+        1   4   7   10  13  16  19
+        AAA TTT CCC GGG AAA TTT CCC
+        TTT AAA GGG CCC TTT AAA GGG AGT
+         F   K   G   P   F   K   G   *
+        Peptide GKFPG starts at position 21 (last C) and includes all bases up
+        to 7, so we should do start = 7, stop = 21
+        Peptide KFPG starts at position 18. So start protein 21 minus AA offset 3
+        '''
+            FivePrime -= offsetInAA * 3
             CodingThreePrime = FivePrime - (AALength * 3) + 1
             ThreePrime = CodingThreePrime - offset3Prime
+            if ThreePrime < 1:
+                print "Warning setting negative start to 1 %d" % ThreePrime
+                ThreePrime = 1
             SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand, Chrom)
         else:
-            #now the position.  We first get the protein start nuc, and then offset to the peptide start
-            CodingThreePrime = FivePrime + (AALength * 3) - 1 # we do a minus one because the bases are inclusive
+            # now the position.  We first get the protein start nuc, and then
+            # offset to the peptide start
+            # we do a minus one because the bases are inclusive
+            FivePrime += offsetInAA * 3
+            CodingThreePrime = FivePrime + (AALength * 3) - 1
             ThreePrime = CodingThreePrime + offset3Prime
             SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand, Chrom)
 
@@ -455,6 +472,10 @@ class ORFFastaHeader(object):
         self.Strand = None
         self.String = Header
         self.Parse(Header)
+
+    def __str__(self):
+        return '%s.Chr:%s.Frame%d.StartNuc%d.Strand%s' % (
+            self.ORFName, self.Chromosome, self.Frame,self.Start,self.Strand )
 
     def Parse(self, String):
         """Parameters: the fasta header line

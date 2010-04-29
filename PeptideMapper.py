@@ -120,8 +120,6 @@ class PeptideMappingClass:
         Protein.AddOneAminoAcidFivePrime() #adding back what we took off because of the NOTE
         Protein.AddStopCodon()
         return Protein
-        
-        
 
 
     def MapNucleotideLocation(self, ParsedORFInfo, StartInProteinSpace, LenAminos):
@@ -132,54 +130,9 @@ class PeptideMappingClass:
         both proteins and peptides want to use this method, and they need other stuff different.
         so shared code goes in one place, no?
         """
-        (Start, Stop) = self.GetStartStop(LenAminos, StartInProteinSpace, ParsedORFInfo.Start, ParsedORFInfo.Strand)
-        SimpleLocation = PGPeptide.GenomicLocation(Start, Stop, ParsedORFInfo.Strand)
-        SimpleLocation.chromosome = ParsedORFInfo.Chromosome
-        SimpleLocation.frame = ParsedORFInfo.Frame
+        SimpleLocation = PGPeptide.GenomicLocation.FromHeader(
+            ParsedORFInfo,
+            LenAminos,
+            offsetInAA=StartInProteinSpace
+        )
         return SimpleLocation
-
-
-    def GetStartStop(self, LenAminos, PeptideStartAA, ORFStartNucleotide, Strand):
-        """
-        Parameters: amino acid string, index of aminos within protein, index of ORF within dna
-        Return: start and stop of aminos on the dna
-        Description: Using the supplied offsets, we get nucleotide coordinates for the amino
-        acid sequence.  It is important to reiterate, that start < stop.  ALWAYS.  The words start
-        and stop do not in any way refer to 5' or 3'.
-        """
-        PeptideStartNucleotide = -1 #set as impossible values for sanity check below
-        PeptideStopNucleotide = -1
-        if (Strand == "-"):
-            (PeptideStartNucleotide, PeptideStopNucleotide) = self.GetCoordsRevStrand(LenAminos, PeptideStartAA, ORFStartNucleotide)
-        else:
-            #now the position.  We first get the protein start nuc, and then offset to the peptide start
-            PeptideStartOffset = PeptideStartAA * 3 # because StartLocation is the start in amino acid space
-            PeptideStartNucleotide = PeptideStartOffset + ORFStartNucleotide
-            PeptideStopNucleotide = PeptideStartNucleotide + (LenAminos * 3) - 1 # we do a minus one because the bases are inclusive
-            
-        if (PeptideStartNucleotide < 0) or (PeptideStopNucleotide < 0):
-            ##SNAFU!!!!!!
-            print "ERROR: PeptideMapper:GetStartStop"
-            print "##### Can't find peptide start or stop for %s"%self.CurrentAminos
-            return
-        return(PeptideStartNucleotide, PeptideStopNucleotide) 
-
-    def GetCoordsRevStrand(self, LenAminos, PeptideStartAA, ORFStartNucleotide):
-        """Separate method because doing math on the reverse strand is difficult.
-        For the visually minded:  codons on the reverse listed below
-        1   4   7   10  13  16  19
-        AAA TTT CCC GGG AAA TTT CCC
-        TTT AAA GGG CCC TTT AAA GGG AGT
-         F   K   G   P   F   K   G   *
-        Peptide GKFPG starts at position 21 (last C) and includes all bases up to 7, so we should do 
-        start = 7, stop = 21
-        Peptide KFPG starts at position 18.  So start protein (21) minus AA offset (3)
-        NOTE: this gets the start<stop version, not the 5' and 3' version.
-        """
-        PeptideStartOffset = PeptideStartAA *3
-        PeptideStartNucleotide = ORFStartNucleotide - PeptideStartOffset
-        PeptideStopNucleotide = PeptideStartNucleotide - (LenAminos*3) + 1
-        #now because this is on the reverse, and we requires start< stop, we send
-        #them back in the reverse order
-        return (PeptideStopNucleotide, PeptideStartNucleotide)
-
