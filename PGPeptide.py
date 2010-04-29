@@ -6,7 +6,7 @@ import bioseq
 ###############################################################################
 
 class GenomicLocation(object):
-    def __init__(self,start,stop,strand):
+    def __init__(self,start,stop,strand,chromosome=None):
         """Start and stop of a region on a sequence.
         Stop must be > then start.
         """
@@ -21,6 +21,39 @@ class GenomicLocation(object):
         self.__stop = stop
         self.__frame = None
         self.strand = strand
+        self.chromosome = chromosome
+
+    @classmethod
+    def FromHeader(self, ParsedHeader, AALength, aaOffset=0, addStop=False):
+        """
+        Parameters: ORFFastaHeader object, length of the amino acids in the ORF
+        addStop is a boolean. On true it includes 1 extra codon at the 3' end.
+        aaOffset doesn't do anything yet
+        Return: GenomicLocation instance
+        Description: Creates a GenomicLocation from the information in the header
+        """
+        FivePrime = ParsedHeader.Start
+        ThreePrime = -1 #set below
+        Strand = ParsedHeader.Strand
+        Chrom = ParsedHeader.Chromosome
+        Frame = ParsedHeader.Frame
+        offset3Prime = 0
+        if addStop:
+            offset3Prime = 3
+
+        #now some math to figure out the stop nuc
+        if Strand == "-":
+            CodingThreePrime = FivePrime - (AALength * 3) + 1
+            ThreePrime = CodingThreePrime - offset3Prime
+            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand, Chrom)
+        else:
+            #now the position.  We first get the protein start nuc, and then offset to the peptide start
+            CodingThreePrime = FivePrime + (AALength * 3) - 1 # we do a minus one because the bases are inclusive
+            ThreePrime = CodingThreePrime + offset3Prime
+            SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand, Chrom)
+
+        SimpleLocation.frame = Frame
+        return SimpleLocation
 
     def __str__(self):
         """Parameters: None
@@ -273,11 +306,12 @@ class OpenReadingFrame(object):
         self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
         self.aaseq = AASequence
         self.naseq = None
-        self.chromosome = None
         if FastaHeader:
             ParsedHeader = ORFFastaHeader(FastaHeader)
             self.name = ParsedHeader.ORFName
-            self.SetLocation(ParsedHeader, len(AASequence))
+            self.location = GenomicLocation.FromHeader(ParsedHeader,
+                                                       len(AASequence),
+                                                       addStop=True)
         if name:
             self.name = name
 
@@ -293,32 +327,13 @@ class OpenReadingFrame(object):
                 NumUniquePeptides += 1
         return "%s as %s, %s (%s) peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), NumUniquePeptides, self.location)
 
-    def SetLocation(self, ParsedHeader, AALength):
-        """
-        Parameters: ORFFastaHeader object, length of the amino acids in the ORF
-        Return: none
-        Description: Fill in the information needed for the location object, create
-        and assign object
-        """
-        FivePrime = ParsedHeader.Start
-        ThreePrime = -1 #set below
-        Strand = ParsedHeader.Strand
-        Chromosome = ParsedHeader.Chromosome
-        Frame = ParsedHeader.Frame
-        #now some math to figure out the stop nuc
-        if Strand == "-":
-            CodingThreePrime = FivePrime - (AALength * 3) + 1
-            ThreePrime = CodingThreePrime - 3 #three bases of the stop codon
-            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand)
-        else:
-            #now the position.  We first get the protein start nuc, and then offset to the peptide start
-            CodingThreePrime = FivePrime + (AALength * 3) - 1 # we do a minus one because the bases are inclusive
-            ThreePrime = CodingThreePrime + 3 # three bases of the stop codon are INCLUDED
-            SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand)
+    @property
+    def chromosome(self):
+        return self.location.chromosome
 
-        self.chromosome = Chromosome
-        SimpleLocation.frame = Frame
-        self.location = SimpleLocation
+    @chromosome.setter
+    def chromosome(self,chrom):
+        self.location.chromosome = chrom
 
     def GetTranslation(self):
         """Parameters: none
@@ -482,10 +497,9 @@ class GFFPeptide(GFFIO.File):
             if not orf:
                 # ORF doesn't exist in chromosome, so add as an pepOnlyOrf
                 orf = OpenReadingFrame(name=protein)
-                orf.chromosome = gffRec.seqid
                 chrom.pepOnlyOrfs[ protein ] = orf
 
-            location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand)
+            location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand, gffRec.seqid)
             # Peptide is encoded as the name, since it's generally short
             peptide = LocatedPeptide( gffRec.attributes['Name'], location)
             peptide.name = gffRec.attributes['ID']
@@ -504,7 +518,9 @@ class GFFPeptide(GFFIO.File):
                 if chrom.pepOnlyOrfs.has_key( seqDef.ORFName ):
                     orf = chrom.pepOnlyOrfs[ seqDef.ORFName ]
                     orf.aaseq = seq.seq
-                    orf.SetLocation( seqDef, len(seq.seq))
+                    orf.location = GenomicLocation.FromHeader( seqDef,
+                                                              len(seq.seq),
+                                                              addStop=True)
 
     def writeORFPeptides(self, orf):
         gffRec = GFFIO.Record() #create empty record.  add values below then write each one
@@ -676,7 +692,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     locProt.ORFName = tmpOrf.name
                     # and add it to the ORF
                     tmpOrf.addLocatedProtein( locProt )
-                    chrom.simpleOrfs[ tmpOrf.name ] = tmpOrf
+                    chrom.addSimpleOrf( tmpOrf )
 
                 elif len(cds.sub_features) > 0:
                     chrom.complexOrfs[ tmpOrf.name ] = tmpOrf
