@@ -2,7 +2,7 @@
 
 UsageInfo = """ProteogenomicsPostProcessing.py
 Given a set of annotation for some spectra, a genome, and a proteome
-we perform a variety of proteogenomic analyses. 
+we perform a variety of proteogenomic analyses.
 1. map peptides to the genome
 2. cluster and filter
 3. Find mis-predicted proteins
@@ -12,9 +12,9 @@ Required Parameters
  -r [FileName] File or directory of Peptide/Spectrum Match results.
  -g [FileName] GFF file of mapped peptides (alternate with -r) (single file)
  -o [Trie file] ORF Database used for search
- -d [Trie file] Proteome Database used for search
+ -b [FileName] The genbank file for the genome includes proteins and nucleotides
  -w [FileName]  Output file
- 
+
 Additional Parameters
  -i [int] Interpeptide distance cutoff for clustering (default 1000 bp)
  -u   Flag for requiring peptide uniqueness within the database.  Default
@@ -70,7 +70,6 @@ class FinderClass():
         self.SearchForCleavage = 1
         self.OutputPeptidesToGFF = 0
         self.GFFOutputPath = "RenameYourOutput.gff"
-        self.NucleotideDatabasePath = None
 
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
@@ -239,10 +238,11 @@ class FinderClass():
             print "Genome has %d chroms totaling %d simple orfs, %d pepOnly." % (
                 genome.numChromosomes(), genome.numOrfs('Simple'), genome.numOrfs('PepOnly') )
         Count = 0
-        BagChecker = PGPrimaryStructure.PrimaryStructure(self.OutputPath, self.NucleotideDatabasePath)
         NovelCount = 0
         UnderPredictedCount = 0
         for (chromName, chrom) in genome.chromosomes.items():
+            BagChecker = PGPrimaryStructure.PrimaryStructure(
+                self.OutputPath, str(chrom.sequence) )
             for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
 
                 Status = BagChecker.CheckStructure(ORF)
@@ -449,12 +449,6 @@ class FinderClass():
                     print UsageInfo
                     sys.exit(1)
                 self.ORFDatabasePaths.append( Value)
-            if Option == "-n":
-                if not os.path.exists(Value):
-                    print "**Error: Could not find nucloetide database file %s\n\n"%Value
-                    print UsageInfo
-                    sys.exit(1)
-                self.NucleotideDatabasePath= Value
             if Option == "-w":
                 self.OutputPath = Value
             if Option == "-u":

@@ -18,11 +18,11 @@ class PrimaryStructure:
         -
     Functions: CheckStructure(PGPeptide.OpenReadingFrame)
     """
-    def __init__(self, OutputPath, NucleotidePath):
+    def __init__(self, OutputPath, NucleotideSequence):
         """Parameters: none 
         Return: none
         Description: trivial constructor 
-        """        
+        """
         #open a file handle to print out stuff
         (Path, Ext) = os.path.splitext(OutputPath)
         self.OutputStub = Path
@@ -38,15 +38,8 @@ class PrimaryStructure:
         self.NotNovelGC = []
         self.NovelLen = []
         self.NotNovelLen = []
-        #set up the nucleotide fasta streamer
-        self.NucleotideFastaPath = NucleotidePath
-        self.DNAReader = bioseq.SequenceIO(self.NucleotideFastaPath)
-        #HUGE HACK. today we know that this will be used for single Chromosome DNA fasta files, so there will 
-        #only be one entry in the fasta to iterate over
-        self.DNA = None
-        for seq in self.DNAReader: # the object DNAReader has an __iter__ function which makes it iteratable
-            self.DNA = seq #the seq object, sequence itself is in seq.seq
-        
+        self.DNA = NucleotideSequence
+
     def CheckStructure(self, ORF):
         """
         Parameters: a PGPeptide.OpenReadingFrame object
@@ -133,7 +126,7 @@ class PrimaryStructure:
         # I want to get the GC content , and store that separately
         #for the Novel ones and the normal ones
         (Start, Stop) = ORF.GetObservedDNACoords()
-        Sequence = self.DNA.seq[Start:Stop]
+        Sequence = self.DNA[Start:Stop]
         if Sequence:
             GC = self.CalculateGC(Sequence)
         else:
