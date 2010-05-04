@@ -644,6 +644,12 @@ class Genome(object):
             filteredOrfDict = filterList.ApplyAllFilters( chrom.simpleOrfs )
             chrom.simpleOrfs = filteredOrfDict
 
+            filteredOrfDict = filterList.ApplyAllFilters( chrom.pepOnlyOrfs )
+            chrom.pepOnlyOrfs = filteredOrfDict
+
+            filteredOrfDict = filterList.ApplyAllFilters( chrom.complexOrfs )
+            chrom.complexOrfs = filteredOrfDict
+
     def addSeqToPepOnlyOrfs( self, sequenceFile, definitionParser=ORFFastaHeader):
         seqReader = bioseq.SequenceIO( sequenceFile )
         # Read in only the needed ORFs from the sequence file
