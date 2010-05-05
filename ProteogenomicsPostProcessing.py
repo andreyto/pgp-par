@@ -73,8 +73,8 @@ class FinderClass():
 
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
-        chromReader = PGPeptide.GenbankChromosomeReader(self.GenbankPath, self.ORFDatabasePaths)
-        genome = chromReader.locateOrfs()
+        chromReader = PGPeptide.GenbankGenomeReader(self.GenbankPath, self.ORFDatabasePaths)
+        genome = chromReader.makeGenomeWithProteinORFs()
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
         if self.InspectResultsPath:
             self.ParseInspect( self.InspectResultsPath )
@@ -85,8 +85,6 @@ class FinderClass():
             gffReader = PGPeptide.GFFPeptide( self.GFFInputPath )
             gffReader.generateORFs( self.ORFDatabasePaths, genome )
 
-#        self.MapPredictedProteins()
-#        self.CreateORFs()
         self.FilterORFs(genome)
 
         if self.OutputPeptidesToGFF:
@@ -113,9 +111,7 @@ class FinderClass():
             List.append(Normalized)
         Histogram = BasicStats.CreateHistogram(List, 0, 0.05)
         BasicStats.PrettyPrintHistogram(Histogram, None)
-          
 
-    
     def FindOverlappingDubiousGeneCalls(self):
         """Parameters: none
         Return: none
@@ -165,8 +161,8 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:FilterORFs"
-            print "Genome has %d chroms totaling %d simple orfs." % (
-                genome.numChromosomes(), genome.numOrfs('Simple') )
+            print "Genome has %d chroms totaling %d simple orfs, %d pepOnly." % (
+                genome.numChromosomes(), genome.numOrfs('Simple'), genome.numOrfs('PepOnly') )
 
         #this is the way we do filters.  We create all the filters that
         #we want to use, and then put them into th efilter list. It does the 
@@ -188,8 +184,6 @@ class FinderClass():
             print "ProteogenomicsPostProcessing.py:AnalyzeCleavage"
         for ORF in self.AllORFs.values():
             PGCleavageAnalysis.Analysis(ORF, Enzymes)
-
-
 
     def LoadResultsFromGFF(self, GFFFile):
         """Parameters: GFF file path
@@ -223,7 +217,7 @@ class FinderClass():
         makes a GFF File containing all of them.  
         """
         GFFOut = PGPeptide.GFFPeptide(self.GFFOutputPath, "w") #creates my GFF converter. 'w' parameter is for writing
-        
+
         for ORF in self.AllORFs.values(): # we cycle through the ORFs, writing all their located peptides
             GFFOut.writeORFPeptides(ORF)
             #print "%s"%ORF
@@ -243,6 +237,9 @@ class FinderClass():
         for (chromName, chrom) in genome.chromosomes.items():
             BagChecker = PGPrimaryStructure.PrimaryStructure(
                 self.OutputPath, str(chrom.sequence) )
+            if self.Verbose:
+                print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
+
             for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
 
                 Status = BagChecker.CheckStructure(ORF)
@@ -259,37 +256,6 @@ class FinderClass():
 #        BagChecker.OutputGCFiles()
 #        BagChecker.OutputLenFiles()
 
-
-    def CreateORFs(self):
-        """This function is to make ORF objects (GenomeLocationForORFs)
-        We should put peptides and predictedProteins in here. 
-        """
-        if self.Verbose:
-            print "ProteogenomicsPostProcessing.py:CreateORFs"
-        Count = 0
-        TotalORFCount = len(self.ORFPeptideMapper.ORFDB.ProteinNames.keys())
-        for ID in self.ORFPeptideMapper.ORFDB.ProteinNames.keys():
-            FastaLine = self.ORFPeptideMapper.ORFDB.ProteinNames[ID]
-            if not self.IsThisORFObserved(FastaLine): #this is for saving space
-                #there are a LOT of ORFs in the six frame translation.  Most we don't care about
-                continue
-            ORFSequence = self.ORFPeptideMapper.ORFDB.ProteinSequences[ID]
-            ORFObject = PGPeptide.OpenReadingFrame(FastaLine, ORFSequence)
-            self.AllORFs[ORFObject.name] = ORFObject
-            #now we go through and put all the protiens on the ORFS, then the peptides on the ORFs
-            for ProteinObject in self.AllPredictedProteins.values():
-                if ProteinObject.ORFName == ORFObject.name:
-                    ORFObject.addLocatedProtein(ProteinObject)
-                    break #we're done here because there can only be one protein in an ORF
-            #now that we've finished running through the protein list, we run through the peptide list
-            for Location in self.AllLocatedPeptides:
-                if Location.ORFName == ORFObject.name:
-                    ORFObject.addLocatedPeptide(Location)
-            #now done assigning both proteins and peptides to this ORF
-            Count += 1
-            if (Count %1000) == 0 and self.Verbose:
-                print "\tCreated %s / %s ORF Objects"%(Count, TotalORFCount)
-        print "\tCreated %s ORF Objects"%Count
 
     def IsThisORFObserved(self, FastaLine):
         """Parameters: fasta line of an ORF from the six frame translation
@@ -355,33 +321,6 @@ class FinderClass():
         if self.Verbose:
             print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in genome"%(Count, LocationCount,inGenomeCount)
 
-    def MapPredictedProteins(self):
-        """Parameters: None
-        Return: None
-        Description: Take all of the predicted proteins and put them into
-        LocatedProtein objects. This will look very much like MapAllPeptides, 
-        because really a predicted protein can fit into an ORF just like a MS/MS 
-        peptide. So we do the same kind of thing. 
-        """
-        if self.Verbose:
-            print "ProteogenomicsPostProcessing::MapPredictedProteins"
-        PredictedProteinReader = SelectProteins.ProteinSelector() #just to use the LoadDB parts.  
-        PredictedProteinReader.LoadMultipleDB(self.ProteomeDatabasePaths)
-        Count = 0
-        for ProteinID in PredictedProteinReader.ProteinNames.keys():
-            Count += 1
-            if (Count %200) == 0 and self.Verbose:
-                print "Mapped %s / %s proteins"%(Count, len(self.AllPredictedProteins))
-            ProteinName = PredictedProteinReader.ProteinNames[ProteinID]
-            ProteinSequence = PredictedProteinReader.ProteinSequences[ProteinID]
-            LocatedProtein = self.ORFPeptideMapper.MapProtein(ProteinSequence, ProteinName)
-            if not LocatedProtein:
-                #SNAFU.  I know that proteins that span multiple ORFs will not map.
-                #some great examples include prfB (ribosomal frame shift) and recA (self splicing)
-                #not sure how to deal with this. but definitely warn and catch
-                continue
-            self.AllPredictedProteins[ProteinName] = LocatedProtein
-        
     def ParseInspect(self, FilePath):
         """Here I parse out Inspect Results to get peptide annotations, 
         Putting them in a hash for safe keeping

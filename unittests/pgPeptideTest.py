@@ -141,8 +141,8 @@ class Test(unittest.TestCase):
 
         gbkFile  = '../PGP.Regression.Test/NC_004088.gbk'
         sixFrame = '../PGP.Regression.Test/NC_004088.6frame.RS.fasta'
-        chromReader = PGPeptide.GenbankChromosomeReader(gbkFile,sixFrame)
-        genome = chromReader.locateOrfs()
+        chromReader = PGPeptide.GenbankGenomeReader(gbkFile,sixFrame)
+        genome = chromReader.makeGenomeWithProteinORFs()
         self.assertEqual( 1, genome.numChromosomes())
         acc = 'NC_004088'
         self.assertEqual( acc, genome.chromosomes.keys()[0] )

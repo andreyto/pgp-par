@@ -19,7 +19,7 @@ class GenomicLocation(object):
         self.__start = start
         self.__stop = stop
         self.__frame = None
-        self.strand = strand
+        self.__strand = strand
         self.chromosome = chromosome
 
     @classmethod
@@ -81,7 +81,7 @@ class GenomicLocation(object):
         and get a meaningful print out
         """
         #return "%d,%d %s%d" % (self.start, self.stop, self.strand, self.frame)
-        return "%d,%d %s" % (self.start, self.stop, self.strand)
+        return "%s:%d,%d %s" % (self.chromosome, self.start, self.stop, self.strand)
 
     def __cmp__(self, other):
         """Parameters: Another GenomicLocation object
@@ -151,11 +151,15 @@ class GenomicLocation(object):
         'Lesser coordinate on the sequence.'
         return self.__start
 
-
     @property
     def stop(self):
         'Greater coordinate on the sequence.'
         return self.__stop
+
+    @property
+    def strand(self):
+        'Strand of location + or -'
+        return self.__strand
 
     @property
     def frame(self):
@@ -665,10 +669,14 @@ class Genome(object):
                     orf.location = GenomicLocation.FromHeader( seqDef,
                                                               len(seq.seq),
                                                               addStop=True)
+                else:
+                    pass # ORF is not a pepOnly, so skip for now
+            else:
+                print "WARNING! unknown Chromosome %s" % chromName
 
 ###############################################################################
 
-class GenbankChromosomeReader(bioseq.FlatFileIO):
+class GenbankGenomeReader(bioseq.FlatFileIO):
     """Returns a single Genome object populated with Chromosomes from each
     sequence in a genbank file, and locates ORFs from a six frame sequence file
     onto their annotated proteins. Uses biopython to parse the Genbank file.
@@ -677,7 +685,7 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
         bioseq.FlatFileIO.__init__(self,gbFile)
         self.orfReader = bioseq.SequenceIO(sixFrameFile)
 
-    def locateOrfs(self):
+    def makeGenomeWithProteinORFs(self):
         genome = Genome()
         # First read in all the CDS features from the genbank file
         for gb_rec in SeqIO.parse(self.io, 'genbank'):
@@ -724,7 +732,8 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                     locProt = LocatedProtein( GenomicLocation(
                         cds.location.start.position + 1,
                         cds.location.end.position,
-                        cds.strand == 1 and '+' or '-'
+                        cds.strand == 1 and '+' or '-',
+                        tmpOrf.chromosome
                     ))
                     locProt.name = cds.qualifiers['product'][0]
                     locProt.ORFName = tmpOrf.name
@@ -740,6 +749,10 @@ class GenbankChromosomeReader(bioseq.FlatFileIO):
                 # ORF without a 3' mapping to a protein
                 unusedOrfs += 1
 
+        print "Read %d chromosomes, with %d Simple and %d Complex ORFs" % (
+            genome.numChromosomes(),
+            genome.numOrfs('Simple'),
+            genome.numOrfs('Complex') )
         print "%d unused ORFs from 6frame fasta." % unusedOrfs
         for acc,chrom in genome.chromosomes.items():
             for cds in chrom.endToCDS.values():

@@ -27,11 +27,11 @@ class PrimaryStructure:
         (Path, Ext) = os.path.splitext(OutputPath)
         self.OutputStub = Path
         NovelFastaPath = "%s.%s"%(self.OutputStub, "novel.faa")
-        self.NovelFastaHandle = open(NovelFastaPath, "wb")
+        self.NovelFastaHandle = open(NovelFastaPath, "a")
         NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
-        self.NovelInfoHandle = open(NovelInfoPath, "wb")
+        self.NovelInfoHandle = open(NovelInfoPath, "a")
         UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
-        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "wb")
+        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "a")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -130,9 +130,10 @@ class PrimaryStructure:
         if Sequence:
             GC = self.CalculateGC(Sequence)
         else:
-            print "WARNING: cannot extract observed sequence for %s (%s, %s)"%(ORF.name, Start, Stop)
+            print "WARNING: cannot extract observed sequence for %s (%s, %s)"%(ORF, Start, Stop)
             GC = 0
-        
+            for pep in ORF.peptideIter():
+                print "A Pep %s" % pep
 
         #now on with the novelty, I swear
         PredictedProtein = ORF.GetLocatedProtein()

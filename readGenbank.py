@@ -25,8 +25,8 @@ def checkTimeAndMem(oldtime,cnt):
 
 timecheck = checkTimeAndMem( os.times()[4], 0 )
 
-chromReader = PGPeptide.GenbankChromosomeReader(gbFile,orfFasta) 
-genome = chromReader.locateOrfs()
+chromReader = PGPeptide.GenbankGenomeReader(gbFile,orfFasta) 
+genome = chromReader.makeGenomeWithProteinORFs()
 
 timecheck = checkTimeAndMem(timecheck,1)
 
