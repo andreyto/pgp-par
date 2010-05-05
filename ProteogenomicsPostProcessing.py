@@ -386,6 +386,7 @@ class FinderClass():
         """Here I parse out Inspect Results to get peptide annotations, 
         Putting them in a hash for safe keeping
         """
+        FalseAminos = []
         inspectParser = InspectResults.Parser( FilePath )
         for result in inspectParser:
             try:
@@ -393,6 +394,7 @@ class FinderClass():
                 Peptide = GetPeptideFromModdedName(Annotation)
                 Aminos = Peptide.Aminos
                 PValue = result.PValue
+                InspectMappedProtein = result.ProteinName
             except:
                 traceback.print_exc()
                 continue # SNAFU
@@ -406,12 +408,19 @@ class FinderClass():
                 PValue = LFDR
                 if LFDR > self.PValueLimit:
                     continue
+
+            if InspectMappedProtein[:3] == "XXX":
+                #this is a true negative, let's count them
+                if not Aminos in FalseAminos:
+                    FalseAminos.append(Aminos)
+                continue
             if not self.AllPeptides.has_key(Aminos):
                 self.AllPeptides[Aminos] = PValue
             else:
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
             self.SpectrumCount += 1
+        print "I got %s truedb peptides, and %s decoy peptides"%(len(self.AllPeptides), len(FalseAminos))
 
     def ParseCommandLine(self,Arguments):
         (Options, Args) = getopt.getopt(Arguments, "b:r:g:d:w:uvi:o:p:CMG:Wn:")
