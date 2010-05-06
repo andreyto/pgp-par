@@ -208,6 +208,10 @@ class LocatedPeptide(object):
         self.TrypticCTerm = None
         self.ORFName = None #this is actually the ORF Name.  as we put them into ORFs
 
+    @property
+    def chromosome(self):
+        return self.location.chromosome
+
     def SetTryptic(self, Prefix):
         """Parmeters: the prefix of the peptide (letter immediately before)
         Return: None
@@ -428,6 +432,8 @@ class OpenReadingFrame(object):
 
     def addLocatedPeptide(self, Peptide):
         'Adds a single LocatedPeptide objects to the ORF.'
+        if self.chromosome != Peptide.location.chromosome:
+            raise ValueError("Adding peptide %s to ORF %s" % (Peptide, self))
         self.__peptides.append( Peptide )
 
 
@@ -520,6 +526,8 @@ class GFFPeptide(GFFIO.File):
             if not orf:
                 # ORF doesn't exist in chromosome, so add as an pepOnlyOrf
                 orf = OpenReadingFrame(name=protein)
+                # Real location is read in from 6frame file in addSeqToPepOnlyOrfs
+                orf.location = GenomicLocation(0,0,'+',gffRec.seqid)
                 chrom.addOrf( orf, 'PepOnly' )
 
             location = GenomicLocation(gffRec.start, gffRec.end, gffRec.strand, gffRec.seqid)
@@ -631,15 +639,11 @@ class Genome(object):
         self.chromosomes[accession] = chrom
         return chrom
 
-    def getOrf(self,protName):
-        """Given an ORFName checks all Chromosomes for the orf regardless of
+    def getOrf(self,protName,chromName):
+        """Given an ORFName and chromName returns the orf regardless of
         simple or complex membership.
         """
-        for (name,chrom) in self.chromosomes.items():
-            orf = chrom.getOrf( protName )
-            if orf != None:
-                return orf
-        return None
+        return self.chromosomes[chromName].getOrf( protName )
 
 
     def filterORFs(self, filterList):

@@ -301,7 +301,7 @@ class FinderClass():
             #now put into the observedORF stuff
             for Location in LocatedPeptides:
 
-                orfInGenome = genome.getOrf( Location.ORFName )
+                orfInGenome = genome.getOrf( Location.ORFName, Location.chromosome )
                 if orfInGenome:
                     inGenomeCount += 1
                     orfInGenome.addLocatedPeptide( Location )
