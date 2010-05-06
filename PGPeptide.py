@@ -197,7 +197,7 @@ class GenomicLocation(object):
 ###############################################################################
 
 class LocatedPeptide(object):
-    def __init__(self, Aminos, location=None):
+    def __init__(self, Aminos, location):
         self.location = location
         self.name = None
         self.aminos = Aminos
@@ -436,16 +436,10 @@ class OpenReadingFrame(object):
             raise ValueError("Adding peptide %s to ORF %s" % (Peptide, self))
         self.__peptides.append( Peptide )
 
-
     def addLocatedPeptides(self,peptideList):
         'Adds a list of LocatedPeptide objects to the ORF.'
-        self.__peptides.extend( peptideList )
-
-    def addRawPeptides(self,peptideList):
-        'Adds a list of peptide sequences without location.'
         for pep in peptideList:
-            pepObj = LocatedPeptide(pep)
-            self.__peptides.append( pepObj )
+            self.addLocatedPeptide( pep )
 
     def filterPeptides( self, filterFunc ):
         'Takes a filter function returning True or False for a LocatedPeptide object'

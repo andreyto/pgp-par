@@ -24,17 +24,18 @@ class Test(unittest.TestCase):
         #these first four are appropriate for a sequence complexity filter
 
         self.fastaLine = ">Protein0.Chr:NC_001263.Frame1.StartNuc1.Strand+" #needed for the construct or 
+
+        self.loc = PGPeptide.GenomicLocation(0,0,'+','NC_001263')
         self.orfSeq = "THISISADUMMYSEQUENCEHOPEITWORKSOK"
-        self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG")
+        self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG",self.loc)
         self.P1.isUnique = 1 #isn't that amazing.  it's unique
-        self.P2 = PGPeptide.LocatedPeptide("GGAGAGAGGGGAGAG")
-        self.P3 = PGPeptide.LocatedPeptide("AGGAGQWEIUPIUFGBVA")
+        self.P2 = PGPeptide.LocatedPeptide("GGAGAGAGGGGAGAG",self.loc)
+        self.P3 = PGPeptide.LocatedPeptide("AGGAGQWEIUPIUFGBVA",self.loc)
         self.P3.isUnique = 1 # also unique
-        self.P4 = PGPeptide.LocatedPeptide("AGGAGGQHGGGAG")
-        
+        self.P4 = PGPeptide.LocatedPeptide("AGGAGGQHGGGAG",self.loc)
+
         #these next are all tryptic at the c-term
-        self.P5 = PGPeptide.LocatedPeptide("MSTAQWSTR")
-        
+        self.P5 = PGPeptide.LocatedPeptide("MSTAQWSTR",self.loc)
 
     def testSequenceComplexity_exclusivelyGA(self):
         """Name: testSequenceComplexity_exclusivelyGA
