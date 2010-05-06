@@ -492,8 +492,8 @@ class ORFFastaHeader(object):
             String = String.replace("XXX.", "XXX")
         InfoBits = String.split(".")
 
-        self.ORFName = InfoBits[0]
         self.Chromosome = InfoBits[1].replace("Chr:", "")
+        self.ORFName = "%s.%s" % (self.Chromosome,InfoBits[0])
         self.Strand = InfoBits[4].replace("Strand", "")
         self.Frame = int(InfoBits[2].replace("Frame", ""))
         self.Start = int(InfoBits[3].replace("StartNuc", "")) # start of the open reading frame, not my peptide

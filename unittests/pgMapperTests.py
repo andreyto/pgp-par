@@ -60,7 +60,9 @@ class Test(unittest.TestCase):
         self.StartList = [7511, 5583, 7106, 5040, 5610, 5610, 5583]
         self.StopList =  [7564, 5609, 7138, 5078, 5639, 5633, 5606]
         self.Databases = ["NC_004837.6frame.trie",]
-        self.PeptidesInORF = ["Protein229", "Protein453", "Protein229", "Protein453", "Protein453", "Protein453", "Protein453"]
+        self.PeptidesInORF = []
+        for p in ["Protein229", "Protein453", "Protein229", "Protein453", "Protein453", "Protein453", "Protein453"]:
+            self.PeptidesInORF.append( 'Plasmid1.' + p )
 
     def testMappingStartStop(self):
         """Name: testMappingStartStop
@@ -80,7 +82,7 @@ class Test(unittest.TestCase):
             self.assertEqual(Peptide.location.start, Start)
             self.assertEqual(Peptide.location.stop, Stop)
             self.assertEqual(Peptide.ORFName, ShouldMapTo)
-        
+
 
     def SetUpProteins(self):
         """ put in some proteins so that I don't have to deal with crap"""
@@ -93,20 +95,20 @@ class Test(unittest.TestCase):
         self.Proteins[Name1] = Seq1
         self.ProteinStarts[Name1] = 2925
         self.ProteinStops[Name1] = 3119
-        self.ProteinORFLocation[Name1] = "Protein87"
+        self.ProteinORFLocation[Name1] = "Plasmid1.Protein87"
         Name2 = "gi|39980762|ref|NP_951040.1| hypothetical protein YPKp06 [Yersinia pestis KIM]"
         Seq2 = "MKFHFCDLNHSYKNQEGKIRSRKTAPGNIRKKQKGDNVSKTKSGRHRLSKTDKRLLAALVVAGYEERTARDLIQKHVYTLTQADLRHLVSEISNGVGQSQAYDAIYQARRIRLARKYLSGKKPEGVEPREGQEREDLP"
         self.Proteins[Name2] = Seq2
         self.ProteinStarts[Name2] = 6006
         self.ProteinStops[Name2] = 6422
-        self.ProteinORFLocation[Name2] = "Protein189"
+        self.ProteinORFLocation[Name2] = "Plasmid1.Protein189"
         Name3 = "gi|39980763|ref|NP_951041.1| putative transcriptional regulator [Yersinia pestis KIM]"
         Seq3 = "MRTLDEVIASRSPESQTRIKEMADEMILEVGLQMMREELQLSQKQVAEAMGISQPAVTKLEQRGNDLKLATLKRYVEAMGGKLSLDVELPTGRRVAFHV"
         self.Proteins[Name3] = Seq3
         self.ProteinStarts[Name3] = 7790
         self.ProteinStops[Name3] = 8089
-        self.ProteinORFLocation[Name3] = "Protein352"
-     
+        self.ProteinORFLocation[Name3] = "Plasmid1.Protein352"
+
     def testMappingProteins(self):
         """Name: testMappingProteins
         Description:does the Protein mapping code give me good LocatedProtein objects
@@ -133,7 +135,7 @@ class Test(unittest.TestCase):
         for Aminos in self.AminoList:
             (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01) #hack because they are all unique, it should be a one member list
             AllPeptides.append(Peptide)
-            
+
         for ID in Mapper.ORFDB.ProteinSequences.keys():
             Fasta = Mapper.ORFDB.ProteinNames[ID]
             Seq = Mapper.ORFDB.ProteinSequences[ID]
@@ -142,16 +144,16 @@ class Test(unittest.TestCase):
             for LocatedPeptide in AllPeptides:
                 if LocatedPeptide.ORFName == Object.name:
                     Object.addLocatedPeptide(LocatedPeptide)
-                    
+
             AllORFs.append(Object)
         #now we are done with making our ORFs, lets' get the 5' peptide for each
         # as a crib sheet 
         for ORF in AllORFs:
             Peptide = ORF.GetFivePrimePeptide()
-            if ORF.name == "Protein229":
+            if ORF.name == "NC_004837.Protein229":
                 self.assertEqual(Peptide.aminos, "AGITAGYQETR")
-            if ORF.name == "Protein453":
-                self.assertEqual(Peptide.aminos, "TEGTVSYEQK")    
+            if ORF.name == "NC_004837.Protein453":
+                self.assertEqual(Peptide.aminos, "TEGTVSYEQK")
 
     def testORFfromFasta(self):
         'ORFs get created correctly from a 6frame fasta.'
@@ -170,7 +172,7 @@ class Test(unittest.TestCase):
                                       ),
                                  orf229.location.stop)
                 self.assertEqual(chrom, orf229.chromosome)
-                self.assertEqual('Protein229', orf229.name)
+                self.assertEqual(chrom + '.Protein229', orf229.name)
                 genome.addOrf( orf229, 'Simple' )
 
             if 'Protein453.Chr:NC_004837.Frame3.StartNuc5900.Strand-' == seq.acc:
@@ -183,7 +185,7 @@ class Test(unittest.TestCase):
                                  orf453.location.start)
                 self.assertEqual(5900,orf453.location.stop)
                 self.assertEqual(chrom, orf453.chromosome)
-                self.assertEqual('Protein453', orf453.name)
+                self.assertEqual(chrom + '.Protein453', orf453.name)
                 genome.addOrf( orf453, 'Simple' )
 
         self.assertEqual(2, genome.numOrfs())

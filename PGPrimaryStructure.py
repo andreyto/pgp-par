@@ -170,7 +170,7 @@ class PrimaryStructure:
         FirstObservedNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         StartCodon = ORF.GetNucleotideStartOfTranslation()
         Strand = ORF.GetStrand()
-        
+
         #2. Strand switch that we use all over the place
         if Strand == "+":
             if FirstObservedNucleotide + 3 < StartCodon: # do the plus three
@@ -185,7 +185,7 @@ class PrimaryStructure:
                 self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
                 #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
-                
+
         #3. Is the actual start codon observed as a L or V, instead of M
         if FirstObservedNucleotide == StartCodon:
             FirstObservedAminoAcid = FirstObservedPeptide.aminos[0]
