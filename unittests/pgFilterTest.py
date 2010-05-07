@@ -25,7 +25,7 @@ class Test(unittest.TestCase):
 
         self.fastaLine = ">Protein0.Chr:NC_001263.Frame1.StartNuc1.Strand+" #needed for the construct or 
 
-        self.loc = PGPeptide.GenomicLocation(0,0,'+','NC_001263')
+        self.loc = PGPeptide.GenomicLocation(0,0,'+','NC_001263') #total hack because in this unit test we are NOT testing location.
         self.orfSeq = "THISISADUMMYSEQUENCEHOPEITWORKSOK"
         self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG",self.loc)
         self.P1.isUnique = 1 #isn't that amazing.  it's unique
@@ -36,6 +36,9 @@ class Test(unittest.TestCase):
 
         #these next are all tryptic at the c-term
         self.P5 = PGPeptide.LocatedPeptide("MSTAQWSTR",self.loc)
+        self.P6 = PGPeptide.LocatedPeptide("WEROTYSDSWH", self.loc) #NOT tryptic
+        self.P5.SetTryptic("K") #making this fully tryptic
+        self.P6.SetTryptic("M") #making this not tryptic
 
     def testSequenceComplexity_exclusivelyGA(self):
         """Name: testSequenceComplexity_exclusivelyGA
@@ -113,6 +116,26 @@ class Test(unittest.TestCase):
         
         self.assertEqual(Filter.apply(ORFHasUnique), 0)
         self.assertEqual(Filter.apply(ORFLacksUnique), 1)
+
+    def testTrypticFilter(self):
+        "Name: test the tryptic filters of open reading frames"
+        Filter = PGORFFilters.TrypticFilter()
+        #set tryptic on peptides done in setUp()
+        ListHasTryptic = [self.P1, self.P5]
+        ListLacksTryptic = [self.P1, self.P6]
+        ListUnset = [self.P1, self.P2]
+        ORFHasTryptic = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
+        ORFHasTryptic.addLocatedPeptides( ListHasTryptic)
+        ORFLacksTryptic = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
+        ORFLacksTryptic.addLocatedPeptides( ListLacksTryptic )
+        ORFUnset = PGPeptide.OpenReadingFrame(self.fastaLine, self.orfSeq)
+        ORFUnset.addLocatedPeptides( ListUnset )
+       
+        self.assertEqual(Filter.apply(ORFHasTryptic), 0)
+        self.assertEqual(Filter.apply(ORFLacksTryptic), 1)
+        self.assertEqual(Filter.apply(ORFUnset), 1)
+        
+        
         
 
 if __name__ == "__main__":
