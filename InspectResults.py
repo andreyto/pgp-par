@@ -96,7 +96,7 @@ class Parser():
         inputMirrorTo: an output directory to mirror the input dir structure to.
             obj.mirrorOutHandle will be the handle to write out to the current file.
         """
-        self.extensions = (".txt", ".filtered", ".res", ".csv", ".out")
+        self.extensions = (".txt", ".res", ".csv", ".out", ".msgf")
         self.maxFiles = MaxFilesToParse
         self.quiet = QuietFlag
         self.filePath = FilePath
