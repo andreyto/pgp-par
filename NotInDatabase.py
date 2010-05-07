@@ -30,9 +30,9 @@ class CompileClass():
         self.MundanePeptideOutPath = None
         self.ReferenceDatabasePath = [] #possibly multiple
         self.PeptideScores = {} # {Aminos} => pvalue
-        self.BestPeptideLine = {}
         self.PValueCutoff = None
         self.LFDRCutoff = None
+        self.PeptideORFs = {} #aminos => ORFs
         
 
         
@@ -58,14 +58,14 @@ class CompileClass():
                 print "finished with %d peptides"%TotalPeptides
             Locations = self.ProteinPicker.FindPeptideLocations(Aminos)
             if self.AllPeptideOutPath:
-                AllOutHandle.write(self.BestPeptideLine[Aminos])
+                AllOutHandle.write("%s\n"%Aminos)
             if len(Locations) == 0:
                 FoundCount += 1
                 if self.NovelPeptideOutPath:
-                    NovelOutHandle.write(self.BestPeptideLine[Aminos])
+                    NovelOutHandle.write("%s\t%s\n"%(Aminos, self.PeptideORFs[Aminos]))
             else:
                 if self.MundanePeptideOutPath:
-                    MundaneOutHandle.write(self.BestPeptideLine[Aminos])
+                    MundaneOutHandle.write("%s\n"%Aminos)
                 #print Aminos
         print "Out of %d total peptides, I found %s"%(TotalPeptides, FoundCount)
         if self.AllPeptideOutPath:
@@ -83,11 +83,13 @@ class CompileClass():
                 Peptide = GetPeptideFromModdedName(Annotation)
                 Aminos = Peptide.Aminos
                 PValue = result.PValue
+                ORF = result.ProteinName
             except:
                 traceback.print_exc()
                 continue # SNAFU
             if not self.PeptideScores.has_key(Peptide.Aminos):
                 self.PeptideScores[Peptide.Aminos] = PValue
+                self.PeptideORFs[Peptide.Aminos] = ORF
             else:
                 if PValue < self.PeptideScores[Peptide.Aminos]:
                     self.PeptideScores[Peptide.Aminos] = PValue
