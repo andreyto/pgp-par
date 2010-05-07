@@ -148,6 +148,53 @@ class Test(unittest.TestCase):
         self.assertEqual( acc, genome.chromosomes.keys()[0] )
         self.assertEqual( 4086, len( genome.chromosomes[acc].simpleOrfs ))
         self.assertEqual( 0, genome.chromosomes[acc].numORFsWithPeptides())
+        
+    def testProteinLocation(self):
+        'testProteinLocation: reading and mapping of protein locations from gbk onto 6frame'
+        gbkFile = "NC_004837.gbk"
+        sixFrame = "NC_004837.6frame.trie"
+        Accession = "NC_004837"
+        chromReader = PGPeptide.GenbankGenomeReader(gbkFile, sixFrame)
+        genome = chromReader.makeGenomeWithProteinORFs()
+        self.assertEqual( 1, genome.numChromosomes())
+        #now we do the hard stuff.  Let's check exact locations of proteins
+        self.SetUpProteinLocs()
+        SimpleORFs = genome.chromosomes[Accession].simpleOrfs
+        for (Name, Seq) in self.Proteins.items():
+            ORFName = self.ProteinORFLocation[Name]
+            ORF = SimpleORFs[ORFName]# a PGPeptide.OpenReadingFrame object
+            LocatedProtein = ORF.annotatedProtein
+            self.assertEqual(LocatedProtein.GetStart(), self.ProteinStarts[Name])
+            self.assertEqual(LocatedProtein.GetStop(), self.ProteinStops[Name])
+            self.assertEqual(LocatedProtein.GetORFName(), self.ProteinORFLocation[Name])
+            
+            
+
+
+    def SetUpProteinLocs(self):
+        """ put in some proteins so that I don't have to deal with crap"""
+        self.Proteins = {}
+        self.ProteinStarts = {}
+        self.ProteinStops = {}
+        self.ProteinORFLocation = {}
+        Name1 = "gi|39980761|ref|NP_951039.1| putative replication regulatory protein [Yersinia pestis KIM]"
+        Seq1 = "MNKQQQTALNMARFIRSQSLILLEKLDALDADEQAAMCERLHELAEELQNSIQARFEAESETGT"
+        self.Proteins[Name1] = Seq1
+        self.ProteinStarts[Name1] = 2925
+        self.ProteinStops[Name1] = 3119
+        self.ProteinORFLocation[Name1] = "NC_004837.Protein87"
+        Name2 = "gi|39980762|ref|NP_951040.1| hypothetical protein YPKp06 [Yersinia pestis KIM]"
+        Seq2 = "MKFHFCDLNHSYKNQEGKIRSRKTAPGNIRKKQKGDNVSKTKSGRHRLSKTDKRLLAALVVAGYEERTARDLIQKHVYTLTQADLRHLVSEISNGVGQSQAYDAIYQARRIRLARKYLSGKKPEGVEPREGQEREDLP"
+        self.Proteins[Name2] = Seq2
+        self.ProteinStarts[Name2] = 6006
+        self.ProteinStops[Name2] = 6422
+        self.ProteinORFLocation[Name2] = "NC_004837.Protein189"
+        Name3 = "gi|39980763|ref|NP_951041.1| putative transcriptional regulator [Yersinia pestis KIM]"
+        Seq3 = "MRTLDEVIASRSPESQTRIKEMADEMILEVGLQMMREELQLSQKQVAEAMGISQPAVTKLEQRGNDLKLATLKRYVEAMGGKLSLDVELPTGRRVAFHV"
+        self.Proteins[Name3] = Seq3
+        self.ProteinStarts[Name3] = 7790
+        self.ProteinStops[Name3] = 8089
+        self.ProteinORFLocation[Name3] = "NC_004837.Protein352"
 
 
 if __name__ == "__main__":

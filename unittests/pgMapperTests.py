@@ -62,7 +62,7 @@ class Test(unittest.TestCase):
         self.Databases = ["NC_004837.6frame.trie",]
         self.PeptidesInORF = []
         for p in ["Protein229", "Protein453", "Protein229", "Protein453", "Protein453", "Protein453", "Protein453"]:
-            self.PeptidesInORF.append( 'Plasmid1.' + p )
+            self.PeptidesInORF.append( 'NC_004837.' + p )
 
     def testMappingStartStop(self):
         """Name: testMappingStartStop
@@ -84,44 +84,6 @@ class Test(unittest.TestCase):
             self.assertEqual(Peptide.ORFName, ShouldMapTo)
 
 
-    def SetUpProteins(self):
-        """ put in some proteins so that I don't have to deal with crap"""
-        self.Proteins = {}
-        self.ProteinStarts = {}
-        self.ProteinStops = {}
-        self.ProteinORFLocation = {}
-        Name1 = "gi|39980761|ref|NP_951039.1| putative replication regulatory protein [Yersinia pestis KIM]"
-        Seq1 = "MNKQQQTALNMARFIRSQSLILLEKLDALDADEQAAMCERLHELAEELQNSIQARFEAESETGT"
-        self.Proteins[Name1] = Seq1
-        self.ProteinStarts[Name1] = 2925
-        self.ProteinStops[Name1] = 3119
-        self.ProteinORFLocation[Name1] = "Plasmid1.Protein87"
-        Name2 = "gi|39980762|ref|NP_951040.1| hypothetical protein YPKp06 [Yersinia pestis KIM]"
-        Seq2 = "MKFHFCDLNHSYKNQEGKIRSRKTAPGNIRKKQKGDNVSKTKSGRHRLSKTDKRLLAALVVAGYEERTARDLIQKHVYTLTQADLRHLVSEISNGVGQSQAYDAIYQARRIRLARKYLSGKKPEGVEPREGQEREDLP"
-        self.Proteins[Name2] = Seq2
-        self.ProteinStarts[Name2] = 6006
-        self.ProteinStops[Name2] = 6422
-        self.ProteinORFLocation[Name2] = "Plasmid1.Protein189"
-        Name3 = "gi|39980763|ref|NP_951041.1| putative transcriptional regulator [Yersinia pestis KIM]"
-        Seq3 = "MRTLDEVIASRSPESQTRIKEMADEMILEVGLQMMREELQLSQKQVAEAMGISQPAVTKLEQRGNDLKLATLKRYVEAMGGKLSLDVELPTGRRVAFHV"
-        self.Proteins[Name3] = Seq3
-        self.ProteinStarts[Name3] = 7790
-        self.ProteinStops[Name3] = 8089
-        self.ProteinORFLocation[Name3] = "Plasmid1.Protein352"
-
-    def testMappingProteins(self):
-        """Name: testMappingProteins
-        Description:does the Protein mapping code give me good LocatedProtein objects
-        """
-        self.SetUpProteins()
-        ORFDatabases = ["NC_004837.6frame.trie",]
-        Mapper = PeptideMapper.PeptideMappingClass()
-        Mapper.LoadDatabases(ORFDatabases)
-        for (Name, Seq) in self.Proteins.items():
-            LocatedProtein = Mapper.MapProtein(Seq, Name)
-            self.assertEqual(LocatedProtein.GetStart(), self.ProteinStarts[Name])
-            self.assertEqual(LocatedProtein.GetStop(), self.ProteinStops[Name])
-            self.assertEqual(LocatedProtein.GetORFName(), self.ProteinORFLocation[Name])
 
     def testOpenReadingFrame_GetFivePrime(self):
         "Access 5' ORF peptide correctly."
