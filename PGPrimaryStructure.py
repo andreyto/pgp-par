@@ -147,7 +147,13 @@ class PrimaryStructure:
         #well, if we get here, then we have something interesting
         #let's try and get the observed sequence.  That's firstpeptide->stop
         ObservedSequence = ORF.GetObservedSequence()
-        self.NovelInfoHandle.write("I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence))
+        NovelInfoString = "I got this observed sequence from %s\n"%ORF
+        Count =0
+        for Peptide in ORF.peptideIter():
+            Count += 1
+            NovelInfoString += "Peptide %s, %s\n"%(Count, Peptide)
+        NovelInfoString += "%s\n\n"%ObservedSequence
+        self.NovelInfoHandle.write("%s"%NovelInfoString)
         #print "I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence)
         Fasta = "Observed.%s"%ORF.name
         self.NovelFastaHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
