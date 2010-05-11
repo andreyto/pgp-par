@@ -369,25 +369,6 @@ class FinderClass():
 #        BagChecker.OutputLenFiles()
 
 
-    def IsThisORFObserved(self, FastaLine):
-        """Parameters: fasta line of an ORF from the six frame translation
-        Return: 0/1 
-        Description: We want to answer whether this ORF has some peptides associated with
-        it in this dataset
-        
-        REMOVE
-        """
-        if FastaLine.find("XXX.") == 0:
-            FastaLine = FastaLine.replace("XXX.", "XXX")
-        InfoBits = FastaLine.split(".")
-        #chromosome, strand
-        ORFName = InfoBits[0]
-        if ORFName in self.ProteomicallyObservedORFs:
-            return 1
-        if ORFName in self.ProteinObservedORFs:
-            return 1
-        return 0
-
     def MapAllPeptides(self,genome):
         """
         Parameters: Genome object to add peptides too
