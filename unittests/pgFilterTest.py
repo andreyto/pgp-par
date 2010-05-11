@@ -40,6 +40,7 @@ class Test(unittest.TestCase):
         self.P5.SetTryptic("K") #making this fully tryptic
         self.P6.SetTryptic("M") #making this not tryptic
 
+
     def testSequenceComplexity_exclusivelyGA(self):
         """Name: testSequenceComplexity_exclusivelyGA
         Description: This method is meant to test whether we remove peptides
@@ -135,8 +136,7 @@ class Test(unittest.TestCase):
         self.assertEqual(Filter.apply(ORFLacksTryptic), 1)
         self.assertEqual(Filter.apply(ORFUnset), 1)
         
-        
-        
+
 
 if __name__ == "__main__":
     unittest.main()
