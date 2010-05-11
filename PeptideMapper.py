@@ -71,10 +71,15 @@ class PeptideMappingClass:
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.ORFDB.ProteinSequences[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
-            Peptide.SetTryptic(PrefixOfPeptide)
+            PeptideEndAA = PeptideStartAA + len(Aminos)
+            if PeptideEndAA == len(ORFSequence):
+                #this is at the end, so it is really c-term tryptic, even though there
+                #may not be an R, K
+                Peptide.SetTryptic(PrefixOfPeptide, 1) #1 is for overwrite c term
+            else:
+                Peptide.SetTryptic(PrefixOfPeptide)
             if len(LocationsInORFDB) == 1:
                 Peptide.isUnique = 1
-
             #append to list
             ReturnList.append(Peptide)
             
