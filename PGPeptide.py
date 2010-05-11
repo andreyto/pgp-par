@@ -208,11 +208,12 @@ class LocatedPeptide(object):
         self.TrypticCTerm = None
         self.ORFName = None #this is actually the ORF Name.  as we put them into ORFs
 
+
     @property
     def chromosome(self):
         return self.location.chromosome
 
-    def SetTryptic(self, Prefix):
+    def SetTryptic(self, Prefix, CtermForce=0):
         """Parmeters: the prefix of the peptide (letter immediately before)
         Return: None
         Description: This function sets the two tryptic variables, n and c term
@@ -220,11 +221,15 @@ class LocatedPeptide(object):
         TrypticLetters = ["R", "K"]
         if Prefix in TrypticLetters:
             self.TrypticNTerm = 1
+            #our prefix could also be the beginning of the protein, not sure how to fix for that
         if self.aminos[-1] in TrypticLetters:
             self.TrypticCTerm = 1
+        if CtermForce:
+            self.TrypticCTerm = 1
+            
+    
 
-
-    def isTryptic(self):
+    def isPartiallyTryptic(self):
         """Parameters: None
         Return: true/falst on whether a peptide is tryptic
         Description: current implementation is that any tryptic
@@ -233,6 +238,11 @@ class LocatedPeptide(object):
         if self.TrypticCTerm:
             return True
         if self.TrypticNTerm:
+            return True
+        return False
+    
+    def isFullyTryptic(self):
+        if self.TrypticCTerm and self.TrypticNTerm:
             return True
         return False
 
@@ -279,6 +289,9 @@ class LocatedPeptide(object):
 
     def Strand(self):
         return self.location.strand
+    
+    def GetAminos(self):
+        return self.aminos
 
 
 ###############################################################################
@@ -316,6 +329,9 @@ class LocatedProtein(object):
         return self.location.stop
     def GetORFName(self):
         return self.ORFName
+    def GetName(self):
+        return self.name
+    
 
     def __str__(self):
         return "%s in %s, %s"%(self.name, self.ORFName, self.location)
@@ -366,6 +382,40 @@ class OpenReadingFrame(object):
         Description: gets the translation of the entire open reading frame
         """
         return self.aaseq
+
+    def WriteSimpleProteinInference(self, Handle):
+        """Parameters: an open file handle
+        Return: None
+        Description: We will write a summary of this protein's observed peptides
+        using a utterly simple protein inference model.  We will print out all 
+        peptides, separated out into unique and non-unique.  This is just a 
+        printer, it does no reasoning.
+        """
+        Line = ""
+        #first we want the name of the protein (if such exists)
+        if self.annotatedProtein:
+            Line += "%s\t"%self.annotatedProtein.GetName()
+        else:
+            Line += "Unannotated ORF\t"
+        #now we get the peptide count
+        Line += "%s\t"%self.numPeptides()
+        #now the number of unique peptides
+        NumUniquePeptides = 0
+        UniquePeptideString = ""
+        NonUniquePeptideString = ""
+        for Peptide in self.peptideIter():
+            if Peptide.isUnique:
+                NumUniquePeptides += 1
+                UniquePeptideString += "%s, "%Peptide.GetAminos()
+            else:
+                NonUniquePeptideString += "%s, "%Peptide.GetAminos()
+        Line += "%s\t"%NumUniquePeptides
+        Line += "%s\t"%UniquePeptideString
+        Line += "%s\n"%NonUniquePeptideString
+        #now write it out
+        Handle.write(Line)
+
+        
 
     def GetStrand(self):
         return self.location.strand
@@ -429,6 +479,13 @@ class OpenReadingFrame(object):
         if self.annotatedProtein:
             return self.annotatedProtein
         return None
+    
+    def GetProteinSequence(self):
+        """Parameters: none
+        Return: amino acid string (or None)
+        Description: get the predicted protein sequence if such exists
+        """
+        return self.aaseq
 
     def addLocatedPeptide(self, Peptide):
         'Adds a single LocatedPeptide objects to the ORF.'
@@ -440,10 +497,21 @@ class OpenReadingFrame(object):
         'Adds a list of LocatedPeptide objects to the ORF.'
         for pep in peptideList:
             self.addLocatedPeptide( pep )
+            
+    def DeleteAllPeptides(self):
+        """Parameters: None
+        Return: None
+        Description: If we've decided to filter out this ORF, we delete all
+        the peptide objects. Only call this if you understand the ramifications        
+        """
+        del self.__peptides[:] #deletes all members of the array, but leaves the empty list
 
     def filterPeptides( self, filterFunc ):
         'Takes a filter function returning True or False for a LocatedPeptide object'
         self.__peptides = filter( filterFunc, self.__peptides)
+        
+    def GetName(self):
+        return self.name
 
     def peptideIter( self ):
         'An iterator for the peptides. Usage: for pep in orf.peptideIter():'
