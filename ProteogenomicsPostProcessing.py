@@ -44,7 +44,7 @@ import BasicStats
 import GFFIO
 from Utils import *
 Initialize()
-
+import math #for the log
 
 class FinderClass():
     def __init__(self):
@@ -87,12 +87,32 @@ class FinderClass():
 
         self.FilterORFs(genome)
 
+
         if self.OutputPeptidesToGFF:
             self.WritePeptideGFFFile()
         if self.SearchForMispredictions:
             self.FindMiscalls(genome)
         if self.SearchForCleavage:
             self.AnalyzeCleavage()
+        #write out the simple protein inference
+        self.WriteProteinInference()
+        
+    def WriteProteinInference(self):
+        """Parameters: NOne
+        Return: NOne
+        Description: write a simple protein inference file, just proteins 
+        and their mapped peptides, separated out into unique and shared
+        """
+        Header = "Protein Name\tNum Peptides\tUnique Count\tUniquePeptides\tShared Peptides\n"
+        (Path, Ext) = os.path.splitext(self.OutputPath)
+        InferencePath = "%s.proteininference.txt"%Path
+        Handle = open(InferencePath, "wb")
+        Handle.write(Header)
+        for ORF in self.AllORFs.values():
+            if ORF.numPeptides() == 0: #remember, we keep these around for the overlap comparison
+                continue
+            ORF.WriteSimpleProteinInference(Handle)
+        Handle.close()
 
     def CheckComplexity(self):
         if self.Verbose:
@@ -167,11 +187,101 @@ class FinderClass():
         #this is the way we do filters.  We create all the filters that
         #we want to use, and then put them into th efilter list. It does the 
         #magic for us.
+
         SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
         FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, MinPeptide]) # an anonymous list
         genome.filterORFs( FilterList )
+
+
+    def SequenceComplexityHack(self):
+        """hack"""
+        
+        ORFList = []
+        PeptideList = []
+        DiffList = []
+        RealProteinList = []
+        for ORF in self.AllORFs.values():
+            #we try for the predicted protein first
+            Sequence =  ORF.GetProteinSequence()
+            if Sequence:
+                Entropy = self.SequenceEntropy(Sequence)
+                RealProteinList.append(Entropy)
+            if not Sequence:
+                Sequence = ORF.GetObservedSequence()
+            ProteinEntropy = self.SequenceEntropy(Sequence)
+            #now do for the peptides
+            PeptideCat = ""
+            for Peptide in ORF.peptideIter():
+                PeptideCat += Peptide.GetAminos()
+            PeptideEntropy = self.SequenceEntropy(PeptideCat)
+            
+            #put stuff in lists
+            ORFList.append(ProteinEntropy)
+            PeptideList.append(PeptideEntropy)
+            Diff = ProteinEntropy - PeptideEntropy
+            DiffList.append(Diff)
+            
+        ORFHandle = open("ORFEntropy.txt", "wb")
+        ORFLine = "\t".join(map(str, ORFList))
+        ORFHandle.write(ORFLine)
+        ORFHandle.close()
+    
+        PeptideHandle = open("PeptideEntropy.txt", "wb")
+        Line = "\t".join(map(str, PeptideList))
+        PeptideHandle.write(Line)
+        PeptideHandle.close()
+        
+        DiffHandle = open("DiffEntropy.txt", "wb")
+        Line = "\t".join(map(str, DiffList))
+        DiffHandle.write(Line)
+        DiffHandle.close()
+        
+        RealHandle = open("RealProteinEntropy.txt", "wb")
+        Line = "\t".join(map(str, RealProteinList))
+        RealHandle.write(Line)
+        RealHandle.close()
+        
+   
+    def SequenceEntropy(self, Sequence):
+        """Parameters: An amino acid sequence
+        Return: the H(x) entropy
+        Description: Use the classic information entropy equation to calculate
+        the entropy of the input sequence.
+        H(x) = SUM p(xi) * log(1/ p(xi))
+        xi = letter of the sequence
+        e.g. GGGAS
+        x1 = G, p(G) = 3/5
+        x2 = A, p(A) = 1/5
+        X3 = S, p(S) = 1/5
+        """
+        ProbTable = self.GetProbabilityTable(Sequence)
+        Sum =0 
+        for (Letter, Probability) in ProbTable.items():
+            LogValue = math.log(1 / Probability) #currently the natural log.  not sure the base of the log matters
+            Sum += (Probability * LogValue)
+        return Sum
+
+    def GetProbabilityTable(self, Sequence):
+        """Parameters: an amino acid sequence
+        Return: a dictionary of probability (frequence/n) for each letter
+        Description: just convert counts to probability.  easy.
+        """
+        CountDict = {}
+        ProbabilityDict = {}
+        for Letter in Sequence:
+            if not CountDict.has_key(Letter):
+                CountDict[Letter] = 0 #initialize
+            CountDict[Letter] += 1
+        Len = float(len(Sequence)) #cast to float so we can do real division
+        for (Key, Value) in CountDict.items():
+            Probability = Value / Len
+            ProbabilityDict[Key] = Probability
+        return ProbabilityDict
+            
+
+
 
     def AnalyzeCleavage(self):
         """
@@ -234,6 +344,7 @@ class FinderClass():
         Count = 0
         NovelCount = 0
         UnderPredictedCount = 0
+
         for (chromName, chrom) in genome.chromosomes.items():
             BagChecker = PGPrimaryStructure.PrimaryStructure(
                 self.OutputPath, str(chrom.sequence) )
@@ -250,8 +361,9 @@ class FinderClass():
                 Count +=1
                 if (Count %1000) == 0 and self.Verbose:
                     print "Processed %s ORF Objects" % (Count)
+
         #done with loop
-        print "Processed %s. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
+        print "Processed %s for potential miscalls. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
 #        print "Named %s, hypothetical %s"%(BagChecker.NamedCount, BagChecker.HypotheticalCount)
 #        BagChecker.OutputGCFiles()
 #        BagChecker.OutputLenFiles()
@@ -262,6 +374,8 @@ class FinderClass():
         Return: 0/1 
         Description: We want to answer whether this ORF has some peptides associated with
         it in this dataset
+        
+        REMOVE
         """
         if FastaLine.find("XXX.") == 0:
             FastaLine = FastaLine.replace("XXX.", "XXX")
@@ -269,6 +383,8 @@ class FinderClass():
         #chromosome, strand
         ORFName = InfoBits[0]
         if ORFName in self.ProteomicallyObservedORFs:
+            return 1
+        if ORFName in self.ProteinObservedORFs:
             return 1
         return 0
 
@@ -321,6 +437,7 @@ class FinderClass():
         if self.Verbose:
             print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in genome"%(Count, LocationCount,inGenomeCount)
 
+
     def ParseInspect(self, FilePath):
         """Here I parse out Inspect Results to get peptide annotations, 
         Putting them in a hash for safe keeping
@@ -347,12 +464,13 @@ class FinderClass():
                 PValue = LFDR
                 if LFDR > self.PValueLimit:
                     continue
-
+            #just a little damage control here.  We want to count the number of false positive peptides
             if InspectMappedProtein[:3] == "XXX":
-                #this is a true negative, let's count them
+                #this is a true negative.  let's count them
                 if not Aminos in FalseAminos:
                     FalseAminos.append(Aminos)
                 continue
+
             if not self.AllPeptides.has_key(Aminos):
                 self.AllPeptides[Aminos] = PValue
             else:
