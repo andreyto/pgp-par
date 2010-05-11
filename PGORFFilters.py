@@ -7,6 +7,7 @@ a method called 'apply' where the magic gets done.
 NOTE: this is a utility, and not executable from the command line
 
 """
+import math #used to calculate logs
 
 class FilterList:
     """Class FilterList: This is a container object for a list
@@ -30,8 +31,7 @@ class FilterList:
         Description: apply the filters one at a time, deleting
         the ORF objects that the filters tell me to delete
         """
-        KeepDict = {}
-        KillList = []
+        KillList = [] # a list of ORF.name to kill
         for (Name, ORF) in DictionaryOfORFs.items():
             #now cycle through all our filters.  We use the ordering
             #of the list, meaning that you should have throught about
@@ -42,17 +42,22 @@ class FilterList:
                 DeleteMe = Filter.apply(ORF)
                 if DeleteMe:
                     break #quit the filter already, we know it sucks
-            if not DeleteMe:
-                KeepDict[Name] = ORF
-            else:
-                KillList.append(Name)
-                
-        #now we should politely kill all those on the naughty list
-        # I haven't figured out how to do that yet, because there is no
-        #real object model yet, and I need a refresher on garbage collection
-        #especially in the python implementation
+            # so here's the deal.  We have created ORFs for two reasons
+            #1. It contains peptides
+            #2. It contains a predicted protein, which is important to keep track
+            #    of when we are resolving conflicts.  So we don't really want to 
+            #    kill ORFs for no reason.  In fact it would actually be better for 
+            #    if we just deleted all the peptides of stuff on the list.
+            if DeleteMe:
+                ORF.DeleteAllPeptides()
+                #we only truly delete something if it has no peptides AND no protein
+                if ORF.GetLocatedProtein() == None:
+                    KillList.append(Name)
+            
+        for Name in KillList:
+            del DictionaryOfORFs[Name]
         
-        return KeepDict
+        return DictionaryOfORFs
     
 
 
@@ -155,7 +160,7 @@ class TrypticFilter(Filter):
         """
         Save = 0
         for Peptide in ORF.peptideIter():
-            if Peptide.isTryptic(): # == 1 
+            if Peptide.isFullyTryptic(): # == 1 
                 Save = 1
                 break
         if Save:
@@ -244,11 +249,19 @@ class SequenceComplexityFilter(Filter):
         """
         Saved = 0
         GA = ["G", "A"]
+        Len = len(PeptideObject.aminos)
+        LenAboveReproach = 10 #total magic number.  But the short peptides are the ones giving me fits
+        if Len >= LenAboveReproach:
+            return True #this passes filter, because it's above reproach
+        MinNonGA = Len / 5 # was /2 but I'm testing to get bad results
+        Count =0
         #now cycle through and see if it's only G and A
         for Letter in PeptideObject.aminos:
             if not Letter in GA:
-                Saved = 1
-                break
+                Count += 1
+        #now that Iv'e tallied my non-ga, see if we meet the criteria
+        if Count >= MinNonGA:
+            Saved =1
         if Saved:
             return True
         else:
@@ -261,6 +274,12 @@ class SequenceComplexityFilter(Filter):
         Description: Apply the filter. Look for sequence complexity
         that is outside of the acceptable range.
         """
+        #some upfront debugging
+        Sequence =  ORF.GetProteinSequence()
+        if Sequence:
+            Entropy = self.SequenceEntropy(Sequence)
+        
+        #end debugging/research
         ORF.filterPeptides( self.lowComplexFilter )
         return
         #1. Get a big string of all the peptides in the ORF
@@ -276,6 +295,43 @@ class SequenceComplexityFilter(Filter):
         if Normalized > self.MaximumLowMWContent:
             return 1 # delete ME
         return 0 #keep ME
+    
+    def SequenceEntropy(self, Sequence):
+        """Parameters: An amino acid sequence
+        Return: the H(x) entropy
+        Description: Use the classic information entropy equation to calculate
+        the entropy of the input sequence.
+        H(x) = SUM p(xi) * log(1/ p(xi))
+        xi = letter of the sequence
+        e.g. GGGAS
+        x1 = G, p(G) = 3/5
+        x2 = A, p(A) = 1/5
+        X3 = S, p(S) = 1/5
+        """
+        ProbTable = self.GetProbabilityTable(Sequence)
+        Sum =0 
+        for (Letter, Probability) in ProbTable.items():
+            LogValue = math.log(1 / Probability) #currently the natural log.  not sure the base of the log matters
+            Sum += (Probability * LogValue)
+        return Sum
+        
+        
+    def GetProbabilityTable(self, Sequence):
+        """Parameters: an amino acid sequence
+        Return: a dictionary of probability (frequence/n) for each letter
+        Description: just convert counts to probability.  easy.
+        """
+        CountDict = {}
+        ProbabilityDict = {}
+        for Letter in Sequence:
+            if not CountDict.has_key(Letter):
+                CountDict[Letter] = 0 #initialize
+            CountDict[Letter] += 1
+        Len = float(len(Sequence)) #cast to float so we can do real division
+        for (Key, Value) in CountDict.items():
+            Probability = Value / Len
+            ProbabilityDict[Key] = Probability
+        return ProbabilityDict
             
 
 
