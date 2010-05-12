@@ -524,6 +524,47 @@ class FinderClass():
             sys.exit(1)
 
 
+class PGPReport():
+    """Takes information about the data run and formats it so that you can
+    have a pretty report for later.
+    """
+    def __init__(self, FileName):
+        self.CommandLine = None
+        self.SpectraProcessed = None
+        self.TruePeptides = None
+        self.DecoyPeptides = None
+        self.MappedProteins = None
+        self.UnmappedProteinsSNAFU = None
+        self.UnmappedProteinsComplex = None
+        self.MappedPeptideCount = None
+        self.MappedPeptideLocationCount = None
+        self.ORFCountPreFilter =None
+        self.ORFCountPostFilter = None
+        self.NovelORFCount = None
+        self.ORFWrongStartCount = None
+        self.PGPVersion = None
+        self.FiltersUsed = None
+        self.FileName = FileName
+        
+    def WriteReport(self):
+        #create the long string.  Sooo boring
+        String = ""
+        String += "Proteogenomics version %s\n"%self.PGPVersion
+        String += "Command Line: %s\n"%self.CommandLine
+        String += "Spectra Passing PValue: %s\n"%self.SpectraProcessed
+        String += "True Peptides %s, False Peptides %s\n"%(self.TruePeptides, self.DecoyPeptides)
+        String += "Mapped %s proteins (%s failed complex, %s failed other)\n"%(self.MappedProteins, self.UnmappedProteinsComplex, self.UnmappedProteinsSNAFU)
+        String += "Mapped %s peptides to %s locations\n"%(self.MappedPeptideCount, self.MappedPeptideLocationCount)
+        String += "ORFs analyzed: %s prefilter, %s postfilter\n"%(self.ORFCountPreFilter, self.ORFCountPostFilter)
+        String += "Filters employed %s\n"%self.FiltersUsed
+        String += "Novel proteins: %s\n"%self.NovelORFCount
+        String += "Underpredicted proteins: %s\n"%self.ORFWrongStartCount
+        
+        Handle = open(self.FileName, "w")
+        Handle.write(String)
+        Handle.close()
+        
+
 if __name__ == "__main__":
     try:
         import psyco

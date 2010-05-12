@@ -46,6 +46,11 @@ class PrimaryStructure:
         Return: ?
         Description: various QA/QC checks
         """
+        #it is possible that someone called this with an ORF that
+        #has no peptide support, so we should not do much for them
+        if ORF.numPeptides() == 0:
+            return "NO EVIDENCE"
+        
         Novel = self.IsItNovel(ORF)
 
         if Novel:
