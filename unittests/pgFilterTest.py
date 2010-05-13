@@ -27,9 +27,9 @@ class Test(unittest.TestCase):
 
         self.loc = PGPeptide.GenomicLocation(0,0,'+','NC_001263') #total hack because in this unit test we are NOT testing location.
         self.orfSeq = "THISISADUMMYSEQUENCEHOPEITWORKSOK"
-        self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGGGG",self.loc)
+        self.P1 = PGPeptide.LocatedPeptide("GGGGGGGGG",self.loc)
         self.P1.isUnique = 1 #isn't that amazing.  it's unique
-        self.P2 = PGPeptide.LocatedPeptide("GGAGAGAGGGGAGAG",self.loc)
+        self.P2 = PGPeptide.LocatedPeptide("GGAGAGAG",self.loc)
         self.P3 = PGPeptide.LocatedPeptide("AGGAGQWEIUPIUFGBVA",self.loc)
         self.P3.isUnique = 1 # also unique
         self.P4 = PGPeptide.LocatedPeptide("AGGAGGQHGGGAG",self.loc)
