@@ -60,7 +60,6 @@ class FinderClass():
         self.AllORFs = {} #ORF name -> GenomeLocationForORF object
         self.ProteomicallyObservedORFs = [] # this is populated when peptides are mapped, and deleted after ORF Objects are created
         self.UniquenessFlag = 0
-        self.SpectrumCount = 0
         self.ORFPeptideMapper = PeptideMapper.PeptideMappingClass()
         self.InterPeptideDistanceMax = 1000 # sensible default
         self.PValueLimit = 0.05 #pvalues are 0.00 (good) to 1.0 (bad) 
@@ -70,6 +69,7 @@ class FinderClass():
         self.SearchForCleavage = 1
         self.OutputPeptidesToGFF = 0
         self.GFFOutputPath = "RenameYourOutput.gff"
+        self.Report = PGPReport()
 
     def Main(self):
         self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
@@ -78,7 +78,6 @@ class FinderClass():
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
         if self.InspectResultsPath:
             self.ParseInspect( self.InspectResultsPath )
-            print "I found %s peptides from %s spectra"%(len(self.AllPeptides), self.SpectrumCount)
             self.MapAllPeptides(genome) # modify to add too genome/chromsome
 
         else :
@@ -89,13 +88,14 @@ class FinderClass():
 
 
         if self.OutputPeptidesToGFF:
-            self.WritePeptideGFFFile()
+            self.WritePeptideGFFFile(genome)
         if self.SearchForMispredictions:
             self.FindMiscalls(genome)
         if self.SearchForCleavage:
             self.AnalyzeCleavage()
         #write out the simple protein inference
         self.WriteProteinInference()
+        #write out the report
         
     def WriteProteinInference(self):
         """Parameters: NOne
@@ -319,18 +319,23 @@ class FinderClass():
                 self.ProteomicallyObservedORFs.append(MappedORF)
             self.AllLocatedPeptides.append(Location)
 
-    def WritePeptideGFFFile(self):
+    def WritePeptideGFFFile(self, genome):
         """
         Parameters: None
         Return: None
         Description: This takes the peptide objects from self.AllLocatedPeptides and
         makes a GFF File containing all of them.  
         """
+        if self.Verbose:
+            print "ProteogenomicPostProcessing.py::WritePeptideGFFFile"
+
         GFFOut = PGPeptide.GFFPeptide(self.GFFOutputPath, "w") #creates my GFF converter. 'w' parameter is for writing
 
-        for ORF in self.AllORFs.values(): # we cycle through the ORFs, writing all their located peptides
-            GFFOut.writeORFPeptides(ORF)
-            #print "%s"%ORF
+        for (ChromName, Chrom) in genome.chromosomes.items():
+            for (ORFName, ORF) in Chrom.simpleOrfs.items() + Chrom.pepOnlyOrfs.items():
+                # we cycle through the ORFs, writing all their located peptides
+                GFFOut.writeORFPeptides(ORF)
+
         GFFOut.close()
 
     def FindMiscalls(self, genome):
@@ -424,6 +429,7 @@ class FinderClass():
         Putting them in a hash for safe keeping
         """
         FalseAminos = []
+        SpectrumCount = 0
         inspectParser = InspectResults.Parser( FilePath )
         for result in inspectParser:
             try:
@@ -445,6 +451,8 @@ class FinderClass():
                 PValue = LFDR
                 if LFDR > self.PValueLimit:
                     continue
+            #everybody passed this line gets a cookie (you passed pvalue cutoff)
+            SpectrumCount += 1
             #just a little damage control here.  We want to count the number of false positive peptides
             if InspectMappedProtein[:3] == "XXX":
                 #this is a true negative.  let's count them
@@ -457,12 +465,17 @@ class FinderClass():
             else:
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
-            self.SpectrumCount += 1
+            
         print "I got %s truedb peptides, and %s decoy peptides"%(len(self.AllPeptides), len(FalseAminos))
+        self.Report.SetValue("TruePeptides", len(self.AllPeptides))
+        self.Report.SetValue("DecoyPeptides", len(FalseAminos))
+        self.Report.SetValue("SpectraProcessed", SpectrumCount)
 
     def ParseCommandLine(self,Arguments):
         (Options, Args) = getopt.getopt(Arguments, "b:r:g:d:w:uvi:o:p:CMG:Wn:")
         OptionsSeen = {}
+        #set our report
+        self.Report.SetValue("CommandLine", Arguments)
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
             if Option == "-r":
@@ -528,41 +541,54 @@ class PGPReport():
     """Takes information about the data run and formats it so that you can
     have a pretty report for later.
     """
-    def __init__(self, FileName):
-        self.CommandLine = None
-        self.SpectraProcessed = None
-        self.TruePeptides = None
-        self.DecoyPeptides = None
-        self.MappedProteins = None
-        self.UnmappedProteinsSNAFU = None
-        self.UnmappedProteinsComplex = None
-        self.MappedPeptideCount = None
-        self.MappedPeptideLocationCount = None
-        self.ORFCountPreFilter =None
-        self.ORFCountPostFilter = None
-        self.NovelORFCount = None
-        self.ORFWrongStartCount = None
-        self.PGPVersion = None
-        self.FiltersUsed = None
-        self.FileName = FileName
+    def __init__(self):
+        self.Info = {}
+        self.Info["CommandLine"] = None
+        self.Info["SpectraProcessed"] = None
+        self.Info["TruePeptides"] = None
+        self.Info["DecoyPeptides"] = None
+        self.Info["MappedProteins"] = None
+        self.Info["UnmappedProteinsSNAFU"] = None
+        self.Info["UnmappedProteinsComplex"] = None
+        self.Info["MappedPeptideCount"] = None
+        self.Info["MappedPeptideLocationCount"] = None
+        self.Info["ORFCountPreFilter"] =None
+        self.Info["ORFCountPostFilter"] = None
+        self.Info["NovelORFCount"] = None
+        self.Info["ORFWrongStartCount"] = None
+        self.Info["PGPVersion"] = None
+        self.Info["FiltersUsed"] = None
+        self.FileName = "renameyourreport.txt"
         
     def WriteReport(self):
         #create the long string.  Sooo boring
         String = ""
-        String += "Proteogenomics version %s\n"%self.PGPVersion
-        String += "Command Line: %s\n"%self.CommandLine
-        String += "Spectra Passing PValue: %s\n"%self.SpectraProcessed
-        String += "True Peptides %s, False Peptides %s\n"%(self.TruePeptides, self.DecoyPeptides)
-        String += "Mapped %s proteins (%s failed complex, %s failed other)\n"%(self.MappedProteins, self.UnmappedProteinsComplex, self.UnmappedProteinsSNAFU)
-        String += "Mapped %s peptides to %s locations\n"%(self.MappedPeptideCount, self.MappedPeptideLocationCount)
-        String += "ORFs analyzed: %s prefilter, %s postfilter\n"%(self.ORFCountPreFilter, self.ORFCountPostFilter)
-        String += "Filters employed %s\n"%self.FiltersUsed
-        String += "Novel proteins: %s\n"%self.NovelORFCount
-        String += "Underpredicted proteins: %s\n"%self.ORFWrongStartCount
+        String += "Proteogenomics version %s\n"%self.Info["PGPVersion"]
+        String += "Command Line: %s\n"%self.Info["CommandLine"]
+        String += "Spectra Passing PValue: %s\n"%self.Info["SpectraProcessed"]
+        String += "True Peptides %s, False Peptides %s\n"%(self.Info["TruePeptides"], self.Info["DecoyPeptides"])
+        String += "Mapped %s proteins (%s failed complex, %s failed other)\n"%(self.Info["MappedProteins"],
+                                                                               self.Info["UnmappedProteinsComplex"],
+                                                                               self.Info["UnmappedProteinsSNAFU"])
+        String += "Mapped %s peptides to %s locations\n"%(self.Info["MappedPeptideCount"], 
+                                                          self.Info["MappedPeptideLocationCount"])
+        String += "ORFs analyzed: %s prefilter, %s postfilter\n"%(self.Info["ORFCountPreFilter"],
+                                                                  self.Info["ORFCountPostFilter"])
+        String += "Filters employed %s\n"%self.Info["FiltersUsed"]
+        String += "Novel proteins: %s\n"%self.Info["NovelORFCount"]
+        String += "Underpredicted proteins: %s\n"%self.Info["ORFWrongStartCount"]
         
         Handle = open(self.FileName, "w")
         Handle.write(String)
         Handle.close()
+
+    def SetValue(self, Key, Value):
+        if not self.Info.has_key(Key):
+            print "WARNING: report called with bad key %s"%Key
+            return
+        self.Info[Key] = Value
+    def SetFileName(self, FileName):
+        self.FileName = FileName
         
 
 if __name__ == "__main__":
