@@ -472,7 +472,7 @@ class FinderClass():
         self.Report.SetValue("SpectraProcessed", SpectrumCount)
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "b:r:g:d:w:uvi:o:p:CMG:Wn:")
+        (Options, Args) = getopt.getopt(Arguments, "b:r:g:d:w:uvi:o:p:CMG:W")
         OptionsSeen = {}
         #set our report
         self.Report.SetValue("CommandLine", Arguments)
