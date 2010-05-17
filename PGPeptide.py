@@ -341,7 +341,7 @@ class LocatedProtein(object):
 
 class OpenReadingFrame(object):
     def __init__(self, FastaHeader=None, AASequence=None, name=None):
-        self.location = None
+        self.location = None # a GenomicLocation object
         self.__peptides = [] #LocatedPeptide objects
         self.annotatedProtein = None # a LocatedProtein Object, can't have more than one. If there's a fight, longest one wins
         self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
@@ -463,6 +463,32 @@ class OpenReadingFrame(object):
                 return Peptide #just return right off the bat
             if Peptide.isUnique:
                 return Peptide
+
+    def GetUpstreamPeptideCount(self):
+        """Parameters: none
+        Return: number of peptides upstream of start (int)
+        Description: count the number of peptides which appear upstream of the 
+        start site and return them. Note the extra careful variable naming that
+        uses 'FivePrime' and not 'start'.  That's very important.  You must
+        remember that 'start' is a small number, and has nothing to do with biology
+        """
+        ProteinFivePrimeNuc = self.GetNucleotideStartOfTranslation()
+        Strand = self.GetStrand()
+        Count = 0
+        for Peptide in self.peptideIter():
+            #strand switch
+            if Strand == "+":
+                #now test
+                PeptideFivePrimeNuc = Peptide.GetStart()
+                if PeptideFivePrimeNuc < ProteinFivePrimeNuc:
+                    Count += 1
+            else:
+                PeptideFivePrimeNuc = Peptide.GetStop()
+                if PeptideFivePrimeNuc > ProteinFivePrimeNuc:
+                    Count += 1
+        return Count
+                
+            
 
     def GetNucleotideStartOfTranslation(self):
         """Returns the start of translation"""

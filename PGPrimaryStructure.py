@@ -27,11 +27,11 @@ class PrimaryStructure:
         (Path, Ext) = os.path.splitext(OutputPath)
         self.OutputStub = Path
         NovelFastaPath = "%s.%s"%(self.OutputStub, "novel.faa")
-        self.NovelFastaHandle = open(NovelFastaPath, "a")
+        self.NovelFastaHandle = open(NovelFastaPath, "w") #this used to be append. but I couldn't figure out why
         NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
-        self.NovelInfoHandle = open(NovelInfoPath, "a")
+        self.NovelInfoHandle = open(NovelInfoPath, "w")
         UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
-        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "a")
+        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "wd")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -181,19 +181,23 @@ class PrimaryStructure:
         FirstObservedNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         StartCodon = ORF.GetNucleotideStartOfTranslation()
         Strand = ORF.GetStrand()
+        # we'd also like to get a count on the number of peptides upstream.
+        NumPeptidesUpstream = ORF.GetUpstreamPeptideCount()
 
         #2. Strand switch that we use all over the place
         if Strand == "+":
             if FirstObservedNucleotide + 3 < StartCodon: # do the plus three
                 #because we want more than a single amino acid upstream.
                 UpstreamExtent = StartCodon - FirstObservedNucleotide
-                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                self.UnderpredictionInfoHandle.write("There are %s peptides upstream\n\n"%NumPeptidesUpstream)
                 #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
         else:
             if FirstObservedNucleotide > StartCodon + 3:
                 UpstreamExtent = FirstObservedNucleotide - StartCodon
-                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
+                self.UnderpredictionInfoHandle.write("There are %s peptides upstream\n\n"%NumPeptidesUpstream)
                 #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
 

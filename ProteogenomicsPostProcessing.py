@@ -466,7 +466,7 @@ class FinderClass():
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
             
-        print "I got %s truedb peptides, and %s decoy peptides"%(len(self.AllPeptides), len(FalseAminos))
+        print "I got %s truedb peptides, and %s decoy peptides (%s spectra)"%(len(self.AllPeptides), len(FalseAminos), SpectrumCount)
         self.Report.SetValue("TruePeptides", len(self.AllPeptides))
         self.Report.SetValue("DecoyPeptides", len(FalseAminos))
         self.Report.SetValue("SpectraProcessed", SpectrumCount)
