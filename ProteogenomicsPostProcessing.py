@@ -157,7 +157,7 @@ class FinderClass():
             if self.Verbose:
                 print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
             AllORFs = chrom.simpleOrfs.values() + chrom.pepOnlyOrfs.values()
-            for (ORF1, ORF2) in combinations(AllORFs, 2):
+            for (ORF1, ORF2) in combinations(AllORFs, 2): #this is from itertools and gives all combinations (symetry cancelled)
                 #first we check that at least one of these dudes has some proteomic coverage
                 #because we really don't care if stuff is not supported 
                 if ORF1.numPeptides() == 0 and ORF2.numPeptides() == 0:
@@ -181,7 +181,16 @@ class FinderClass():
                 else:
                     State = self.ComplexOverlapAnalysis(ORF1, ORF2, OutHandle)
                     ConflictLevelCount[State] += 1
-        print ConflictLevelCount
+        String = "Conflict States\n"
+        String += "0: no conflict, %s\n"%ConflictLevelCount[0]
+        String += "1: overlap < 10bp, %s\n"%ConflictLevelCount[1]
+        String += "2: overlap < 40bp, %s\n"%ConflictLevelCount[2]
+        String += "3: overlap > 40bp, overlap an unsupported hypothetical, %s\n"%ConflictLevelCount[3]
+        String += "4: overlap > 40bp, overlap an unsupported named protein, %s\n"%ConflictLevelCount[4]
+        String += "5: overlap > 40bp, no peptides in overlap region, %s\n"%ConflictLevelCount[5]
+        String += "6: overlap > 40bp, peptides in overlap region, %s\n"%ConflictLevelCount[6]
+        OutHandle.write(String)
+        print String
                 
     def ComplexOverlapAnalysis(self, ORF1, ORF2, Handle):
         """Parameters: two OpenReadingFrame objects, an open file handle
