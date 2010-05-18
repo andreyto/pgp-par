@@ -31,7 +31,9 @@ class PrimaryStructure:
         NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
         self.NovelInfoHandle = open(NovelInfoPath, "w")
         UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
-        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "wd")
+        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "w")
+        ShortProteinPath = "%s.%s"%(self.OutputStub, "shortprotein.info")
+        self.ShortProteinHandle = open(ShortProteinPath, "w")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -52,9 +54,10 @@ class PrimaryStructure:
             return "NO EVIDENCE"
         
         Novel = self.IsItNovel(ORF)
-
         if Novel:
             return "NOVEL"
+        
+        self.ShortProteins(ORF)
         ProteinName = ORF.annotatedProtein.name
         Location = ProteinName.find("hypothetical")
         if Location == -1:
@@ -64,6 +67,17 @@ class PrimaryStructure:
         UnderPredicted = self.IsItUnderPredicted(ORF)
         if UnderPredicted:
             return "UNDERPREDICTED"
+
+    def ShortProteins(self, ORF):
+        # I want to do a quick sweep of short proteins.
+        ProteinLength = ORF.GetPredictedProteinLength()
+        if ProteinLength > 100:
+            return
+        self.ShortProteinHandle.write(">%s\n"%ORF)
+        self.ShortProteinHandle.write("%s\n"%ORF.GetProteinSequence())
+        
+
+
 
     def CalculateGC(self, Sequence):
         """Parameters: DNA sequence

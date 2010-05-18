@@ -146,6 +146,11 @@ class GenomicLocation(object):
             return self.__stop
         return self.__start
 
+    def GetFivePrime(self):
+        if self.strand == "+":
+            return self.__start
+        return self.__stop
+
     @property
     def start(self):
         'Lesser coordinate on the sequence.'
@@ -227,7 +232,12 @@ class LocatedPeptide(object):
         if CtermForce:
             self.TrypticCTerm = 1
             
-    
+
+    def IsTrypticNterm(self):
+        if self.TrypticNTerm:
+            return True
+        return False
+        
 
     def isPartiallyTryptic(self):
         """Parameters: None
@@ -331,6 +341,8 @@ class LocatedProtein(object):
         return self.ORFName
     def GetName(self):
         return self.name
+    def GetLocation(self):
+        return self.location
     
 
     def __str__(self):
@@ -345,7 +357,7 @@ class OpenReadingFrame(object):
         self.__peptides = [] #LocatedPeptide objects
         self.annotatedProtein = None # a LocatedProtein Object, can't have more than one. If there's a fight, longest one wins
         self.name = None #the unique identifier of the open reading frame, e.g. Protein12345
-        self.aaseq = AASequence
+        self.aaseq = AASequence #this is the TRANSLATION of the frame, NOT, NOT the protein sequence
         self.naseq = None
         if FastaHeader:
             ParsedHeader = ORFFastaHeader(FastaHeader)
@@ -360,6 +372,11 @@ class OpenReadingFrame(object):
         self.GCPredictedProtein = None
         self.GCObservedRegion = None
         self.CDS = None # biopython SeqFeature for the CDS record from a genbank file
+        #set is AddLocatedProtein, this is the offset before the protein starts.  It is
+        #set such that if you do a slice aaseq[offset:] you will get the protein sequence
+        ##with the exception of the wrong translation for alt start codons.  have to fix that later
+        self.ProteinAminoAcidOffset = None 
+                                            
 
     def __str__(self):
         NumUniquePeptides = 0
@@ -375,13 +392,6 @@ class OpenReadingFrame(object):
     @chromosome.setter
     def chromosome(self,chrom):
         self.location.chromosome = chrom
-
-    def GetTranslation(self):
-        """Parameters: none
-        Return: Amino acid translation of the ORF
-        Description: gets the translation of the entire open reading frame
-        """
-        return self.aaseq
 
     def WriteSimpleProteinInference(self, Handle):
         """Parameters: an open file handle
@@ -499,19 +509,55 @@ class OpenReadingFrame(object):
         return len(self.__peptides)
 
     def addLocatedProtein(self, Protein):
+        """Parameters: LocatedProtein object
+        Return : None
+        Description: adds the protein to the ORF.  At the same
+        time, we also set some offset parameters for the protein/ORF
+        pair so that we can quickly access pieces of the sequence
+        """
         self.annotatedProtein = Protein
+        ProteinNuc5 = Protein.GetFivePrimeNucleotide()
+        ORFNuc5 = self.location.GetFivePrime()
+        Diff = abs(ProteinNuc5 - ORFNuc5)
+        AAOffset = Diff / 3
+        self.ProteinAminoAcidOffset = AAOffset
+        ## debug crap below
+        #print "%s 5' is %s; protein 5' is %s, diff in nuc %s, diff in protein %s"%(self, ORFNuc5, ProteinNuc5, Diff, AAOffset) 
 
     def GetLocatedProtein(self):
         if self.annotatedProtein:
             return self.annotatedProtein
         return None
+
+
+    def GetPredictedProteinLength(self):
+        NucLen = abs(self.annotatedProtein.GetStart() - self.annotatedProtein.GetStop())
+        ProtLen = NucLen / 3
+        return ProtLen
     
-    def GetProteinSequence(self):
-        """Parameters: none
+    def GetTranslation(self, Start =0, Stop = None):
+        """Parameters: none required.  optional start and stop
         Return: amino acid string (or None)
         Description: get the predicted protein sequence if such exists
+        You can also get the a substring, if you want
         """
-        return self.aaseq
+        if Stop:
+            return self.aaseq[Start:Stop]
+        
+        return self.aaseq[Start:]
+    
+    def GetProteinSequence(self, Start = 0, Stop = None):
+        """Parameters: none required.  optional start and stop
+        Return: amino acid string (or None)
+        Description: returns the protein sequence, or substring thereof.  If there
+        is no protein assigned, then this should mirror the GetTranslation method
+        """
+        #print "%s"%self
+        if self.ProteinAminoAcidOffset:
+            Start += self.ProteinAminoAcidOffset #this is because we are trying to get only the
+            ## protein seqeunce, which is already offset into the self.aaseq=== translation of the ORF
+        return self.GetTranslation(Start, Stop)
+
 
     def addLocatedPeptide(self, Peptide):
         'Adds a single LocatedPeptide objects to the ORF.'
@@ -538,6 +584,9 @@ class OpenReadingFrame(object):
         
     def GetName(self):
         return self.name
+    
+    def GetProteinName(self):
+        return self.annotatedProtein.GetName()
 
     def peptideIter( self ):
         'An iterator for the peptides. Usage: for pep in orf.peptideIter():'

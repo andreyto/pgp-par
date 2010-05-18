@@ -38,13 +38,14 @@ import PeptideMapper
 import PGPeptide
 import PGORFFilters
 import PGPrimaryStructure
-import SelectProteins
+import SignalPeptide
 import PGCleavageAnalysis
 import BasicStats
 import GFFIO
 from Utils import *
 Initialize()
 import math #for the log
+from itertools import combinations # for the combinations of double for loops
 
 class FinderClass():
     def __init__(self):
@@ -86,13 +87,17 @@ class FinderClass():
 
         self.FilterORFs(genome)
 
+        #now look for overlaps.  This is an effort at quality of assignments
+        # or confusion in the genome
+        self.CheckForOverlaps(genome, self.OutputPath)
+        
 
         if self.OutputPeptidesToGFF:
             self.WritePeptideGFFFile(genome)
         if self.SearchForMispredictions:
             self.FindMiscalls(genome)
         if self.SearchForCleavage:
-            self.AnalyzeCleavage()
+            self.AnalyzeCleavage(genome)
         #write out the simple protein inference
         self.WriteProteinInference()
         #write out the report
@@ -132,7 +137,7 @@ class FinderClass():
         Histogram = BasicStats.CreateHistogram(List, 0, 0.05)
         BasicStats.PrettyPrintHistogram(Histogram, None)
 
-    def FindOverlappingDubiousGeneCalls(self):
+    def CheckForOverlaps(self, genome, OutputPath):
         """Parameters: none
         Return: none
         Description: There are genomic regions for which two gene calls overlap. 
@@ -141,36 +146,109 @@ class FinderClass():
         out.  This method calls the PROilters methodFindOverlapnGeneCalls
         which does that.  First we have to build the right dictionary,  so we do that here
         """
-        ProteinDictionary = {} #proteinname->(start, stop)
-        MaxOverlap = 50 #the base pairs
-        for ORF in self.AllORFs.values():
-            if not ORF.ProteinPrediction:
-                continue #don't work with those lacking any protein.
-            #print "%s"%ORF.ProteinPredictionName
-            #ORF.ProteinPrediction.PrintMe()
-            #print "\n"
-            Name = ORF.ProteinPredictionName
-            Start = ORF.ProteinPrediction.StartNucleotide 
-            #'Start' is the small number. ALWAYS.  5' refers t but start is always just the small number
-            Stop = ORF.ProteinPrediction.StopNucleotide
-            #these coords don't yet take the stop codon into account, which NCBI does
-            if ORF.Strand == "+":
-                Stop += 3
-            else:
-                Start -= 3
-            ProteinDictionary[Name] = (Start, Stop)
-        OverlappingList = PGORFFilters.FindOverlappingDubiousGeneCalls(ProteinDictionary, MaxOverlap)
-        #now go through and see whether we have peptide evidence for some overlappers
-        for ORF in self.AllORFs.values():
-            if not ORF.ProteinPrediction:
-                continue #don't work with those lacking any protein.
-            if len(ORF.PeptideLocationList) < 1:
-                continue
-            #ORF has both a protein and peptides, good.
-            Name = ORF.ProteinPredictionName
-            if Name in OverlappingList:
-                print "%s is on the overlapping list, and has peptide representation"%Name
-
+        #first let's get our output path fixed up
+        (Path, Ext) = os.path.splitext(OutputPath)
+        NewPath = "%s.%s"%(Path, "conflictreport.txt")
+        OutHandle = open(NewPath, "w")
+        ConflictLevelCount = [0,0,0,0,0,0,0]
+        if self.Verbose:
+            print "ProteogenomicsPostProcessing.py:CheckForOverlaps"
+        for (chromName, chrom) in genome.chromosomes.items():
+            if self.Verbose:
+                print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
+            AllORFs = chrom.simpleOrfs.values() + chrom.pepOnlyOrfs.values()
+            for (ORF1, ORF2) in combinations(AllORFs, 2):
+                #first we check that at least one of these dudes has some proteomic coverage
+                #because we really don't care if stuff is not supported 
+                if ORF1.numPeptides() == 0 and ORF2.numPeptides() == 0:
+                    continue
+                #now we have to get the locations right for these things.  Let's do the simple stuff
+                #first.  We just get the overlap of gene coords (or coverage coords for pepOnlyOrfs)
+                #this can help us with level 0,1,2 then we do some more difficult stuff
+                Location1 = self.GetLocationForOverlapComparison(ORF1)
+                Location2 = self.GetLocationForOverlapComparison(ORF2)
+                Result = Location1.overlap(Location2)
+                ##Result could be 'None' meaning no overlap
+                if not Result:
+                    ConflictLevelCount[0] += 1
+                    continue
+                (StartOverlap, StopOverlap) = Result
+                Len = StopOverlap - StartOverlap
+                if Len < 10:
+                    ConflictLevelCount[1] += 1
+                elif Len < 40: 
+                    ConflictLevelCount[2] += 1
+                else:
+                    State = self.ComplexOverlapAnalysis(ORF1, ORF2, OutHandle)
+                    ConflictLevelCount[State] += 1
+        print ConflictLevelCount
+                
+    def ComplexOverlapAnalysis(self, ORF1, ORF2, Handle):
+        """Parameters: two OpenReadingFrame objects, an open file handle
+        Return: none
+        Description: for ORFs with more than 40bp of overlap, we do some more 
+        indepth analysis.  We see if they both have proteomic support, and
+        whether the supporting regions overlap
+        """
+        Peps1 = ORF1.numPeptides()
+        Peps2 = ORF2.numPeptides()
+        if Peps1 == 0:
+            #no peptides for ORF1.  Is it named "hypothetical"
+            ProteinName1 = ORF1.GetProteinName()
+            if ProteinName1.find("hypothetical") > -1:
+                Handle.write("Level 3 conflict: overlap an unsupported hypothetical\n" )
+                Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+                return 3
+            Handle.write("Level 4 conflict: overlap an unsupported named protein\n" )
+            Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            return 4
+        #now same for ORF2
+        if Peps2 == 0:
+            #print "%s"%ORF2
+            ProteinName2 = ORF2.GetProteinName()
+            if ProteinName2.find("hypothetical") > -1:
+                Handle.write("Level 3 conflict: overlap an unsupported hypothetical\n" )
+                Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+                return 3
+            Handle.write("Level 4 conflict: overlap an unsupported named protein\n" )
+            Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            return 4
+        #now we're both represented. that's not good news
+        #we need to make new locations, which are simply the proteomics-stop.  
+        #then we compare if those areas have a conflict.
+        (Start1, Stop1) = ORF1.GetObservedDNACoords()
+        (Start2, Stop2) = ORF2.GetObservedDNACoords()
+        Strand1 = ORF1.GetStrand()
+        Strand2 = ORF2.GetStrand()
+        Location1 = PGPeptide.GenomicLocation(Start1, Stop1, Strand1)
+        Location2 = PGPeptide.GenomicLocation(Start2, Stop2, Strand2)
+        Result = Location1.overlap(Location2)
+        if not Result:
+            #no overlap
+            Handle.write("Level 5 conflict: overlap of two supported proteins, but overlapping region not supported\n" )
+            Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            return 5
+        Handle.write("Level 6 conflict: overlap of two supported proteins, overlapping region has peptide support\n" )
+        Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+        return 6   
+        
+                    
+    def GetLocationForOverlapComparison(self, ORF):
+        """Parameters: an OpenReadingFrame object
+        Return: a GenomicLocation object
+        Description: we get the location of a protein or peptideset for comparinson
+        in the overlap contest.  When an ORF has a locatedprotein, then we use that
+        if not, then we give the bounding box of the peptides-stop.
+        """
+        Protein = ORF.GetLocatedProtein()
+        if Protein:
+            return Protein.GetLocation()
+        #now we make this up.  It has no protein, so it must have peptides
+        (Start, Stop) = ORF.GetObservedDNACoords()
+        Strand = ORF.GetStrand()
+        Location = PGPeptide.GenomicLocation(Start, Stop, Strand)
+        return Location
+        
 
     def FilterORFs(self,genome):
         """
@@ -283,7 +361,7 @@ class FinderClass():
 
 
 
-    def AnalyzeCleavage(self):
+    def AnalyzeCleavage(self, genome):
         """
         Parameters: None
         Return: None
@@ -292,8 +370,13 @@ class FinderClass():
         Enzymes = ["Trypsin", ]
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:AnalyzeCleavage"
-        for ORF in self.AllORFs.values():
-            PGCleavageAnalysis.Analysis(ORF, Enzymes)
+        for (chromName, chrom) in genome.chromosomes.items():
+            BagChecker = SignalPeptide.FinderClass(self.OutputPath)
+            if self.Verbose:
+                print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
+
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
+                BagChecker.EvaluateSignalPeptide(ORF)
 
     def LoadResultsFromGFF(self, GFFFile):
         """Parameters: GFF file path
