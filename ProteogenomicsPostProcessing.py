@@ -61,7 +61,6 @@ class FinderClass():
         self.AllORFs = {} #ORF name -> GenomeLocationForORF object
         self.ProteomicallyObservedORFs = [] # this is populated when peptides are mapped, and deleted after ORF Objects are created
         self.UniquenessFlag = 0
-        self.ORFPeptideMapper = PeptideMapper.PeptideMappingClass()
         self.InterPeptideDistanceMax = 1000 # sensible default
         self.PValueLimit = 0.05 #pvalues are 0.00 (good) to 1.0 (bad) 
         self.Verbose = 0
@@ -73,7 +72,6 @@ class FinderClass():
         self.Report = PGPReport()
 
     def Main(self):
-        self.ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
         chromReader = PGPeptide.GenbankGenomeReader(self.GenbankPath, self.ORFDatabasePaths)
         genome = chromReader.makeGenomeWithProteinORFs()
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
@@ -481,12 +479,14 @@ class FinderClass():
         Count = 0
         LocationCount=0
         inGenomeCount = 0
+        ORFPeptideMapper = PeptideMapper.PeptideMappingClass()
+        ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
         for (Aminos, PValue) in self.AllPeptides.items():
             Count += 1
             if (Count %1000) == 0 and self.Verbose:
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
-            LocatedPeptides = self.ORFPeptideMapper.MapPeptide(Aminos, PValue)
+            LocatedPeptides = ORFPeptideMapper.MapPeptide(Aminos, PValue)
             if self.UniquenessFlag and (len(LocatedPeptides) > 1):
                 continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
             self.AllLocatedPeptides.extend(LocatedPeptides)
@@ -557,7 +557,7 @@ class FinderClass():
             else:
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
-            
+
         print "I got %s truedb peptides, and %s decoy peptides (%s spectra)"%(len(self.AllPeptides), len(FalseAminos), SpectrumCount)
         self.Report.SetValue("TruePeptides", len(self.AllPeptides))
         self.Report.SetValue("DecoyPeptides", len(FalseAminos))
@@ -651,7 +651,7 @@ class PGPReport():
         self.Info["PGPVersion"] = None
         self.Info["FiltersUsed"] = None
         self.FileName = "renameyourreport.txt"
-        
+
     def WriteReport(self):
         #create the long string.  Sooo boring
         String = ""
@@ -669,7 +669,7 @@ class PGPReport():
         String += "Filters employed %s\n"%self.Info["FiltersUsed"]
         String += "Novel proteins: %s\n"%self.Info["NovelORFCount"]
         String += "Underpredicted proteins: %s\n"%self.Info["ORFWrongStartCount"]
-        
+
         Handle = open(self.FileName, "w")
         Handle.write(String)
         Handle.close()
@@ -681,7 +681,7 @@ class PGPReport():
         self.Info[Key] = Value
     def SetFileName(self, FileName):
         self.FileName = FileName
-        
+
 
 if __name__ == "__main__":
     try:

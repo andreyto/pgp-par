@@ -98,9 +98,9 @@ class Test(unittest.TestCase):
             (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01) #hack because they are all unique, it should be a one member list
             AllPeptides.append(Peptide)
 
-        for ID in Mapper.ORFDB.ProteinSequences.keys():
-            Fasta = Mapper.ORFDB.ProteinNames[ID]
-            Seq = Mapper.ORFDB.ProteinSequences[ID]
+        for ID in range(0,len(Mapper.orfIndex.ids)):
+            Fasta = Mapper.orfIndex.ids[ID]
+            Seq = Mapper.orfIndex.seqs[ID]
             Object = PGPeptide.OpenReadingFrame(Fasta, Seq)
             #now go throug the peptides, and add them to this object
             for LocatedPeptide in AllPeptides:

@@ -40,29 +40,32 @@ class Test(unittest.TestCase):
         "The trie is indexed and finds peptides."
         trieIndex = bioseq.TrieIndexSeqs(Test.TRIE)
         trieIndex.index()
-        pairs = trieIndex.accessionsWherePeptideFound('TPEIRSR')
+        pairs = trieIndex.accessionsWhereSeqFound('TPEIRSR')
         self.assertEqual( len(pairs), 1)
-        acc,index = pairs[0]
+        acc,index,offset = pairs[0]
         self.assertEqual('Protein0.Chr:NC_004837.Frame1.StartNuc1.Strand+',acc)
         self.assertEqual('CNERCNSDPHPTPEIRSRG',trieIndex.seqs[index])
 
-        pairs = trieIndex.accessionsWherePeptideFound('VTNGAIV')
+        pairs = trieIndex.accessionsWhereSeqFound('VTNGAIV')
         self.assertEqual( len(pairs), 1)
-        acc,index = pairs[0]
+        acc,index,offset = pairs[0]
+        self.assertEqual( offset, 0 )
         self.assertEqual('Protein1.Chr:NC_004837.Frame2.StartNuc2.Strand+',acc)
         self.assertEqual('VTNGAIVIHTQRLKSDPGGNLLS',trieIndex.seqs[index])
 
-        pairs = trieIndex.accessionsWherePeptideFound('RADYPLD')
+        pairs = trieIndex.accessionsWhereSeqFound('RADYPLD')
         self.assertEqual( len(pairs), 1)
-        acc,index = pairs[0]
+        acc,index,offset = pairs[0]
+        self.assertEqual( offset, 2 )
         self.assertEqual('Protein595.Chr:NC_004837.Frame3.StartNuc74.Strand-',acc)
         self.assertEqual('IRRADYPLDLISGVGCGSLLHRSL',trieIndex.seqs[index])
 
-        pairs = trieIndex.accessionsWherePeptideFound('SSII')
+        pairs = trieIndex.accessionsWhereSeqFound('SSII')
         self.assertEqual( len(pairs), 2)
-        acc,index = pairs[0]
+        acc,index,offset = pairs[0]
         self.assertEqual('LKIINAILACKSNIWHRKALVITYYPHSFREVSGISSIIITI',trieIndex.seqs[index])
-        acc,index = pairs[1]
+        acc,index,offset = pairs[1]
+        self.assertEqual( offset, 2 )
         self.assertEqual('CCSSIITPLLCRMSRRWRVDDAGGVCRSSPDFHQDARHTLFSPEAVPAWTAALRASDRRDGPGLFHAFVG',
                          trieIndex.seqs[index])
 

@@ -17,9 +17,8 @@ NOTE: this is strictly for bacterial peptides that map unspliced.  There
 is a separate program eukPeptideMapper that deals with the headache of splicing
 """
 
-
-import SelectProteins
 import PGPeptide
+import bioseq
 
 
 class PeptideMappingClass:
@@ -27,7 +26,7 @@ class PeptideMappingClass:
         self.DatabasePaths = [] #possibly multiple
         self.CurrentAminos = ""
         self.UniquePeptideCount =0
-        
+
     def LoadDatabases(self, DBPaths):
         """
         Parameters: a list of paths to databases.  these should be 6 frame translations
@@ -35,8 +34,8 @@ class PeptideMappingClass:
         Description: load up databases in preparation for searching
         """
         self.DatabasePaths = DBPaths
-        self.ORFDB = SelectProteins.ProteinSelector()
-        self.ORFDB.LoadMultipleDB(self.DatabasePaths)
+        self.orfIndex = bioseq.TrieIndexSeqs( DBPaths )
+        self.orfIndex.index()
 
     def MapPeptide(self, Aminos, PValue, WarnNoMatch = 0):
         """
@@ -50,16 +49,15 @@ class PeptideMappingClass:
         ReturnList = [] # the list of PGPeptide.LocatedPeptide objects
         self.CurrentAminos = Aminos #only used for printing in case or error
         #1. First find the location(s) of the aminos in the ORF database
-        LocationsInORFDB = self.ORFDB.FindPeptideLocations(Aminos)
+        LocationsInORFDB = self.orfIndex.accessionsWhereSeqFound(Aminos)
         if (len(LocationsInORFDB) < 1) and WarnNoMatch:
             #sometimes we don't care that there's no match.  Like for trypsin.  it's 
             #not part of our 6frame bacteria, but it was in the inspect search
             print "Peptide %s was not found in the database"%Aminos
         #2. now go through the process of converting protein space to nucleotide space    
-        for (ORFID, PeptideStartAA) in LocationsInORFDB:
+        for (ORFFastaLine, ORFID, PeptideStartAA) in LocationsInORFDB:
             ## PeptideStartAA is the start position within the amino acid sequence
             #1. parse out the features of the protein name (fasta header)
-            ORFFastaLine = self.ORFDB.ProteinNames[ORFID]
             ParsedORFInfo = PGPeptide.ORFFastaHeader(ORFFastaLine)
             SimpleLocation = self.MapNucleotideLocation(ParsedORFInfo, PeptideStartAA, len(Aminos))
             #now that we have a Location, let's get our Located Peptide Object up and running
@@ -69,7 +67,7 @@ class PeptideMappingClass:
             Peptide.name = "Peptide%s"%self.UniquePeptideCount
             self.UniquePeptideCount += 1
             #now we check the letter before us to see if it's tryptic
-            ORFSequence = self.ORFDB.ProteinSequences[ORFID]
+            ORFSequence = self.orfIndex.seqs[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]
             PeptideEndAA = PeptideStartAA + len(Aminos)
             if PeptideEndAA == len(ORFSequence):
@@ -82,7 +80,7 @@ class PeptideMappingClass:
                 Peptide.isUnique = 1
             #append to list
             ReturnList.append(Peptide)
-            
+
         return ReturnList
 
 

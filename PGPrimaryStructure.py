@@ -27,13 +27,15 @@ class PrimaryStructure:
         (Path, Ext) = os.path.splitext(OutputPath)
         self.OutputStub = Path
         NovelFastaPath = "%s.%s"%(self.OutputStub, "novel.faa")
-        self.NovelFastaHandle = open(NovelFastaPath, "w") #this used to be append. but I couldn't figure out why
+        #Use append mode so output from multiple chromosomes is not overwritten
+        #in testing make sure to remove or rename your previous output
+        self.NovelFastaHandle = open(NovelFastaPath, "a")
         NovelInfoPath = "%s.%s"%(self.OutputStub, "novel.info")
-        self.NovelInfoHandle = open(NovelInfoPath, "w")
+        self.NovelInfoHandle = open(NovelInfoPath, "a")
         UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
-        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "w")
+        self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "a")
         ShortProteinPath = "%s.%s"%(self.OutputStub, "shortprotein.info")
-        self.ShortProteinHandle = open(ShortProteinPath, "w")
+        self.ShortProteinHandle = open(ShortProteinPath, "a")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []

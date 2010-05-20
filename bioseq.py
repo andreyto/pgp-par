@@ -99,24 +99,31 @@ class TrieIndexSeqs(object):
         for seq in self.reader:
             self.ids.append( seq.acc )
             self.seqs.append( seq.seq )
-            offset += len(seq.seq) + 1 # extra 1 for the * in the trie
-            # Store the end of the sequences
+            # Store begin of sequence
             self.positions.append( offset );
+            offset += len(seq.seq) + 1 # extra 1 for the * in the trie
 
         self.trie = '*'.join( self.seqs )
 
     def indexAtOffset(self, beginInTrie):
-        return bisect.bisect_right( self.positions, beginInTrie)
+        # bisect right will always give us the sequence after 
+        # the one we want, so subtract 1
+        return bisect.bisect_right( self.positions, beginInTrie) - 1
 
-    def accessionsWherePeptideFound( self, peptide):
+    def accessionsWhereSeqFound( self, seqToFind):
+        '''Given a sequence returns a list of tuples of locations in the index.
+        The tuple contains the sequence accession, sequence number, and 
+        start of the search sequence relative to it's parents begin.
+        '''
         accIndexPairs = []
         offset = 0
         while 1:
-            offset = self.trie.find( peptide, offset )
+            offset = self.trie.find( seqToFind, offset )
             if offset == -1:
                 break
             index = self.indexAtOffset( offset )
-            accIndexPairs.append( (self.ids[index], index) )
+            offsetInSeq = offset - self.positions[ index ]
+            accIndexPairs.append( (self.ids[index], index, offsetInSeq) )
             offset += 1
 
         return accIndexPairs

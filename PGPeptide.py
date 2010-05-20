@@ -23,7 +23,7 @@ class GenomicLocation(object):
         self.chromosome = chromosome
 
     @classmethod
-    def FromHeader(self, ParsedHeader, AALength, offsetInAA=0, addStop=False):
+    def FromHeader(cls, ParsedHeader, AALength, offsetInAA=0, addStop=False):
         """
         Parameters: ORFFastaHeader object, length of the amino acids in the ORF
         addStop: is a boolean. On true it includes 1 extra codon at the 3' end.
@@ -59,7 +59,7 @@ class GenomicLocation(object):
             if ThreePrime < 1:
                 print "Warning setting negative start to 1 %d" % ThreePrime
                 ThreePrime = 1
-            SimpleLocation = GenomicLocation(ThreePrime, FivePrime, Strand, Chrom)
+            SimpleLocation = cls(ThreePrime, FivePrime, Strand, Chrom)
         else:
             # now the position.  We first get the protein start nuc, and then
             # offset to the peptide start
@@ -67,7 +67,7 @@ class GenomicLocation(object):
             FivePrime += offsetInAA * 3
             CodingThreePrime = FivePrime + (AALength * 3) - 1
             ThreePrime = CodingThreePrime + offset3Prime
-            SimpleLocation = GenomicLocation(FivePrime, ThreePrime, Strand, Chrom)
+            SimpleLocation = cls(FivePrime, ThreePrime, Strand, Chrom)
 
         SimpleLocation.frame = Frame
         return SimpleLocation
