@@ -5,7 +5,7 @@ A generic sequence class for passing sequences around.
 Also support classes for doing sequence IO.
 '''
 
-import os, re, fileinput, struct
+import os, re, fileinput, struct, bisect
 from StringIO import StringIO
 
 class Sequence(object):
@@ -78,13 +78,40 @@ class TrieReader(FlatFileIO):
             Info = struct.unpack("<qi80s", Block)
             Name = Info[2]
             NullPos = Name.find("\0")
-            if NullPos !=- 1:
+            if NullPos != -1:
                 Name = Name[:NullPos]
             seq = Sequence( Name, seqs[i], Info[1] )
             yield seq
             i += 1
 
         IndexFile.close()
+
+class TrieIndexSeqs(object):
+    def __init__(self,trieFile):
+        self.reader = TrieReader(trieFile)
+        self.positions = []
+        self.ids = []
+        self.seqs = []
+        self.trie = ''
+
+    def index(self):
+        offset = 0
+        for seq in self.reader:
+            self.ids.append( seq.acc )
+            self.seqs.append( seq.seq )
+            offset += len(seq.seq) + 1 # extra 1 for the * in the trie
+            # Store the end of the sequences
+            self.positions.append( offset );
+
+        self.trie = '*'.join( self.seqs )
+
+    def indexAtOffset(self, beginInTrie):
+        return bisect.bisect_right( self.positions, beginInTrie)
+
+    def accessionWherePeptideFound( self, peptide):
+        offset = self.trie.find( peptide )
+        index = self.indexAtOffset( offset )
+        return (self.ids[index],index)
 
 class FastaReader(FlatFileIO):
     '''
