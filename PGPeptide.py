@@ -212,6 +212,7 @@ class LocatedPeptide(object):
         self.TrypticNTerm = None
         self.TrypticCTerm = None
         self.ORFName = None #this is actually the ORF Name.  as we put them into ORFs
+        self.MSMSSource = [] # a list of tuples (file,spectrum), (file, spectrum), (file,spectrum)
 
 
     @property

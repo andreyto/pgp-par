@@ -56,6 +56,7 @@ class FinderClass():
         self.ProteomeDatabasePaths = [] #possibly multiple
         self.ORFDatabasePaths = [] #possibly multiple
         self.AllPeptides = {} # AminoSequence -> best pvalue, nulled out in MapAllPeptides
+        self.PeptideSources = {} #aminosequence->[(file,spectrum), (file,spectrum), ...]
         self.AllLocatedPeptides = [] #list of PeptideMapper.GenomicLocationForPeptide
         self.AllPredictedProteins = {} #predictedProteinName ->GenomicLocationForPeptide Object, used in CreateORFs
         self.AllORFs = {} #ORF name -> GenomeLocationForORF object
@@ -487,6 +488,7 @@ class FinderClass():
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
             LocatedPeptides = ORFPeptideMapper.MapPeptide(Aminos, PValue)
+
             if self.UniquenessFlag and (len(LocatedPeptides) > 1):
                 continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
             self.AllLocatedPeptides.extend(LocatedPeptides)
@@ -530,6 +532,10 @@ class FinderClass():
                 Aminos = Peptide.Aminos
                 PValue = result.PValue
                 InspectMappedProtein = result.ProteinName
+                FilePath = result.SpectrumFile
+                Spectrum = result.ScanNumber
+                (Path, File) = os.path.split(FilePath)
+                SourceTuple = (File,Spectrum)
             except:
                 traceback.print_exc()
                 continue # SNAFU
@@ -554,7 +560,10 @@ class FinderClass():
 
             if not self.AllPeptides.has_key(Aminos):
                 self.AllPeptides[Aminos] = PValue
+                self.PeptideSources[Aminos] = []
+                self.PeptideSources[Aminos].append(SourceTuple)
             else:
+                self.PeptideSources[Aminos].append(SourceTuple)
                 if PValue <  self.AllPeptides[Aminos]:
                     self.AllPeptides[Aminos] = PValue
 
