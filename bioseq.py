@@ -108,10 +108,18 @@ class TrieIndexSeqs(object):
     def indexAtOffset(self, beginInTrie):
         return bisect.bisect_right( self.positions, beginInTrie)
 
-    def accessionWherePeptideFound( self, peptide):
-        offset = self.trie.find( peptide )
-        index = self.indexAtOffset( offset )
-        return (self.ids[index],index)
+    def accessionsWherePeptideFound( self, peptide):
+        accIndexPairs = []
+        offset = 0
+        while 1:
+            offset = self.trie.find( peptide, offset )
+            if offset == -1:
+                break
+            index = self.indexAtOffset( offset )
+            accIndexPairs.append( (self.ids[index], index) )
+            offset += 1
+
+        return accIndexPairs
 
 class FastaReader(FlatFileIO):
     '''

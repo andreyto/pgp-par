@@ -40,17 +40,31 @@ class Test(unittest.TestCase):
         "The trie is indexed and finds peptides."
         trieIndex = bioseq.TrieIndexSeqs(Test.TRIE)
         trieIndex.index()
-        acc,index = trieIndex.accessionWherePeptideFound('TPEIRSR')
+        pairs = trieIndex.accessionsWherePeptideFound('TPEIRSR')
+        self.assertEqual( len(pairs), 1)
+        acc,index = pairs[0]
         self.assertEqual('Protein0.Chr:NC_004837.Frame1.StartNuc1.Strand+',acc)
         self.assertEqual('CNERCNSDPHPTPEIRSRG',trieIndex.seqs[index])
 
-        acc,index = trieIndex.accessionWherePeptideFound('VTNGAIV')
+        pairs = trieIndex.accessionsWherePeptideFound('VTNGAIV')
+        self.assertEqual( len(pairs), 1)
+        acc,index = pairs[0]
         self.assertEqual('Protein1.Chr:NC_004837.Frame2.StartNuc2.Strand+',acc)
         self.assertEqual('VTNGAIVIHTQRLKSDPGGNLLS',trieIndex.seqs[index])
 
-        acc,index = trieIndex.accessionWherePeptideFound('RADYPLD')
+        pairs = trieIndex.accessionsWherePeptideFound('RADYPLD')
+        self.assertEqual( len(pairs), 1)
+        acc,index = pairs[0]
         self.assertEqual('Protein595.Chr:NC_004837.Frame3.StartNuc74.Strand-',acc)
         self.assertEqual('IRRADYPLDLISGVGCGSLLHRSL',trieIndex.seqs[index])
+
+        pairs = trieIndex.accessionsWherePeptideFound('SSII')
+        self.assertEqual( len(pairs), 2)
+        acc,index = pairs[0]
+        self.assertEqual('LKIINAILACKSNIWHRKALVITYYPHSFREVSGISSIIITI',trieIndex.seqs[index])
+        acc,index = pairs[1]
+        self.assertEqual('CCSSIITPLLCRMSRRWRVDDAGGVCRSSPDFHQDARHTLFSPEAVPAWTAALRASDRRDGPGLFHAFVG',
+                         trieIndex.seqs[index])
 
     def testFastaReader(self):
         "Fasta sequence correctly parsed into acc, seq and desc."
