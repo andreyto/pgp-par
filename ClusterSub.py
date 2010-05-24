@@ -370,7 +370,10 @@ PMTolerance,3.0
                     except IndexError:
                         # An occasional mzxml file makes CountScans
                         # raise an IndexError. Skip for now
-                        print "Spectrum file %s had problem skipping." % mzFile
+                        print "Spectrum file %s from %s had problem skipping." % (mzFile,tf)
+                        bad = os.path.join(self.gridEnv.MZXMLDir,mzFile)
+                        print "Removing %s." % bad
+                        os.unlink( bad )
                         del(tarContents[ mzFile ])
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
