@@ -103,7 +103,7 @@ class ScanCounter:
                 self.FileSizes[FileName] = os.stat(FilePath).st_size
     def CountScansMZXML(self, FilePath):
         FileScanCount = 0
-        File = open(FilePath, "rb")
+        File = open(FilePath, "r")
         Text = ""
         MZXMLScanNumbers = {}
         while 1:

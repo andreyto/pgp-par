@@ -365,7 +365,13 @@ PMTolerance,3.0
 
                     tarContents[ mzFile ] = fulltar
                     tfile.extract(tinfo, path=self.gridEnv.MZXMLDir)
-                    CountScans.main( scanArgs )
+                    try:
+                        CountScans.main( scanArgs )
+                    except IndexError:
+                        # An occasional mzxml file makes CountScans
+                        # raise an IndexError. Skip for now
+                        print "Spectrum file %s had problem skipping." % mzFile
+                        del(tarContents[ mzFile ])
 
         print "Found %d spectra tar files with %d members" % (tarCount,len(tarContents))
         mzManifest = open(os.path.join(self.gridEnv.ScratchDir,"SpectraList.txt"),'w')
