@@ -406,11 +406,15 @@ PMTolerance,3.0
             if not foundCommon:
                 if Common in files:
                     shutil.copy( os.path.join( inspectDBs, Common), workDir )
-                    shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir ) 
+                    shutil.copy( os.path.join( inspectDBs, 'Common.RS.index'), workDir )
                     foundCommon = True
 
-            fnafiles = [x for x in files if x.endswith(suffix)
-                                    and not x.endswith(sixSuffix) ]
+            # Only fasta files, and not the Common file, because it doesn't follow the
+            # .fasta.trie naming convention
+            fnafiles = [x for x in files if x.endswith(suffix) and x != Common ]
+            if sixFrame:
+                # Don't do a sixFrame translation of an existing sixFrame file
+                fnafiles = [x for x in fnafiles if not x.endswith(sixSuffix) ]
 
             for fasta in fnafiles:
                 fullFastaPath = os.path.join( root, fasta )
