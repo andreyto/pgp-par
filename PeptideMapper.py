@@ -34,7 +34,8 @@ class PeptideMappingClass:
         Description: load up databases in preparation for searching
         """
         self.DatabasePaths = DBPaths
-        self.orfIndex = bioseq.TrieIndexSeqs( DBPaths )
+        #self.orfIndex = bioseq.TrieIndexSeqs( DBPaths )
+        self.orfIndex = bioseq.QGramIndex( DBPaths )
         self.orfIndex.index()
 
     def MapPeptide(self, Aminos, PValue, WarnNoMatch = 0):

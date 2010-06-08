@@ -2,6 +2,17 @@ This directory is about linking the seqan (http://www.seqan.de) libraries
 to python. Initial this is done via the boost python wrappers:
 http://www.boost.org/doc/libs/1_43_0/libs/python/doc/index.html
 
+About the files
+    The IndexSearch.cpp is the file linking seqan & pyton via boost.
+
+    indexSearch.cc is a C++ only test program. I built it as such: 
+    g++ -O3 -I$das/devel/seqan/projects/library -o indexSearch indexSearch.cc
+    Where $das was /usr/local/devel/DAS/users/eventer. Any copy of seqan
+    should be sufficient.
+
+    ExactSearch.* and indexSearchSet.* are other explorations and or dead
+    ends and may be deleted.
+
 How to Build the module
     A copy of the seqan libraries and boost libraries must be available.
     The boost build tool bjam is also needed to build the module.

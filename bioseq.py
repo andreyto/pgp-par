@@ -128,6 +128,23 @@ class TrieIndexSeqs(object):
 
         return accIndexPairs
 
+import IndexSearch
+
+class QGramIndex(TrieIndexSeqs):
+    def index(self):
+        TrieIndexSeqs.index(self)
+        self.search = IndexSearch.IndexSearch( self.trie )
+
+    def accessionsWhereSeqFound( self, seqToFind):
+        accIndexPairs = []
+        for offset in  self.search.find( seqToFind ):
+            index = self.indexAtOffset( offset )
+            offsetInSeq = offset - self.positions[ index ]
+            accIndexPairs.append( (self.ids[index], index, offsetInSeq) )
+
+        return accIndexPairs
+
+
 class FastaReader(FlatFileIO):
     '''
     A class that iterates through fasta files and produces Sequence objects.
