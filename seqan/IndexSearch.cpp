@@ -41,6 +41,11 @@ namespace { // Avoid cluttering the global namespace.
           dbStr = new Peptide( dbString );
           dbIndex = new MyIndex( *dbStr );
       }
+      ~IndexSearch()
+      {
+          delete dbIndex;
+          delete dbStr;
+      }
 
       PyObject* find(const std::string& pepStr)
       {
