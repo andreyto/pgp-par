@@ -1,0 +1,67 @@
+// Copyright Ralf W. Grosse-Kunstleve 2002-2004. Distributed under the Boost
+// Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#include <boost/python/class.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/def.hpp>
+#include <iostream>
+
+#include <seqan/find.h>
+#include <seqan/sequence.h>
+
+namespace { // Avoid cluttering the global namespace.
+
+  //typedef seqan::String<seqan::AminoAcid> Peptide;
+  typedef seqan::String<char> Peptide;
+  //typedef std::string Peptide;
+
+  class ExactSearch
+  {
+    public:
+      ExactSearch(const std::string& dbStr)
+      {
+          db = new Peptide(dbStr);
+          seqan::Finder<Peptide>* f = new seqan::Finder<Peptide>(*db);
+          finder = *f;
+          std::cout << "Length of db is: " << length(*db) << std::endl;
+      }
+      ~ExactSearch()
+      {
+          delete &finder;
+          delete db;
+      }
+      std::vector<int> find(const std::string& pepStr)
+      {
+          std::vector<int> positions;
+          const Peptide pep(pepStr);
+          seqan::Pattern<Peptide, seqan::Horspool> pattern(pep);
+
+          std::cout << "Peptide to search is " << pep << std::endl;
+          int cnt = 0;
+          while( seqan::find(finder, pattern) )
+          {
+              cnt++;
+              std::cout << position( finder ) << std::endl;
+              positions.push_back( position( finder ));
+              std::cout << position( finder ) << std::endl;
+          }
+          std::cout << "Pattern find count " << cnt << std::endl;
+
+          return positions;
+      }
+    private:
+      seqan::Finder<Peptide> finder;
+      Peptide* db;
+  };
+}
+
+BOOST_PYTHON_MODULE(ExactSearch)
+{
+    using namespace boost::python;
+    class_<ExactSearch>("ExactSearch", init< const std::string >())
+        // Add a regular member function.
+        .def("find", &ExactSearch::find)
+        ;
+}
+
