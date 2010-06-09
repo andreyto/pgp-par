@@ -11,9 +11,9 @@
 #include <seqan/index.h>
 #include <seqan/sequence.h>
 
-// Currently using a 6 mer since a 7 mer gives an overflow
-// error during compile
-#define MER_SIZE 6
+// Currently using a 5 mer since a 7 mer gives an overflow error
+// during compile and a 6 mer is slower due to higher memory usage
+#define MER_SIZE 5
 
 namespace { // Avoid cluttering the global namespace.
 
