@@ -11,12 +11,18 @@
 #include <seqan/index.h>
 #include <seqan/sequence.h>
 
+// Currently using a 6 mer since a 7 mer gives an overflow
+// error during compile
+#define MER_SIZE 6
+
 namespace { // Avoid cluttering the global namespace.
 
   typedef seqan::String<seqan::AminoAcid> Peptide;
 //  typedef seqan::String<char> Peptide;
 //  typedef seqan::StringSet<Peptide> PepSet;
-  typedef seqan::Index< Peptide, seqan::Index_QGram< seqan::UngappedShape< 6 > > > MyIndex;
+  typedef seqan::Index< Peptide,
+          seqan::Index_QGram<
+          seqan::UngappedShape< MER_SIZE > > > MyIndex;
 
   class IndexSearch
   {
@@ -51,14 +57,20 @@ namespace { // Avoid cluttering the global namespace.
       {
           seqan::Finder<MyIndex> finder( *dbIndex );
           const Peptide pep(pepStr);
+          const int pepLen = length(pep);
           PyObject* positions = PyList_New(0);
 
 //          std::cout << "Length of db is " << seqan::length(db) << std::endl;
           while( seqan::find(finder, pep) )
           {
-              PyObject* pos = PyInt_FromLong( position(finder) );
-              PyList_Append( positions, pos );
-              Py_DECREF( pos );
+              int dbOffset = position(finder);
+              const Peptide dbInfix = infixWithLength(*dbStr, dbOffset, pepLen);
+              if (dbInfix == pepStr)
+              {
+                  PyObject* pos = PyInt_FromLong( dbOffset );
+                  PyList_Append( positions, pos );
+                  Py_DECREF( pos );
+              }
           }
           return positions;
       }
