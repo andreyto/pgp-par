@@ -31,6 +31,8 @@ class FilterList:
         Description: apply the filters one at a time, deleting
         the ORF objects that the filters tell me to delete
         """
+        KilledPeptideCount =0
+        KilledProteinCount = 0
         KillList = [] # a list of ORF.name to kill
         for (Name, ORF) in DictionaryOfORFs.items():
             #now cycle through all our filters.  We use the ordering
@@ -49,6 +51,8 @@ class FilterList:
             #    kill ORFs for no reason.  In fact it would actually be better for 
             #    if we just deleted all the peptides of stuff on the list.
             if DeleteMe:
+                KilledPeptideCount += ORF.numPeptides()
+                KilledProteinCount += 1
                 ORF.DeleteAllPeptides()
                 #we only truly delete something if it has no peptides AND no protein
                 if ORF.GetLocatedProtein() == None:
@@ -56,7 +60,7 @@ class FilterList:
             
         for Name in KillList:
             del DictionaryOfORFs[Name]
-        
+        print "after filtering I killed %s proteins with %s peptides"%(KilledProteinCount, KilledPeptideCount)
         return DictionaryOfORFs
     
 

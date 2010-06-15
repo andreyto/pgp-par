@@ -100,6 +100,7 @@ class FinderClass():
         #write out the simple protein inference
         self.WriteProteinInference()
         #write out the report
+        self.Report.WriteReport()
         
     def WriteProteinInference(self):
         """Parameters: NOne
@@ -477,9 +478,11 @@ class FinderClass():
         """
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:MapAllPeptides"
-        Count = 0
+        Count = 0 #just a raw total.  no higher meaning
         LocationCount=0
         inGenomeCount = 0
+        NonMappingCount = 0
+        MappingCount = 0 #those that do map to our databases
         ORFPeptideMapper = PeptideMapper.PeptideMappingClass()
         ORFPeptideMapper.LoadDatabases(self.ORFDatabasePaths) #a handle for the 6frame translations db (called ORF)
         for (Aminos, PValue) in self.AllPeptides.items():
@@ -488,6 +491,13 @@ class FinderClass():
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
             LocatedPeptides = ORFPeptideMapper.MapPeptide(Aminos, PValue)
+            if len(LocatedPeptides) == 0:
+                #this peptide sequence did not map to the database.  That might mean that
+                #it is a common contaminant, like trypsin and I'm not caring about those. 
+                #but in any case it is something that we want to keep track of
+                NonMappingCount += 1
+            else:
+                MappingCount += 1
 
             if self.UniquenessFlag and (len(LocatedPeptides) > 1):
                 continue #skip out on adding it to the list because it's not unique.  And that's what you asked for
@@ -502,7 +512,7 @@ class FinderClass():
                     inGenomeCount += 1
                     orfInGenome.addLocatedPeptide( Location )
                 else:
-                    # ORF not in genome, create a Peptide only orf
+                    # ORF not in genome annotation, create a Peptide only orf
                     orf = PGPeptide.OpenReadingFrame(name=Location.ORFName)
                     orf.location = Location.location
                     genome.addOrf( orf, 'PepOnly' )
@@ -514,8 +524,14 @@ class FinderClass():
         genome.addSeqToPepOnlyOrfs( self.ORFDatabasePaths )
 
         self.AllPeptides = {}  # set to null just for the memory savings
+        #now we set variables in the report
+        PeptidesMappingOutsideAnnotation = LocationCount - inGenomeCount
+        self.Report.SetValue("UnmappedPeptides", NonMappingCount)
+        self.Report.SetValue("MappedPeptideLocationCount", LocationCount)
+        self.Report.SetValue("MappedPeptideCount", MappingCount)
+        self.Report.SetValue("PeptidesMappingOutsideAnnotation", PeptidesMappingOutsideAnnotation)
         if self.Verbose:
-            print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in genome"%(Count, LocationCount,inGenomeCount)
+            print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in current annotation"%(MappingCount, LocationCount,inGenomeCount)
 
 
     def ParseInspect(self, FilePath):
@@ -653,12 +669,14 @@ class PGPReport():
         self.Info["UnmappedProteinsComplex"] = None
         self.Info["MappedPeptideCount"] = None
         self.Info["MappedPeptideLocationCount"] = None
+        self.Info["UnmappedPeptides"] = None
         self.Info["ORFCountPreFilter"] =None
         self.Info["ORFCountPostFilter"] = None
         self.Info["NovelORFCount"] = None
         self.Info["ORFWrongStartCount"] = None
         self.Info["PGPVersion"] = None
         self.Info["FiltersUsed"] = None
+        self.Info["PeptidesMappingOutsideAnnotation"]= None
         self.FileName = "renameyourreport.txt"
 
     def WriteReport(self):
@@ -673,6 +691,8 @@ class PGPReport():
                                                                                self.Info["UnmappedProteinsSNAFU"])
         String += "Mapped %s peptides to %s locations\n"%(self.Info["MappedPeptideCount"], 
                                                           self.Info["MappedPeptideLocationCount"])
+        String += "\t%s Unmappable peptides\n"%self.Info["UnmappedPeptides"]
+        String += "\t%s Peptides map outside of current annotation\n"%self.Info["PeptidesMappingOutsideAnnotation"]
         String += "ORFs analyzed: %s prefilter, %s postfilter\n"%(self.Info["ORFCountPreFilter"],
                                                                   self.Info["ORFCountPostFilter"])
         String += "Filters employed %s\n"%self.Info["FiltersUsed"]

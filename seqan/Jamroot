@@ -5,7 +5,7 @@
 # Specify the path to the Boost project.  If you move this project,
 # adjust the path to refer to the Boost root directory.
 use-project boost 
-  : /export/boost_1_43_0 ;
+  : /export/software/boost_1_43_0 ;
 
 # Set up the project-wide requirements that everything uses the
 # boost_python library defined in the project whose global ID is
@@ -22,7 +22,7 @@ import python ;
 #python-extension ExactSearch : ExactSearch.cpp
 python-extension IndexSearch : IndexSearch.cpp
 :
- <include>/usr/local/devel/DAS/users/eventer/devel/seqan/projects/library
+ <include>/export/software/
  <optimization>speed
 ;
 

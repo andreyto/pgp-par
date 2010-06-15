@@ -4,4 +4,4 @@
 
 # Edit this path to point at the tools/build/v2 subdirectory of your
 # Boost installation.  Absolute paths work, too.
-boost-build /export/boost_1_43_0/tools/build/v2 ;
+boost-build /export/software/boost_1_43_0/tools/build/v2 ;
