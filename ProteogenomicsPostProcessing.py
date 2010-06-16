@@ -75,6 +75,8 @@ class FinderClass():
     def Main(self):
         chromReader = PGPeptide.GenbankGenomeReader(self.GenbankPath, self.ORFDatabasePaths)
         genome = chromReader.makeGenomeWithProteinORFs()
+        self.Report.SetValue("MappedProteins", genome.numOrfs('Simple'))
+        self.Report.SetValue("UnmappedProteinsComplex", genome.numOrfs('Complex'))
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
         if self.InspectResultsPath:
             self.ParseInspect( self.InspectResultsPath )
@@ -89,7 +91,6 @@ class FinderClass():
         #now look for overlaps.  This is an effort at quality of assignments
         # or confusion in the genome
         self.CheckForOverlaps(genome, self.OutputPath)
-        
 
         if self.OutputPeptidesToGFF:
             self.WritePeptideGFFFile(genome)
