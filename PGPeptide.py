@@ -885,8 +885,10 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
 
                 elif len(cds.sub_features) > 0:
                     chrom.addOrf( tmpOrf, 'Complex' )
+                    print "Complex ORF for protein %s" % cds.qualifiers['product'][0]
                 else:
                     chrom.addOrf( tmpOrf, 'Complex' )
+                    print "Other ORF for protein %s" % cds.qualifiers['product'][0]
             else:
                 # ORF without a 3' mapping to a protein
                 unusedOrfs += 1
