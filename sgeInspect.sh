@@ -12,8 +12,10 @@ $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 
 rundir=$PWD
 inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt 
-rescoreOut=${inspectOut/.txt/.res}
+rescoreOut=${inspectOut/.txt/.msgf}
 PepNovoDir=/usr/local/depot/projects/PGP/productionPepNovo
+MSGF=/usr/local/depot/projects/PGP/MSGF/MSGF.jar
+java='/usr/local/java/1.6.0/bin/java -Xmx1000M'
 
 mzxml=`awk -F, '/spectra/ {print $2}' $inspectIn`
 specCnt=`echo $spectra | wc -l`
@@ -24,14 +26,11 @@ then
     exit 1
 fi
 
-cd $PepNovoDir
-ulimit -c 0 # PepNovo cores have filled up the disk before
-
-if ./PepNovo_bin -model CID_IT_TRYP -PTMs 'C+57' -file $mzxml -rescore_inspect $inspectOut $rescoreOut
+if $java -jar $MSGF -inspect $inspectOut -d mzxml -x 0 > $rescoreOut
 then
-    echo "PepNovo success"
+    echo "MSGF success"
 else
-    echo "PepNovo failure"
+    echo "MSGF failure"
     rescoreOut=''
 fi
     
