@@ -702,6 +702,7 @@ class Chromosome(object):
     complexOrfs and pepOnlyOrfs.
     Simple ORFs correspond directly to a contiguous annotated protein.
     Complex ORFs are noncontiguous,
+    Other ORFs are what is left over
     pepOnly ORFs are supported only by peptides.
     """
     def __init__(self,accession=None,seq=None):
@@ -709,6 +710,7 @@ class Chromosome(object):
         self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
         self.simpleOrfs = {} # ORFs corresponding to a contiguous annotated protein
         self.complexOrfs= {} # complex ORFs  have no direct end to end protein map
+        self.otherOrfs  = {} # other ORFs are the leftovers 
         self.pepOnlyOrfs= {} # ORFs created only via peptides
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
@@ -718,6 +720,8 @@ class Chromosome(object):
             orfHash = self.pepOnlyOrfs
         elif orfType == 'Complex':
             orfHash = self.complexOrfs
+        elif orfType == 'Other':
+            orfHash = self.otherOrfs
 
         if orfHash.has_key( orf.name ):
             raise KeyError("Duplicate orf %s in chrom %s"%(orf.name,self.accession))
@@ -765,6 +769,8 @@ class Genome(object):
                 count += len(chrom.pepOnlyOrfs)
             if orfType in ['All','Complex']:
                 count += len(chrom.complexOrfs)
+            if orfType in ['All','Other']:
+                count += len(chrom.otherOrfs)
         return count
 
     def makeChromosome(self,accession,seq=None):
@@ -885,18 +891,19 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
 
                 elif len(cds.sub_features) > 0:
                     chrom.addOrf( tmpOrf, 'Complex' )
-                    print "Complex ORF for protein %s" % cds.qualifiers['product'][0]
+                    print "Complex ORF for protein %s" % cds.qualifiers['protein_id'][0]
                 else:
-                    chrom.addOrf( tmpOrf, 'Complex' )
-                    print "Other ORF for protein %s" % cds.qualifiers['product'][0]
+                    chrom.addOrf( tmpOrf, 'Other' )
+                    print "Other ORF for protein %s" % cds.qualifiers['protein_id'][0]
             else:
                 # ORF without a 3' mapping to a protein
                 unusedOrfs += 1
 
-        print "Read %d chromosomes, with %d Simple and %d Complex ORFs" % (
+        print "Read %d chromosomes with %d Simple, %d Complex, %d Other ORFs" % (
             genome.numChromosomes(),
             genome.numOrfs('Simple'),
-            genome.numOrfs('Complex') )
+            genome.numOrfs('Complex') ,
+            genome.numOrfs('Other') )
         print "%d unused ORFs from 6frame fasta." % unusedOrfs
         for acc,chrom in genome.chromosomes.items():
             for cds in chrom.endToCDS.values():

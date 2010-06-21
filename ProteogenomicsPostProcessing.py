@@ -77,6 +77,7 @@ class FinderClass():
         genome = chromReader.makeGenomeWithProteinORFs()
         self.Report.SetValue("MappedProteins", genome.numOrfs('Simple'))
         self.Report.SetValue("UnmappedProteinsComplex", genome.numOrfs('Complex'))
+        self.Report.SetValue("UnmappedProteinsSNAFU", genome.numOrfs('Other'))
         #1. we map peptides, either from Inspect, or from pre-mapped GFFs
         if self.InspectResultsPath:
             self.ParseInspect( self.InspectResultsPath )
