@@ -6,6 +6,8 @@ Also support classes for doing sequence IO.
 '''
 
 import os, re, fileinput, struct, bisect
+import gzip, bz2
+
 from StringIO import StringIO
 
 class Sequence(object):
@@ -19,7 +21,7 @@ class Sequence(object):
         seq is the sequence string itself
         desc is a description of the sequence ie defline
         '''
-        self.acc = acc  
+        self.acc = acc
         self.seq = seq
         self.desc = desc
 
@@ -28,19 +30,23 @@ class FlatFileIO(object):
     A parent class for all the classes that do IO to flat files.
     Children should always be iterable.
     '''
+
+    # Support transparent compression based on filename extension
+    openTable = { '.bz2': bz2.BZ2File, '.gz': gzip.open }
+
     def __init__(self, fileForIO, mode='r'):
         if type(fileForIO) is file:
             self.io = fileForIO
 
         elif type(fileForIO) is str: #assumes this is the path for a file to open .  mode default is read.  
             self.name = fileForIO
-            self.io = open( fileForIO, mode)
+            self.io = self.open( fileForIO, mode)
 
         elif isinstance(fileForIO, list): # combines a list of files together into 1
             if len(fileForIO) == 1:
                 # Treat just like a single file
                 self.name = fileForIO[0]
-                self.io = open( fileForIO[0], mode)
+                self.io = self.open( fileForIO[0], mode)
             else:
                 self.io = fileinput.input(fileForIO)
 
@@ -51,6 +57,16 @@ class FlatFileIO(object):
 
     def __del__(self):
         self.io.close()
+
+    def open(self, fileName, mode):
+        (base, extension) = os.path.splitext(fileName)
+        openCall = None
+        if FlatFileIO.openTable.has_key( extension ):
+            openCall = FlatFileIO.openTable[ extension ]
+        else:
+            openCall = open
+        # Open the file using the correct compression method as needed 
+        return openCall( fileName, mode )
 
     def close(self):
         self.io.close()
