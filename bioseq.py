@@ -35,6 +35,7 @@ class FlatFileIO(object):
     openTable = { '.bz2': bz2.BZ2File, '.gz': gzip.open }
 
     def __init__(self, fileForIO, mode='r'):
+        self.io = None
         if type(fileForIO) is file:
             self.io = fileForIO
 
@@ -56,7 +57,8 @@ class FlatFileIO(object):
             raise TypeError("Need string or io handle, got %s" % type(fileForIO))
 
     def __del__(self):
-        self.io.close()
+        if self.io:
+            self.io.close()
 
     def open(self, fileName, mode):
         (base, extension) = os.path.splitext(fileName)
@@ -71,12 +73,8 @@ class FlatFileIO(object):
     def close(self):
         self.io.close()
 
-    def write(self,seq):
-        pass
-
-    def writeMulti(self,seqList):
-        for i in seqList:
-            self.write(i)
+    def write(self,data):
+        self.io.write(data)
 
 class TrieReader(FlatFileIO):
     def __iter__(self):
