@@ -11,8 +11,12 @@ inspectIn=jobs/$SGE_TASK_ID.in
 $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 
 rundir=$PWD
-inspectOut=$rundir/ResultsX/$SGE_TASK_ID.txt 
+results=$rundir/ResultsX
+filter=$results/filter
+inspectOut=$results/$SGE_TASK_ID.txt
 rescoreOut=${inspectOut/.txt/.msgf}
+filterOut=${rescoreOut/ResultsX/ResultsX/filter}
+
 PepNovoDir=/usr/local/depot/projects/PGP/productionPepNovo
 MSGF=/usr/local/depot/projects/PGP/MSGF/MSGF.jar
 java='/usr/local/java/1.6.0/bin/java -Xmx1000M'
@@ -29,11 +33,17 @@ fi
 if $java -jar $MSGF -inspect $inspectOut -d mzxml -x 0 > $rescoreOut
 then
     echo "MSGF success"
+    if [ ! -d $filter ]
+    then
+        mkdir $filter
+    fi
+    $exe_path/FilterInspectMSGF.py -p 1e-6 -r $rescoreOut -o $filterOut
 else
     echo "MSGF failure"
     rescoreOut=''
+    filterOut=''
 fi
     
-bzip2 $inspectOut $rescoreOut
+bzip2 $inspectOut $rescoreOut $filterOut
 
 touch $rundir/Done/$SGE_TASK_ID
