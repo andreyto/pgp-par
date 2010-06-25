@@ -2,13 +2,14 @@
 THis is a set of classes designed to help analyze the primary
 structure of proteins, and whether they agree with the proteomic
 evidences
- 
+
 NOTE: this is a utility, and not executable from the command line
 
 """
 import os
 import bioseq
 import string
+import DNA
 
 class PrimaryStructure:
     """Class PrimaryStructure: This is an analysis object to help
@@ -19,9 +20,9 @@ class PrimaryStructure:
     Functions: CheckStructure(PGPeptide.OpenReadingFrame)
     """
     def __init__(self, OutputPath, NucleotideSequence):
-        """Parameters: none 
+        """Parameters: none
         Return: none
-        Description: trivial constructor 
+        Description: trivial constructor
         """
         #open a file handle to print out stuff
         (Path, Ext) = os.path.splitext(OutputPath)
@@ -43,6 +44,8 @@ class PrimaryStructure:
         self.NovelLen = []
         self.NotNovelLen = []
         self.DNA = NucleotideSequence
+        # Start codons to look for
+        self.StartCodonTable = [ 'ATG', 'GTG', 'TTG' ]
 
     def CheckStructure(self, ORF):
         """
@@ -54,11 +57,13 @@ class PrimaryStructure:
         #has no peptide support, so we should not do much for them
         if ORF.numPeptides() == 0:
             return "NO EVIDENCE"
-        
+
+        self.FindAllUpstreamStartCodons(ORF)
+
         Novel = self.IsItNovel(ORF)
         if Novel:
             return "NOVEL"
-        
+
         self.ShortProteins(ORF)
         ProteinName = ORF.annotatedProtein.name
         Location = ProteinName.find("hypothetical")
@@ -77,7 +82,7 @@ class PrimaryStructure:
             return
         self.ShortProteinHandle.write(">%s\n"%ORF)
         self.ShortProteinHandle.write("%s\n"%ORF.GetProteinSequence())
-        
+
 
 
 
@@ -94,28 +99,28 @@ class PrimaryStructure:
         Fraction = GCCount / float (TotalCount)
         Percent = int (Fraction *100)
         return Percent
-            
+
     def OutputGCFiles(self):
         """
         Parameters: None
         Return: None
-        Description: I have spent some time in the Novel checker to 
+        Description: I have spent some time in the Novel checker to
         save the GC content of the observed sequences.  This Function
         will take these lists and put them out to a file
         """
-        
+
         NovelPath = "%s.%s"%(self.OutputStub, "GC.novel.txt")
         Handle = open(NovelPath, "wb")
         String = "\t".join(map(str, self.NovelGC))
         Handle.write(String)
         Handle.close()
-        
+
         NotNovelPath = "%s.%s"%(self.OutputStub, "GC.notnovel.txt")
         Handle = open(NotNovelPath, "wb")
         String = "\t".join(map(str, self.NotNovelGC))
         Handle.write(String)
         Handle.close()
-        
+
 
     def OutputLenFiles(self):
         NovelPath = "%s.%s"%(self.OutputStub, "len.novel.txt")
@@ -123,23 +128,23 @@ class PrimaryStructure:
         String = "\t".join(map(str, self.NovelLen))
         Handle.write(String)
         Handle.close()
-        
+
         NotNovelPath = "%s.%s"%(self.OutputStub, "len.notnovel.txt")
         Handle = open(NotNovelPath, "wb")
         String = "\t".join(map(str, self.NotNovelLen))
         Handle.write(String)
         Handle.close()
-        
-        
+
+
     def IsItNovel(self, ORF):
         """
         Parameters: a PGPeptide.OpenReadingFrame object
         Return: true/false
-        Description: check to see if this ORF has peptides but not a 
+        Description: check to see if this ORF has peptides but not a
         predicted protein
-        
+
         NOTE: in the old version of this, I had a minimum ORF length.  Should
-        I put that in here? I'm not inclined yet, ,mostly because I don't 
+        I put that in here? I'm not inclined yet, ,mostly because I don't
         remember why I put that in there, and don't have any really solid
         research compelling me to do so.
         """
@@ -179,14 +184,14 @@ class PrimaryStructure:
         Fasta = "Observed.%s"%ORF.name
         self.NovelFastaHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
         return True
-        
+
     def IsItUnderPredicted(self, ORF):
         """
         Parameters: a PGPeptide.OpenReadingFrame object
         Return: true/false
-        Description: Check to see if this ORF has peptides upstream 
+        Description: Check to see if this ORF has peptides upstream
         of the currently predicted start (at least two amino acids
-        upstream). We should also include whether there is a start 
+        upstream). We should also include whether there is a start
         site upstream to use
         """
         #1. we get the nuc of the 5' peptide
@@ -224,4 +229,25 @@ class PrimaryStructure:
                 self.UnderpredictionInfoHandle.write("Peptide %s is at the start codon of protein in %s\n\n"%(FirstObservedPeptide, ORF))
                 #print "Peptide %s is at the start codon of protein %s\n\n"%(FirstObservedPeptide, ORF)
                 return True
-        
+
+    def FindAllUpstreamStartCodons(self, ORF):
+        # Annotated protein gives us the StartofTranslation
+        # What are our alternatives?
+        if not ORF.annotatedProtein:
+            return
+        startTranslation = ORF.GetNucleotideStartOfTranslation()
+        orfStart = ORF.location.GetFivePrime()
+        # For the reverse strand switch postions so we're still going up
+        if ORF.location.strand == '-':
+            (orfStart, startTranslation) = (startTranslation, orfStart)
+        print "Looking for upstream starts for %s" % ORF
+        while (orfStart < startTranslation):
+            codon = self.DNA[orfStart:orfStart+3].upper()
+            codonLoc = orfStart
+            if ORF.location.strand == '-':
+                codon = DNA.ReverseComplement( codon )
+                codonLoc = orfStart+3
+
+            if codon in self.StartCodonTable:
+                print "Start Codon %s found at %d" % (codon, codonLoc)
+            orfStart += 1
