@@ -56,12 +56,11 @@ class FinderClass():
         if ORF.numPeptides() == 0:
             return "NO EVIDENCE"
 
-        
         HPlot = ProteinStatistics.HyrdopathyPlot()
         FirstObservedPeptide = ORF.GetFivePrimePeptide(Unique=1)
         # level 1 - is it non-tryptic on the N-terminus
         if FirstObservedPeptide.IsTrypticNterm():
-            return False
+            return "FAIL: N-term tryptic"
         #Level 2 - the length filter, which is somewhat stupid, because a 
         ##protein could be mispredicted, but it's what we have to go with 
         ##and we expect signal peptides to fall within a certain length range
@@ -69,9 +68,9 @@ class FinderClass():
         MaxLen = 50
         MinLen = 15
         if PeptideOffsetIntoProtein < MinLen:
-            return False
+            return "FAIL: too short"
         if PeptideOffsetIntoProtein > MaxLen:
-            return False
+            return "FAIL: too long"
         #meet's level 2
         PrefixSequence = ORF.GetProteinSequence(0, PeptideOffsetIntoProtein) # zero is the start.
         AfterCut = ORF.GetProteinSequence(PeptideOffsetIntoProtein, PeptideOffsetIntoProtein + 2)

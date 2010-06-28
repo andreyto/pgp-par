@@ -59,7 +59,6 @@ class FinderClass():
         self.PeptideSources = {} #aminosequence->[(file,spectrum), (file,spectrum), ...]
         self.AllLocatedPeptides = [] #list of PeptideMapper.GenomicLocationForPeptide
         self.AllPredictedProteins = {} #predictedProteinName ->GenomicLocationForPeptide Object, used in CreateORFs
-        self.AllORFs = {} #ORF name -> GenomeLocationForORF object
         self.ProteomicallyObservedORFs = [] # this is populated when peptides are mapped, and deleted after ORF Objects are created
         self.UniquenessFlag = 0
         self.InterPeptideDistanceMax = 1000 # sensible default
@@ -100,11 +99,14 @@ class FinderClass():
         if self.SearchForCleavage:
             self.AnalyzeCleavage(genome)
         #write out the simple protein inference
-        self.WriteProteinInference()
+        self.WriteProteinInference(genome)
         #write out the report
+        (Path, Ext) = os.path.splitext(self.OutputPath)
+        ReportPath = "%s.report.txt"%Path
+        self.Report.SetFileName(ReportPath)        
         self.Report.WriteReport()
         
-    def WriteProteinInference(self):
+    def WriteProteinInference(self, genome):
         """Parameters: NOne
         Return: NOne
         Description: write a simple protein inference file, just proteins 
@@ -115,27 +117,30 @@ class FinderClass():
         InferencePath = "%s.proteininference.txt"%Path
         Handle = open(InferencePath, "wb")
         Handle.write(Header)
-        for ORF in self.AllORFs.values():
-            if ORF.numPeptides() == 0: #remember, we keep these around for the overlap comparison
-                continue
-            ORF.WriteSimpleProteinInference(Handle)
+        for (chromName, chrom) in genome.chromosomes.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
+                if ORF.numPeptides() == 0: #remember, we keep these around for the overlap comparison
+                    continue
+                ORF.WriteSimpleProteinInference(Handle)
         Handle.close()
 
-    def CheckComplexity(self):
+    def CheckComplexity(self, genome):
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:CheckComplexity"
         LowMW = ["G", "A"]
         List = []
-        for ORF in self.AllORFs.values():
-            PeptideString = ""
-            for PeptideObject in ORF.PeptideLocationList:
-                PeptideString += PeptideObject.Aminos
-            Count = 0
-            for Letter in PeptideString:
-                if Letter in LowMW:
-                    Count +=1
-            Normalized = Count / float (len(PeptideString))
-            List.append(Normalized)
+        for (chromName, chrom) in genome.chromosomes.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
+        
+                PeptideString = ""
+                for PeptideObject in ORF.PeptideLocationList:
+                    PeptideString += PeptideObject.Aminos
+                Count = 0
+                for Letter in PeptideString:
+                    if Letter in LowMW:
+                        Count +=1
+                Normalized = Count / float (len(PeptideString))
+                List.append(Normalized)
         Histogram = BasicStats.CreateHistogram(List, 0, 0.05)
         BasicStats.PrettyPrintHistogram(Histogram, None)
 
@@ -284,33 +289,35 @@ class FinderClass():
         genome.filterORFs( FilterList )
 
 
-    def SequenceComplexityHack(self):
+    def SequenceComplexityHack(self, genome):
         """hack"""
         
         ORFList = []
         PeptideList = []
         DiffList = []
         RealProteinList = []
-        for ORF in self.AllORFs.values():
-            #we try for the predicted protein first
-            Sequence =  ORF.GetProteinSequence()
-            if Sequence:
-                Entropy = self.SequenceEntropy(Sequence)
-                RealProteinList.append(Entropy)
-            if not Sequence:
-                Sequence = ORF.GetObservedSequence()
-            ProteinEntropy = self.SequenceEntropy(Sequence)
-            #now do for the peptides
-            PeptideCat = ""
-            for Peptide in ORF.peptideIter():
-                PeptideCat += Peptide.GetAminos()
-            PeptideEntropy = self.SequenceEntropy(PeptideCat)
-            
-            #put stuff in lists
-            ORFList.append(ProteinEntropy)
-            PeptideList.append(PeptideEntropy)
-            Diff = ProteinEntropy - PeptideEntropy
-            DiffList.append(Diff)
+        for (chromName, chrom) in genome.chromosomes.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
+        
+                #we try for the predicted protein first
+                Sequence =  ORF.GetProteinSequence()
+                if Sequence:
+                    Entropy = self.SequenceEntropy(Sequence)
+                    RealProteinList.append(Entropy)
+                if not Sequence:
+                    Sequence = ORF.GetObservedSequence()
+                ProteinEntropy = self.SequenceEntropy(Sequence)
+                #now do for the peptides
+                PeptideCat = ""
+                for Peptide in ORF.peptideIter():
+                    PeptideCat += Peptide.GetAminos()
+                PeptideEntropy = self.SequenceEntropy(PeptideCat)
+                
+                #put stuff in lists
+                ORFList.append(ProteinEntropy)
+                PeptideList.append(PeptideEntropy)
+                Diff = ProteinEntropy - PeptideEntropy
+                DiffList.append(Diff)
             
         ORFHandle = open("ORFEntropy.txt", "wb")
         ORFLine = "\t".join(map(str, ORFList))
@@ -387,7 +394,8 @@ class FinderClass():
                 print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
 
             for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
-                BagChecker.EvaluateSignalPeptide(ORF)
+                Decision = BagChecker.EvaluateSignalPeptide(ORF)
+                print Decision
 
     def LoadResultsFromGFF(self, GFFFile):
         """Parameters: GFF file path
@@ -463,9 +471,8 @@ class FinderClass():
 
         #done with loop
         print "Processed %s for potential miscalls. %s novel and %s underpredicted"%(Count, NovelCount, UnderPredictedCount)
-#        print "Named %s, hypothetical %s"%(BagChecker.NamedCount, BagChecker.HypotheticalCount)
-#        BagChecker.OutputGCFiles()
-#        BagChecker.OutputLenFiles()
+        self.Report.SetValue("NovelORFCount", NovelCount)
+        self.Report.SetValue("ORFWrongStartCount", UnderPredictedCount)
 
 
     def MapAllPeptides(self,genome):
@@ -694,7 +701,7 @@ class PGPReport():
         String += "Mapped %s peptides to %s locations\n"%(self.Info["MappedPeptideCount"], 
                                                           self.Info["MappedPeptideLocationCount"])
         String += "\t%s Unmappable peptides\n"%self.Info["UnmappedPeptides"]
-        String += "\t%s Peptides map outside of current annotation\n"%self.Info["PeptidesMappingOutsideAnnotation"]
+        String += "\t%s Peptide locations outside of current annotation\n"%self.Info["PeptidesMappingOutsideAnnotation"]
         String += "ORFs analyzed: %s prefilter, %s postfilter\n"%(self.Info["ORFCountPreFilter"],
                                                                   self.Info["ORFCountPostFilter"])
         String += "Filters employed %s\n"%self.Info["FiltersUsed"]
