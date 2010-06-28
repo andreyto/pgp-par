@@ -305,6 +305,17 @@ class LocatedPeptide(object):
         return self.aminos
 
 
+    def AppendMSMSSource(self, Array):
+        """Parameters: an array of tuples [(filename, spectrum), (filename, spectrum), (filename, spectrum), ...]
+        REturn: none
+        Description: Add MSMS sources for this peptide by appending to a list
+        """
+        self.MSMSSource.extend(Array)
+        self.spectrumCount = len(self.MSMSSource)
+    def GetMSMSSource(self):
+        return self.MSMSSource
+        
+
 ###############################################################################
 
 class LocatedProtein(object):
@@ -425,6 +436,43 @@ class OpenReadingFrame(object):
         Line += "%s\n"%NonUniquePeptideString
         #now write it out
         Handle.write(Line)
+
+    def WritePeptidome(self, Handle):
+        """Parameters: an open file handle
+        Return: None
+        Description: We will write a summary of this protein's observed peptides
+        in the format appropriate for peptidome. 
+        Protein             Peptide                  File:Spectrum, File:Spectrum,
+                            Peptide2                 File:Spectrum, File:Spectrum
+        """
+        Header = ""
+        #first we want the name of the protein (if such exists)
+        if self.annotatedProtein:
+            Header += "%s\t"%self.annotatedProtein.GetName()
+        else:
+            Header += "Unannotated ORF\t"
+        Blank = "\t"
+        
+        First = 1
+        for Peptide in self.peptideIter():
+            Line = ""
+            if First:
+                First = 0 
+                Line += Header
+            else:
+                Line += Blank
+            #now put on a peptide
+            Line += "%s\t"%Peptide.GetAminos()
+            #now put together some aweful line of MSMSSources
+            Source = ""
+            AllSources = Peptide.GetMSMSSource()
+            for (File,Scan) in AllSources:
+                String = "%s:%s"%(File,Scan)
+                Source += "%s, "%String
+            SourceClipped = Source[:-1] #cuts off the last comma
+            Line += "%s\n"%SourceClipped
+            Handle.write(Line)
+        #done iterating through the peptides. Done with me
 
         
 

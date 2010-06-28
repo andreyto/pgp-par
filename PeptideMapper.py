@@ -38,7 +38,7 @@ class PeptideMappingClass:
         self.orfIndex = bioseq.QGramIndex( DBPaths )
         self.orfIndex.index()
 
-    def MapPeptide(self, Aminos, PValue, WarnNoMatch = 0):
+    def MapPeptide(self, Aminos, PValue, MSMSSources, WarnNoMatch = 0):
         """
         Parameters: an amino acid string, the best score (pvalue)
         Return: a list of LocatedPeptide objects (possible list of len 1)
@@ -67,6 +67,7 @@ class PeptideMappingClass:
             Peptide.ORFName = ParsedORFInfo.ORFName
             Peptide.name = "Peptide%s"%self.UniquePeptideCount
             self.UniquePeptideCount += 1
+            Peptide.AppendMSMSSource(MSMSSources)
             #now we check the letter before us to see if it's tryptic
             ORFSequence = self.orfIndex.seqs[ORFID]
             PrefixOfPeptide = ORFSequence[PeptideStartAA -1]

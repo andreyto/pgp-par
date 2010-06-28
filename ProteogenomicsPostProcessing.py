@@ -115,7 +115,7 @@ class FinderClass():
         Header = "Protein Name\tNum Peptides\tUnique Count\tUniquePeptides\tShared Peptides\n"
         (Path, Ext) = os.path.splitext(self.OutputPath)
         InferencePath = "%s.proteininference.txt"%Path
-        Handle = open(InferencePath, "wb")
+        Handle = open(InferencePath, "w")
         Handle.write(Header)
         for (chromName, chrom) in genome.chromosomes.items():
             for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
@@ -123,6 +123,19 @@ class FinderClass():
                     continue
                 ORF.WriteSimpleProteinInference(Handle)
         Handle.close()
+        
+        #now we write a peptidome protein submission file
+        PeptidomePath = "%s.peptidome.txt"%Path
+        Handle = open(PeptidomePath, "w")
+        Header = "Protein\tPeptide\tSpectrum\n"
+        Handle.write(Header)
+        for (chromName, chrom) in genome.chromosomes.items():
+            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
+                if ORF.numPeptides() == 0: #remember, we keep these around for the overlap comparison
+                    continue
+                ORF.WritePeptidome(Handle)
+        Handle.close()
+        
 
     def CheckComplexity(self, genome):
         if self.Verbose:
@@ -499,7 +512,9 @@ class FinderClass():
             if (Count %1000) == 0 and self.Verbose:
                 print "Mapped %s / %s peptides"%(Count, len(self.AllPeptides))
             #print Aminos
-            LocatedPeptides = ORFPeptideMapper.MapPeptide(Aminos, PValue)
+            MSMSSources = self.PeptideSources[Aminos] #the are all the spectra that are for a amino acid string
+            LocatedPeptides = ORFPeptideMapper.MapPeptide(Aminos, PValue, MSMSSources)
+            
             if len(LocatedPeptides) == 0:
                 #this peptide sequence did not map to the database.  That might mean that
                 #it is a common contaminant, like trypsin and I'm not caring about those. 
