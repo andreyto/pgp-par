@@ -58,10 +58,10 @@ class PrimaryStructure:
         if ORF.numPeptides() == 0:
             return "NO EVIDENCE"
 
-        self.FindAllUpstreamStartCodons(ORF)
 
         Novel = self.IsItNovel(ORF)
         if Novel:
+            self.FindAllUpstreamStartCodons(ORF)
             return "NOVEL"
 
         self.ShortProteins(ORF)
@@ -73,6 +73,7 @@ class PrimaryStructure:
             self.HypotheticalCount += 1
         UnderPredicted = self.IsItUnderPredicted(ORF)
         if UnderPredicted:
+            self.FindAllUpstreamStartCodons(ORF)
             return "UNDERPREDICTED"
 
     def ShortProteins(self, ORF):
@@ -231,23 +232,32 @@ class PrimaryStructure:
                 return True
 
     def FindAllUpstreamStartCodons(self, ORF):
-        # Annotated protein gives us the StartofTranslation
-        # What are our alternatives?
-        if not ORF.annotatedProtein:
+        #1. we get the nuc of the 5' peptide
+        FirstObservedPeptide = ORF.GetFivePrimePeptide()
+        if not FirstObservedPeptide:
+            print "No peptides for %s"%ORF
             return
-        startTranslation = ORF.GetNucleotideStartOfTranslation()
+        firstNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         orfStart = ORF.location.GetFivePrime()
         # For the reverse strand switch postions so we're still going up
         if ORF.location.strand == '-':
-            (orfStart, startTranslation) = (startTranslation, orfStart)
-        print "Looking for upstream starts for %s" % ORF
-        while (orfStart < startTranslation):
+            (orfStart, firstNucleotide) = (firstNucleotide, orfStart)
+            # We need to go back one to check the 1st AA
+            orfStart -= 3
+        print "Looking for upstream starts from %d-%d for %s" % (
+            orfStart, firstNucleotide, ORF)
+        first = True
+        while (orfStart < firstNucleotide):
             codon = self.DNA[orfStart:orfStart+3].upper()
             codonLoc = orfStart
             if ORF.location.strand == '-':
                 codon = DNA.ReverseComplement( codon )
                 codonLoc = orfStart+3
 
-            if codon in self.StartCodonTable:
+            if (first and codon == 'ATG') or (
+            not first and codon in self.StartCodonTable):
+                # These should be zero base based coordinates
+                # so we'll need to add 1 for 1 based output
                 print "Start Codon %s found at %d" % (codon, codonLoc)
             orfStart += 1
+            first = False
