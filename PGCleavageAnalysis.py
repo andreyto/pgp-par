@@ -110,7 +110,7 @@ def GetSignalPeptideHeader():
     
     
     """
-    Header = "ProteinName\tFirstPeptideIndex\tPrefixSequence\tSuffixSequence\tHasHydrophobicPatch\tHasAxBMotif\n"
+    Header = "ProteinName\tFirstPeptideIndex\tPrefixSequence\tSuffixSequence\tHasHydrophobicPatch\tHasAxBMotif\tHasBasicEarly\n"
     return Header
 
     
@@ -157,10 +157,17 @@ def EvaluateSignalPeptide(ORF):
     #now some trickery
     Plot = HPlot.MakePlot(PrefixSequence)
     LongerSignal = HPlot.IsConsistentSignal(Plot) #default to 10
-    ShorterSignal = HPlot.IsConsistentSignal(Plot, 0.5, 8)
+    ShorterSignalStartIndex = HPlot.IsConsistentSignal(Plot, 0.5, 8)
+    ShorterSignal = 0 #assume that there is no shorter signal
+    if ShorterSignalStartIndex > -1:
+        ShorterSignal = 1 #reset if you get one
     AxBMotif = ProteinStatistics.HasSignalPeptidaseMotif(PrefixSequence)
+    #we look for the basic residue
+    HasBasicEarlyResidue = 0 # assume guilt
+    if ShorterSignal:
+        HasBasicEarlyResidue = ProteinStatistics.HasBasicResidue(PrefixSequence, 0, ShorterSignalStartIndex)
     #I decided to go with the shorter hydrophobic patch length, but I kept the other var in there just incase
-    String = "%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideOffsetIntoProtein, PrefixSequence, AfterCut, ShorterSignal, AxBMotif)
+    String = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideOffsetIntoProtein, PrefixSequence, AfterCut, ShorterSignal, AxBMotif, HasBasicEarlyResidue)
     PlotString =""
     # need to front pad these with zeros
     PadLen = MaxLen - len(Plot)

@@ -60,15 +60,24 @@ class HyrdopathyPlot:
         plot.  So for standards, we count positive values, at least 10 in a row
         """
         Counter  = 0
-        Found = 0
+        Index = -1 #start at -1 so I can increment right off the bat
+        StartIndex = -1 #start of the hydrophobic patch
         for Item in List:
+            Index += 1 #index into the array
+            
             if Item > Min:
+                if not Counter:
+                    #this is the first one in a row
+                    StartIndex = Index
                 Counter += 1
                 if Counter >= Len:
-                    Found =1
+                    return StartIndex
             else:
-                Counter =0 
-        return Found
+                Counter =0
+                StartIndex =-1 
+        return -1 # not found
+
+
 
 
 def GetMW(Aminos):
@@ -92,3 +101,20 @@ def HasSignalPeptidaseMotif(Aminos):
     if not BPosition in AcceptableB:
         return 0
     return 1
+
+def HasBasicResidue(Sequence, Start = 0, End = None):
+    """
+    return 0/1 if there is a basic residue in the sequence given,
+    and the bracketed subsequence
+    """
+    SubSequence = Sequence
+    if End:
+        SubSequence = Sequence[Start:End]
+    else:
+        SubSequence = Sequence[Start:]
+    Basic = ["R", "K"]
+    for Letter in SubSequence:
+        if Letter in Basic:
+            return 1
+        
+    return 0
