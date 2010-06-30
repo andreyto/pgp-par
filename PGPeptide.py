@@ -601,10 +601,22 @@ class OpenReadingFrame(object):
         Description: returns the protein sequence, or substring thereof.  If there
         is no protein assigned, then this should mirror the GetTranslation method
         """
-        #print "%s"%self
+        if self.CDS:
+            #this is the preferred way to get the protein sequence, from the CDS 
+            #which is from the genbank file.  However, some things don't have a 
+            #genbank entry, so we have a backup
+            Sequence = self.CDS.qualifiers['translation'][0] #UGLY COMMENT: this always comes as an array of len 1
+            if Stop:
+                SequenceFromCDS = Sequence[Start:Stop]
+            else:
+                SequenceFromCDS = Sequence[Start:] #if there's not a stop, get to the end
+            return SequenceFromCDS
+        
         if self.ProteinAminoAcidOffset:
             Start += self.ProteinAminoAcidOffset #this is because we are trying to get only the
             ## protein seqeunce, which is already offset into the self.aaseq=== translation of the ORF
+            if Stop:
+                Stop += self.ProteinAminoAcidOffset
         return self.GetTranslation(Start, Stop)
 
 

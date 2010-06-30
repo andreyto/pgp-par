@@ -59,6 +59,8 @@ class Test(unittest.TestCase):
         self.AminoList = ["NSGDSVSIGGDAAGISNK", "ITVETGQEK", "AGITAGYQETR", "IEGLFNDANIGLR", "TEGTVSYEQK", "GTVSYEQK", "TVETGQEK"]
         self.StartList = [7511, 5583, 7106, 5040, 5610, 5610, 5583]
         self.StopList =  [7564, 5609, 7138, 5078, 5639, 5633, 5606]
+        self.FakeMSMSSource = []
+        self.FakeMSMSSource.append (("filename.mzxml", 1234)) # a single tuple for (file, scannum)
         self.Databases = ["NC_004837.6frame.trie",]
         self.PeptidesInORF = []
         for p in ["Protein229", "Protein453", "Protein229", "Protein453", "Protein453", "Protein453", "Protein453"]:
@@ -78,7 +80,7 @@ class Test(unittest.TestCase):
             Start = self.StartList[Index]
             Stop = self.StopList[Index]
             ShouldMapTo = self.PeptidesInORF[Index]
-            (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01) #hack because they are all unique, it should be a one member list
+            (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01, self.FakeMSMSSource) #hack because they are all unique, it should be a one member list
             self.assertEqual(Peptide.location.start, Start)
             self.assertEqual(Peptide.location.stop, Stop)
             self.assertEqual(Peptide.ORFName, ShouldMapTo)
@@ -95,7 +97,7 @@ class Test(unittest.TestCase):
         AllPeptides = []
         AllORFs = []
         for Aminos in self.AminoList:
-            (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01) #hack because they are all unique, it should be a one member list
+            (Peptide, ) = Mapper.MapPeptide(Aminos, 0.01, self.FakeMSMSSource) #hack because they are all unique, it should be a one member list
             AllPeptides.append(Peptide)
 
         for ID in range(0,len(Mapper.orfIndex.ids)):

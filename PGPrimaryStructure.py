@@ -258,6 +258,7 @@ class PrimaryStructure:
             not first and codon in self.StartCodonTable):
                 # These should be zero base based coordinates
                 # so we'll need to add 1 for 1 based output
-                print "Start Codon %s found at %d" % (codon, codonLoc)
+                pass
+                #print "Start Codon %s found at %d" % (codon, codonLoc)
             orfStart += 1
             first = False

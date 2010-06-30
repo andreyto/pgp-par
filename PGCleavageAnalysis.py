@@ -33,6 +33,8 @@ NOTE: this is a utility, and not executable from the command line
 ## warning, these are very simplistic enzymes, no motif, just single letter
 ## enzymes, like trypsin
 
+import ProteinStatistics
+
 NTermCuts = {}
 NTermCuts["Trypsin"] = ["K", "R"]  
 
@@ -47,13 +49,8 @@ def Analysis(ORFObject, ProteolysisEnzymes):
     Description: do some analysis on the peptide cleavage, see note at
     top of the file.
     """
-    if not ORFObject.ProteinPrediction: ## temporary maybe.  I should not be looking
-        ## at things without a protein prediction, or I should just get the protein
-        ## sequence of the whole ORF.  Another decision postponed.
-        print "the below ORF has no protein"
-        ORFObject.PrintMe(0,1)
-    else:
-        MapPeptidesIntoProteinSpace(ORFObject, ProteolysisEnzymes)
+    return EvaluateSignalPeptide(ORFObject)
+        
 
 
 
@@ -65,7 +62,10 @@ def MapPeptidesIntoProteinSpace(ORFObject, ProteolysisEnzymes):
     us it is very, very useful to get these mapped onto the amino acid 
     sequence space.
     """
-    ProteinSequence = ORFObject.ProteinPrediction.Aminos
+    
+    """ #############DEPRECATED>  DO I USE THIS ??????????? #####################"""
+    
+    ProteinSequence = ORFObject.annotatedProtein.Aminos
     MappingDictionary = {} #key = (startamino, stopamino) value = (follows proteolytic rule n, and c)
     for PeptideObject in ORFObject.PeptideLocationList:
         Aminos = PeptideObject.Aminos
@@ -102,8 +102,79 @@ def MapPeptidesIntoProteinSpace(ORFObject, ProteolysisEnzymes):
         Value = (StartCutFollowsRules, StopCutFollowsRules)
         MappingDictionary[Key] = Value
             
+def GetSignalPeptideHeader():
+    """ Return a string header corresponding to the output of EvaulateSignalPeptide.  
+    If you change one but not the other, your name is MUD
+    The header contains column names for the information columns, but not for the
+    columns representing solely the hyrdophobicity score of a given index
     
     
+    """
+    Header = "ProteinName\tFirstPeptideIndex\tPrefixSequence\tSuffixSequence\tHasHydrophobicPatch\tHasAxBMotif\n"
+    return Header
+
     
+def EvaluateSignalPeptide(ORF):
+    """Parameters: an openreadingframe object
+    Return: Decision (Int), String of info
+    Description: we look at whether a protein has evidence of a signal
+    peptide.  We assume that everything passed to us HAS PEPTIDES.
+    We return a decision on whether there is information supporting
+    a signal peptide cleavage, and then we also return a string
+    which is full of information.  Return Values for Decision:
+        0 = tryptic nterminal first peptide - no evidence
+        1 + non-tryptic nterminal first peptide - perhaps evidence
+        1 = too short - evidence against
+        2 = too long - no evidence
+        3 = no patch - evidence against
+        4 = patch  - evidence supporting signal peptide cleavage
+    NOTE: if decision <3, then the string will be None, the NULL variable, 
+    not the string 'None'
+    """
+
+    HPlot = ProteinStatistics.HyrdopathyPlot()
+    FirstObservedPeptide = ORF.GetFivePrimePeptide(Unique=1)
+    FirstResidue = ORF.aaseq.find(FirstObservedPeptide.aminos) #the index into the OpenReadingFrame of the first observed peptide
+    AnnotatedProteinStart = ORF.ProteinAminoAcidOffset #index within the OpenReadingFrame
+    
+    # level 1 - is it non-tryptic on the N-terminus
+    if FirstObservedPeptide.IsTrypticNterm():
+        return (0, None) # this means N-term tryptic.  the none is because there is no string to return
+    #Level 2 - the length filter, which is somewhat stupid, because a 
+    ##protein could be mispredicted, but it's what we have to go with 
+    ##and we expect signal peptides to fall within a certain length range
+    PeptideOffsetIntoProtein = FirstResidue - AnnotatedProteinStart
+    MaxLen = 50
+    MinLen = 15
+    if PeptideOffsetIntoProtein < MinLen:
+        return (1, None) # this means too short
+    if PeptideOffsetIntoProtein > MaxLen:
+        return (2, None) #this means too long
+    #meet's level 2
+    PrefixSequence = ORF.GetProteinSequence(0, PeptideOffsetIntoProtein) # zero is the start.
+    AfterCut = ORF.GetProteinSequence(PeptideOffsetIntoProtein, PeptideOffsetIntoProtein + 2)
+    ProteinName = ORF.GetProteinName()
+    #now some trickery
+    Plot = HPlot.MakePlot(PrefixSequence)
+    LongerSignal = HPlot.IsConsistentSignal(Plot) #default to 10
+    ShorterSignal = HPlot.IsConsistentSignal(Plot, 0.5, 8)
+    AxBMotif = ProteinStatistics.HasSignalPeptidaseMotif(PrefixSequence)
+    #I decided to go with the shorter hydrophobic patch length, but I kept the other var in there just incase
+    String = "%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideOffsetIntoProtein, PrefixSequence, AfterCut, ShorterSignal, AxBMotif)
+    PlotString =""
+    # need to front pad these with zeros
+    PadLen = MaxLen - len(Plot)
+    for i in range(PadLen):
+        PlotString += "\t0"
+    
+    for Item in Plot:
+        PlotString += "\t%s"%Item
+    ReturnString = "%s%s\n"%(String, PlotString) #plotString has an explicit \t at start. .Put \n to make it completely self enclosed
+    if not ShorterSignal:
+        return (3, ReturnString) #lacks the hydrophobic patch
+    return  (4, ReturnString) #it has a hyrophobic patch 
+            
+
+
     
     

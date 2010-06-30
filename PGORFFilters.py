@@ -278,14 +278,15 @@ class SequenceComplexityFilter(Filter):
         Description: Apply the filter. Look for sequence complexity
         that is outside of the acceptable range.
         """
-        #some upfront debugging
-        Sequence =  ORF.GetProteinSequence()
-        if Sequence:
-            Entropy = self.SequenceEntropy(Sequence)
         
         #end debugging/research
         ORF.filterPeptides( self.lowComplexFilter )
         return
+        #some upfront debugging
+        Sequence =  ORF.GetProteinSequence()
+        if Sequence:
+            Entropy = self.SequenceEntropy(Sequence)
+
         #1. Get a big string of all the peptides in the ORF
         PeptideString = ""
         for PeptideObject in ORF.peptideIter():

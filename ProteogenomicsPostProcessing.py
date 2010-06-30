@@ -396,19 +396,62 @@ class FinderClass():
         """
         Parameters: None
         Return: None
-        Description: glorified wrapper for calling the filter function. 
+        Description: glorified wrapper for calling the filter function.
+        I get returned the following
+        0 = tryptic nterminal first peptide
+        1 + non-tryptic nterminal first peptide
+        1 = too short
+        2 = too long
+        3 = no patch
+        4 = patch 
         """
-        Enzymes = ["Trypsin", ]
+
+        #make ourselves a file handle here
+        (PathStub, Ext) = os.path.splitext(self.OutputPath)
+        SignalPeptidePath = "%s.%s"%(PathStub, "signalpeptide.info")
+        Handle = open (SignalPeptidePath, "w")
+        Header = PGCleavageAnalysis.GetSignalPeptideHeader()
+        Handle.write(Header)
+        
+        ProteinsWithNonTrypticNTermTotal = 0
+        ProteinsWithHydrophobicPatch = 0
+        ProteinLackHydrophobicPatch = 0
+        WrongLength = 0
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:AnalyzeCleavage"
         for (chromName, chrom) in genome.chromosomes.items():
-            BagChecker = SignalPeptide.FinderClass(self.OutputPath)
             if self.Verbose:
                 print "ORFs for chromosome %s of len %d" % (chromName, len(chrom.sequence))
 
             for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
-                Decision = BagChecker.EvaluateSignalPeptide(ORF)
-                print Decision
+                #first we do some checking.  
+                if ORF.numPeptides() == 0:
+                    # we dont want to deal with things that don't have peptides,
+                    continue
+
+                if not ORF.CDS: ## temporary maybe.  I should not be looking
+                    ## at things without a protein prediction, or I should just get the protein
+                    ## sequence of the whole ORF.  Another decision postponed.
+                    continue
+                
+                (Decision, String) = PGCleavageAnalysis.Analysis(ORF, "Trypsin")
+                if Decision: #all things not zero
+                    ProteinsWithNonTrypticNTermTotal += 1
+                if Decision == 1 or Decision == 2:
+                    WrongLength +=  1
+                if Decision == 3:
+                    ProteinLackHydrophobicPatch += 1
+                if Decision == 4:
+                    ProteinsWithHydrophobicPatch += 1
+                if Decision >= 3:
+                    #these are thing I want to print out, conveniently they also have a non NULL String
+                    Handle.write(String)
+        print "These are the counts"
+        print "all those with a non-tryptic: %s"%ProteinsWithNonTrypticNTermTotal
+        print "wrong length: %s"%WrongLength
+        print "no patch: %s"%ProteinLackHydrophobicPatch
+        print "Have Patch: %s"%ProteinsWithHydrophobicPatch
+        Handle.close()
 
     def LoadResultsFromGFF(self, GFFFile):
         """Parameters: GFF file path
@@ -554,6 +597,9 @@ class FinderClass():
         self.Report.SetValue("MappedPeptideLocationCount", LocationCount)
         self.Report.SetValue("MappedPeptideCount", MappingCount)
         self.Report.SetValue("PeptidesMappingOutsideAnnotation", PeptidesMappingOutsideAnnotation)
+        
+        #we're now done with the self.PeptideSources array, let's clean it up just to be nice for memory footprint
+        del self.PeptideSources
         if self.Verbose:
             print "ProteogenomicsPostProcessing:MapAllPeptides - mapped %s peptides to %s genomic locations %s found in current annotation"%(MappingCount, LocationCount,inGenomeCount)
 
