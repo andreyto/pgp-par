@@ -303,7 +303,8 @@ class LocatedPeptide(object):
     
     def GetAminos(self):
         return self.aminos
-
+    def GetSpectrumCount(self):
+        return self.spectrumCount
 
     def AppendMSMSSource(self, Array):
         """Parameters: an array of tuples [(filename, spectrum), (filename, spectrum), (filename, spectrum), ...]
@@ -416,7 +417,8 @@ class OpenReadingFrame(object):
         Line = ""
         #first we want the name of the protein (if such exists)
         if self.annotatedProtein:
-            Line += "%s\t"%self.annotatedProtein.GetName()
+            
+            Line += "%s,%s\t"%(self.annotatedProtein.GetName(), self.CDS.qualifiers['protein_id'][0])
         else:
             Line += "Unannotated ORF\t"
         #now we get the peptide count
@@ -428,9 +430,9 @@ class OpenReadingFrame(object):
         for Peptide in self.peptideIter():
             if Peptide.isUnique:
                 NumUniquePeptides += 1
-                UniquePeptideString += "%s, "%Peptide.GetAminos()
+                UniquePeptideString += "%s(%s), "%(Peptide.GetAminos(), Peptide.GetSpectrumCount())
             else:
-                NonUniquePeptideString += "%s, "%Peptide.GetAminos()
+                NonUniquePeptideString += "%s(%s), "%(Peptide.GetAminos(), Peptide.GetSpectrumCount())
         Line += "%s\t"%NumUniquePeptides
         Line += "%s\t"%UniquePeptideString
         Line += "%s\n"%NonUniquePeptideString

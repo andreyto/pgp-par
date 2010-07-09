@@ -73,7 +73,7 @@ class ResultsParser:
                 if not QuietFlag:
                     print "(%s/%s) %s"%(FileNameIndex, len(FileNames), FileName)
                 (Stub, Extension) = os.path.splitext(FileName)
-                if Extension.lower() not in (".txt", ".filtered", ".res", ".csv", ".out"):
+                if Extension.lower() not in (".txt", ".filtered", ".res", ".csv", ".out", ".msgf"):
                     continue
                 FileCount += 1
                 SubFilePath = os.path.join(FilePath, FileName)

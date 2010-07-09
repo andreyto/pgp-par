@@ -8,6 +8,7 @@ NOTE: this is a utility, and not executable from the command line
 
 """
 import math #used to calculate logs
+import os
 
 class FilterList:
     """Class FilterList: This is a container object for a list
@@ -17,12 +18,16 @@ class FilterList:
         self.List
     Functions: ApplyAllFilters(ORFList)
     """
-    def __init__(self, ListOfFilterObjects):
+    def __init__(self, ListOfFilterObjects, OutputPath):
         """Parameters: List of filter objects, or classes that inherit from 'Filter' 
         Return: none
         Description: trivially constructor 
         """        
         self.List = ListOfFilterObjects
+        (Path, Ext) = os.path.splitext(OutputPath)
+        FilterPath = "%s.filterreport.txt"%Path
+        self.Handle = open(FilterPath, "w")
+        
         
     def ApplyAllFilters(self, DictionaryOfORFs):
         """
@@ -34,16 +39,20 @@ class FilterList:
         KilledPeptideCount =0
         KilledProteinCount = 0
         KillList = [] # a list of ORF.name to kill
+        FiltersKillingORFs = {} #filter.name -> [list of orfs killed]
+        ORFStrings = {} #orf.name -> orf.__string__
         for (Name, ORF) in DictionaryOfORFs.items():
             #now cycle through all our filters.  We use the ordering
             #of the list, meaning that you should have throught about
             #what order you wanted to apply them in when you created 
             #me as an object
             DeleteMe = 0 #assume innnocence
+            CurrFilter = None
             for Filter in self.List:
+                CurrFilter = Filter.name
                 DeleteMe = Filter.apply(ORF)
                 if DeleteMe:
-                    break #quit the filter already, we know it sucks
+                    break #quit cycling through all the filters already, we know it sucks
             # so here's the deal.  We have created ORFs for two reasons
             #1. It contains peptides
             #2. It contains a predicted protein, which is important to keep track
@@ -53,7 +62,14 @@ class FilterList:
             if DeleteMe:
                 KilledPeptideCount += ORF.numPeptides()
                 KilledProteinCount += 1
+                #before we nuke this thing, let's get the string version for our report
+                ORFStrings[ORF.GetName()] = "%s"%ORF # uses the __string__ method we cleverly built in
                 ORF.DeleteAllPeptides()
+                #now after killing all peptides, we keep track of which filter killed which
+                #protein
+                if not FiltersKillingORFs.has_key(CurrFilter):
+                    FiltersKillingORFs[CurrFilter] = [] #empty list
+                FiltersKillingORFs[CurrFilter].append(ORF.GetName())
                 #we only truly delete something if it has no peptides AND no protein
                 if ORF.GetLocatedProtein() == None:
                     KillList.append(Name)
@@ -61,6 +77,19 @@ class FilterList:
         for Name in KillList:
             del DictionaryOfORFs[Name]
         print "after filtering I killed %s proteins with %s peptides"%(KilledProteinCount, KilledPeptideCount)
+        #now we write out to the report file
+        #first the skinny
+        for (FilterName, ProteinList) in FiltersKillingORFs.items():
+            self.Handle.write("Filter %s eliminated %s\n"%(FilterName, len(ProteinList)))
+        
+        #now the long
+        for (FilterName, ProteinList) in FiltersKillingORFs.items():
+            self.Handle.write("Filter %s results\n"%FilterName)
+            #now we want to list out all the things that got killed
+            for ORFName in ProteinList:
+                self.Handle.write("%s\n"%ORFStrings[ORFName])
+            #one final return just to help out
+            self.Handle.write("\n")
         return DictionaryOfORFs
     
 
@@ -140,8 +169,7 @@ class TrypticFilter(Filter):
     Rule 1. If there are no tryptic peptides, then we signal for deleting 
     the ORF.
     
-    NOTE: THIS WILL NOT WORK YET, as the peptide object does not have
-    the tryptic variable. But it will soon
+    Peptides Trypticness should be set when peptides are mapped
     
     """
     def __init__(self):
@@ -250,6 +278,7 @@ class SequenceComplexityFilter(Filter):
         Description: This looks for peptides that are just
         LowMW residues and removes them entirely.  They are crappy
         annotations and I don't want to see them!
+        
         """
         Saved = 0
         GA = ["G", "A"]
@@ -257,7 +286,7 @@ class SequenceComplexityFilter(Filter):
         LenAboveReproach = 10 #total magic number.  But the short peptides are the ones giving me fits
         if Len >= LenAboveReproach:
             return True #this passes filter, because it's above reproach
-        MinNonGA = Len / 5 # was /2 but I'm testing to get bad results
+        MinNonGA = Len / 3 # was /2 but I'm testing to get bad results
         Count =0
         #now cycle through and see if it's only G and A
         for Letter in PeptideObject.aminos:
@@ -267,6 +296,7 @@ class SequenceComplexityFilter(Filter):
         if Count >= MinNonGA:
             Saved =1
         if Saved:
+            
             return True
         else:
             return False
@@ -274,14 +304,18 @@ class SequenceComplexityFilter(Filter):
     def apply(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
-        Return: don't know
+        Return: None
         Description: Apply the filter. Look for sequence complexity
         that is outside of the acceptable range.
         """
         
         #end debugging/research
         ORF.filterPeptides( self.lowComplexFilter )
-        return
+        return #this is an intentionally blank return.  We are filtering individual peptides here
+        #so we don't return a call of this particular ORF or not.  
+        #that is as long as we're doing the cheap hack and not the full entropy based model
+        
+        ###### OLD CODE for ENTROPY ########
         #some upfront debugging
         Sequence =  ORF.GetProteinSequence()
         if Sequence:

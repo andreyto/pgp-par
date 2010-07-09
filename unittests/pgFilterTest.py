@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
         self.assertEqual(FilterRequire5.apply(ORF5), 0) 
 
         # Also test the FilterList
-        filters = PGORFFilters.FilterList([FilterRequire5])
+        filters = PGORFFilters.FilterList([FilterRequire5], "dummyfile.delme")
         keep = filters.ApplyAllFilters( { 'ORF5': ORF5, 'ORF2': ORF2 })
         self.assertEqual( 1, len(keep) )
         self.assertEqual( 'ORF5', keep.keys()[0] )

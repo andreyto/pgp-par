@@ -298,7 +298,8 @@ class FinderClass():
         SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
-        FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, MinPeptide]) # an anonymous list
+        Tryptic = PGORFFilters.TrypticFilter()
+        FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, Tryptic, MinPeptide], self.OutputPath) # an anonymous list
         genome.filterORFs( FilterList )
 
 
