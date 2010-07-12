@@ -22,12 +22,11 @@ class FilterList:
         """Parameters: List of filter objects, or classes that inherit from 'Filter' 
         Return: none
         Description: trivially constructor 
-        """        
+        """
         self.List = ListOfFilterObjects
         (Path, Ext) = os.path.splitext(OutputPath)
         FilterPath = "%s.filterreport.txt"%Path
         self.Handle = open(FilterPath, "w")
-        
         
     def ApplyAllFilters(self, DictionaryOfORFs):
         """
@@ -73,7 +72,7 @@ class FilterList:
                 #we only truly delete something if it has no peptides AND no protein
                 if ORF.GetLocatedProtein() == None:
                     KillList.append(Name)
-            
+
         for Name in KillList:
             del DictionaryOfORFs[Name]
         print "after filtering I killed %s proteins with %s peptides"%(KilledProteinCount, KilledPeptideCount)
@@ -91,14 +90,14 @@ class FilterList:
             #one final return just to help out
             self.Handle.write("\n")
         return DictionaryOfORFs
-    
+
 
 
 class Filter:
     """Class Filter: this is a generic filter, meant to be inherited to 
     the actual specific filter classes, e.g. SequenceComplexityFilter
     Classes that inherit from this must define - 
-    Variables: 
+    Variables:
         self.name
     Functions:
         apply(ORF)
@@ -107,9 +106,9 @@ class Filter:
         """Parameters: none
         Return: none
         Description: trivially empty constructor for the parent class
-        """        
+        """
         self.name = "Filter Parent Class"
-        
+
     def apply(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
@@ -129,17 +128,17 @@ class UniquenessFilter(Filter):
     Rules for Filter:
     Rule 1. If there are no unique peptides, then we signal for deleting 
     the ORF.
-    
+
     """
     def __init__(self):
         """
         Parameters: none
         Return: none
         Description: a rather small constructor
-        """               
+        """
         Filter.__init__(self)
         self.name = "UniquenessFilter"
-        
+
 
     def apply(self, ORF):
         """
@@ -168,19 +167,19 @@ class TrypticFilter(Filter):
     Rules for Filter:
     Rule 1. If there are no tryptic peptides, then we signal for deleting 
     the ORF.
-    
+
     Peptides Trypticness should be set when peptides are mapped
-    
+
     """
     def __init__(self):
         """
         Parameters: none
         Return: none
         Description: a rather small constructor
-        """               
+        """
         Filter.__init__(self)
         self.name = "TrypticFilter"
-        
+
 
     def apply(self, ORF):
         """
@@ -208,19 +207,19 @@ class MinPeptideFilter(Filter):
     Rules for Filter:
     Rule 1. If there are fewer peptides than our cutoff, then we signal for 
     deleting the ORF.
-    
-    
+
+
     """
     def __init__(self, MinimumPeptides = 2):
         """
         Parameters: The minimum number of peptides that you require. defalut = 2 
         Return: none
         Description: a rather small constructor
-        """               
+        """
         Filter.__init__(self)
         self.name = "MinPeptideFilter"
         self.MinimumPeptides = MinimumPeptides
-        
+
     def apply(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
@@ -234,7 +233,6 @@ class MinPeptideFilter(Filter):
         return 1 # delete me NOW
 
 
-    
 class SequenceComplexityFilter(Filter):
     """Class SequenceComplexityFilter: this is an ORF level filter for 
     proteogenomics, and works to get rid of ORFs who are represented by
@@ -251,7 +249,7 @@ class SequenceComplexityFilter(Filter):
     Maybe also look for those way outside the stdev. we'll see about that later
     Rule 2: if the sequence is entirely G,A, then I am going to just delete the
     peptide, and let it float through the rest of the filters
-    
+
     Variables:
         self.name
     Functions:
@@ -262,7 +260,7 @@ class SequenceComplexityFilter(Filter):
         Parameters: none
         Return: none
         Description: a rather small constructor
-        """               
+        """
         Filter.__init__(self)
         self.name = "SequenceComplexityFilter"
         self.MaximumLowMWContent = 0.9
@@ -334,7 +332,7 @@ class SequenceComplexityFilter(Filter):
         if Normalized > self.MaximumLowMWContent:
             return 1 # delete ME
         return 0 #keep ME
-    
+
     def SequenceEntropy(self, Sequence):
         """Parameters: An amino acid sequence
         Return: the H(x) entropy
@@ -353,8 +351,8 @@ class SequenceComplexityFilter(Filter):
             LogValue = math.log(1 / Probability) #currently the natural log.  not sure the base of the log matters
             Sum += (Probability * LogValue)
         return Sum
-        
-        
+
+
     def GetProbabilityTable(self, Sequence):
         """Parameters: an amino acid sequence
         Return: a dictionary of probability (frequence/n) for each letter
@@ -371,7 +369,6 @@ class SequenceComplexityFilter(Filter):
             Probability = Value / Len
             ProbabilityDict[Key] = Probability
         return ProbabilityDict
-            
 
 
 def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):
@@ -415,16 +412,11 @@ def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):
                 else:
                     #there is no overlap with this, and it's a sorted list, so time to advance p1
                     break
-                
+
         return Overlappers
-                
-                    
-                    
-                 
-                
-                
-            
-        
+
+
+
 def SortStartStop(Begin1, End1, Begin2, End2):
     if Begin1 > Begin2:
         return 1

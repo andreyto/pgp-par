@@ -232,13 +232,13 @@ class LocatedPeptide(object):
             self.TrypticCTerm = 1
         if CtermForce:
             self.TrypticCTerm = 1
-            
+
 
     def IsTrypticNterm(self):
         if self.TrypticNTerm:
             return True
         return False
-        
+
 
     def isPartiallyTryptic(self):
         """Parameters: None
@@ -251,7 +251,7 @@ class LocatedPeptide(object):
         if self.TrypticNTerm:
             return True
         return False
-    
+
     def isFullyTryptic(self):
         if self.TrypticCTerm and self.TrypticNTerm:
             return True
@@ -300,7 +300,7 @@ class LocatedPeptide(object):
 
     def Strand(self):
         return self.location.strand
-    
+
     def GetAminos(self):
         return self.aminos
     def GetSpectrumCount(self):
@@ -356,7 +356,7 @@ class LocatedProtein(object):
         return self.name
     def GetLocation(self):
         return self.location
-    
+
 
     def __str__(self):
         return "%s in %s, %s"%(self.name, self.ORFName, self.location)
@@ -388,8 +388,8 @@ class OpenReadingFrame(object):
         #set is AddLocatedProtein, this is the offset before the protein starts.  It is
         #set such that if you do a slice aaseq[offset:] you will get the protein sequence
         ##with the exception of the wrong translation for alt start codons.  have to fix that later
-        self.ProteinAminoAcidOffset = None 
-                                            
+        self.ProteinAminoAcidOffset = None
+
 
     def __str__(self):
         NumUniquePeptides = 0
@@ -410,8 +410,8 @@ class OpenReadingFrame(object):
         """Parameters: an open file handle
         Return: None
         Description: We will write a summary of this protein's observed peptides
-        using a utterly simple protein inference model.  We will print out all 
-        peptides, separated out into unique and non-unique.  This is just a 
+        using a utterly simple protein inference model.  We will print out all
+        peptides, separated out into unique and non-unique.  This is just a
         printer, it does no reasoning.
         """
         Line = ""
@@ -476,7 +476,6 @@ class OpenReadingFrame(object):
             Handle.write(Line)
         #done iterating through the peptides. Done with me
 
-        
 
     def GetStrand(self):
         return self.location.strand
@@ -528,7 +527,7 @@ class OpenReadingFrame(object):
     def GetUpstreamPeptideCount(self):
         """Parameters: none
         Return: number of peptides upstream of start (int)
-        Description: count the number of peptides which appear upstream of the 
+        Description: count the number of peptides which appear upstream of the
         start site and return them. Note the extra careful variable naming that
         uses 'FivePrime' and not 'start'.  That's very important.  You must
         remember that 'start' is a small number, and has nothing to do with biology
@@ -548,8 +547,7 @@ class OpenReadingFrame(object):
                 if PeptideFivePrimeNuc > ProteinFivePrimeNuc:
                     Count += 1
         return Count
-                
-            
+
 
     def GetNucleotideStartOfTranslation(self):
         """Returns the start of translation"""
@@ -573,7 +571,7 @@ class OpenReadingFrame(object):
         AAOffset = Diff / 3
         self.ProteinAminoAcidOffset = AAOffset
         ## debug crap below
-        #print "%s 5' is %s; protein 5' is %s, diff in nuc %s, diff in protein %s"%(self, ORFNuc5, ProteinNuc5, Diff, AAOffset) 
+        #print "%s 5' is %s; protein 5' is %s, diff in nuc %s, diff in protein %s"%(self, ORFNuc5, ProteinNuc5, Diff, AAOffset)
 
     def GetLocatedProtein(self):
         if self.annotatedProtein:
@@ -585,7 +583,7 @@ class OpenReadingFrame(object):
         NucLen = abs(self.annotatedProtein.GetStart() - self.annotatedProtein.GetStop())
         ProtLen = NucLen / 3
         return ProtLen
-    
+
     def GetTranslation(self, Start =0, Stop = None):
         """Parameters: none required.  optional start and stop
         Return: amino acid string (or None)
@@ -594,9 +592,9 @@ class OpenReadingFrame(object):
         """
         if Stop:
             return self.aaseq[Start:Stop]
-        
+
         return self.aaseq[Start:]
-    
+
     def GetProteinSequence(self, Start = 0, Stop = None):
         """Parameters: none required.  optional start and stop
         Return: amino acid string (or None)
@@ -632,22 +630,22 @@ class OpenReadingFrame(object):
         'Adds a list of LocatedPeptide objects to the ORF.'
         for pep in peptideList:
             self.addLocatedPeptide( pep )
-            
+
     def DeleteAllPeptides(self):
         """Parameters: None
         Return: None
         Description: If we've decided to filter out this ORF, we delete all
-        the peptide objects. Only call this if you understand the ramifications        
+        the peptide objects. Only call this if you understand the ramifications
         """
         del self.__peptides[:] #deletes all members of the array, but leaves the empty list
 
     def filterPeptides( self, filterFunc ):
         'Takes a filter function returning True or False for a LocatedPeptide object'
         self.__peptides = filter( filterFunc, self.__peptides)
-        
+
     def GetName(self):
         return self.name
-    
+
     def GetProteinName(self):
         return self.annotatedProtein.GetName()
 
@@ -772,7 +770,7 @@ class Chromosome(object):
         self.sequence = seq  # NA sequence of chromosome, currently a biopython Seq object
         self.simpleOrfs = {} # ORFs corresponding to a contiguous annotated protein
         self.complexOrfs= {} # complex ORFs  have no direct end to end protein map
-        self.otherOrfs  = {} # other ORFs are the leftovers 
+        self.otherOrfs  = {} # other ORFs are the leftovers
         self.pepOnlyOrfs= {} # ORFs created only via peptides
         self.endToCDS   = {} # maps the 3' end of an protein to its SeqFeature object
 
