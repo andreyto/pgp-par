@@ -239,11 +239,19 @@ class PrimaryStructure:
             return
         firstNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         orfStart = ORF.location.GetFivePrime()
+        peptidePosition = 1
+        peptideIncr = 1
         # For the reverse strand switch postions so we're still going up
         if ORF.location.strand == '-':
             (orfStart, firstNucleotide) = (firstNucleotide, orfStart)
             # We need to go back one to check the 1st AA
             orfStart -= 3
+            nucDiff = firstNucleotide - orfStart
+            if nucDiff % 3 != 0:
+                print "Warning frame is off diff is %d" % nucDiff
+            peptidePosition = nucDiff / 3
+            peptideIncr = -1
+
         print "Looking for upstream starts from %d-%d for %s" % (
             orfStart, firstNucleotide, ORF)
         first = True
@@ -258,7 +266,7 @@ class PrimaryStructure:
             not first and codon in self.StartCodonTable):
                 # These should be zero base based coordinates
                 # so we'll need to add 1 for 1 based output
-                pass
-                #print "Start Codon %s found at %d" % (codon, codonLoc)
-            orfStart += 1
+                print "Start Codon %s found at %d pep %d" % (codon, codonLoc, peptidePosition)
+            orfStart += 3
+            peptidePosition += peptideIncr
             first = False
