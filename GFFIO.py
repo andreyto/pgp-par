@@ -9,9 +9,9 @@ NOTE: this is a utility, and not executable from the command line
 from bioseq import FlatFileIO
 
 class File(FlatFileIO):
-    
+
     ### inherits the constructor from FlatFileIO ###
-    
+
     def __iter__(self):
         for line in self.io.xreadlines():
             if line[0] in ["#", "\n", ""]:
@@ -24,7 +24,7 @@ class File(FlatFileIO):
             # Attributes is a dictionary, which we join into key=value
             # pairs with each separated by a ;
             pairs = [(p[0],str(p[1])) for p in record.attributes.items()]
-            attributes = ";".join(["=".join(x) for x in pairs]) 
+            attributes = ";".join(["=".join(x) for x in pairs])
 
         self.io.write("\t".join([
             record.seqid,
@@ -44,7 +44,7 @@ class Record(object):
         Return: GFFIO.Record object filled with values
         Description: Take a GFF line and parse it out into the object. You
         can do whatever you want with the object.  The format should be invariant
-        """    
+        """
         cols = gffline.strip().split("\t")
         self.seqid = cols[0]
         self.source= cols[1]
@@ -78,7 +78,7 @@ Methods for reading or writing the GFF3 format
 Notes for the GFF format are on: http://www.sequenceontology.org/gff3.shtml
 
 ##gff-version   3
-##sequence-region   ctg123 1 1497228       
+##sequence-region   ctg123 1 1497228
 ctg123 . gene            1000  9000  .  +  .  ID=gene00001;Name=EDEN
 ctg123 . TF_binding_site 1000  1012  .  +  .  ID=tfbs00001;Parent=gene00001
 ctg123 . mRNA            1050  9000  .  +  .  ID=mRNA00001;Parent=gene00001;Name=EDEN.1
@@ -154,7 +154,7 @@ If we're dealing with unspliced peptides, the phase should always be zero.
 Column 9: "attributes"
 
 A list of feature attributes in the format tag=value.  Multiple
-tag=value pairs are separated by semicolons.  
+tag=value pairs are separated by semicolons.
 
 These tags have predefined meanings:
 
