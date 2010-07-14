@@ -6,10 +6,7 @@ evidences
 NOTE: this is a utility, and not executable from the command line
 
 """
-import os
-import bioseq
-import string
-import DNA
+import os, DNA, GFFIO
 
 class PrimaryStructure:
     """Class PrimaryStructure: This is an analysis object to help
@@ -19,6 +16,9 @@ class PrimaryStructure:
         -
     Functions: CheckStructure(PGPeptide.OpenReadingFrame)
     """
+    # Class variable to count start codons
+    startCodonCount = 1
+
     def __init__(self, OutputPath, NucleotideSequence):
         """Parameters: none
         Return: none
@@ -37,6 +37,8 @@ class PrimaryStructure:
         self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "a")
         ShortProteinPath = "%s.%s"%(self.OutputStub, "shortprotein.info")
         self.ShortProteinHandle = open(ShortProteinPath, "a")
+        startCodonPath = "%s.%s"%(self.OutputStub, "starts.gff")
+        self.startCodonGFF = GFFIO.File(startCodonPath, "a")
         self.HypotheticalCount =0
         self.NamedCount = 0
         self.NovelGC = []
@@ -237,35 +239,49 @@ class PrimaryStructure:
         if not FirstObservedPeptide:
             print "No peptides for %s"%ORF
             return
+        # Subtract one to use zero based coordinates for DNA array access
         firstNucleotide = FirstObservedPeptide.GetFivePrimeNucleotide()
         orfStart = ORF.location.GetFivePrime()
+        # Keep track of the peptide position in the ORF
         peptidePosition = 1
         peptideIncr = 1
+        # GFF record to output the start codons
+        gffRec = GFFIO.Record()
+        gffRec.source = 'Proteomics'
+        gffRec.type = 'polypeptide'
+        gffRec.seqid = ORF.chromosome
+        gffRec.attributes['Parent'] = ORF.name
         # For the reverse strand switch postions so we're still going up
         if ORF.location.strand == '-':
             (orfStart, firstNucleotide) = (firstNucleotide, orfStart)
-            # We need to go back one to check the 1st AA
-            orfStart -= 3
-            nucDiff = firstNucleotide - orfStart
+            # We need to go back one AA to check the 1st AA
+            orfStart -= 2 # one AA in genomic base based coordinates
+            nucDiff = firstNucleotide - orfStart + 1
             if nucDiff % 3 != 0:
                 print "Warning frame is off diff is %d" % nucDiff
             peptidePosition = nucDiff / 3
             peptideIncr = -1
 
-        print "Looking for upstream starts from %d-%d for %s" % (
-            orfStart, firstNucleotide, ORF)
+        print "Looking for upstream starts from %d-%d for %s 1st codons %s" % (
+            orfStart, firstNucleotide, ORF, self.DNA[orfStart-1:orfStart+8])
         first = True
         while (orfStart < firstNucleotide):
-            codon = self.DNA[orfStart:orfStart+3].upper()
+            # Need zero base based coordinates for the array access
+            codon = self.DNA[orfStart-1:orfStart+2].upper()
             codonLoc = orfStart
             if ORF.location.strand == '-':
                 codon = DNA.ReverseComplement( codon )
-                codonLoc = orfStart+3
 
             if (first and codon == 'ATG') or (
             not first and codon in self.StartCodonTable):
-                # These should be zero base based coordinates
-                # so we'll need to add 1 for 1 based output
+                gffRec.start = codonLoc
+                gffRec.end   = codonLoc+2
+                gffRec.score = 0
+                gffRec.strand= ORF.location.strand
+                gffRec.attributes['Name'] = "%s@%d" % (codon,peptidePosition)
+                gffRec.attributes['ID'] = PrimaryStructure.startCodonCount
+                PrimaryStructure.startCodonCount += 1
+                self.startCodonGFF.write( gffRec )
                 print "Start Codon %s found at %d pep %d" % (codon, codonLoc, peptidePosition)
             orfStart += 3
             peptidePosition += peptideIncr
