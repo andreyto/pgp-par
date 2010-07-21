@@ -280,6 +280,9 @@ class PrimaryStructure:
                 gffRec.strand= ORF.location.strand
                 gffRec.attributes['Name'] = "%s@%d" % (codon,peptidePosition)
                 gffRec.attributes['ID'] = PrimaryStructure.startCodonCount
+                if ORF.CDS:
+                    gffRec.attributes['locus_tag'] = ORF.CDS.qualifiers['locus_tag'][0]
+
                 PrimaryStructure.startCodonCount += 1
                 self.startCodonGFF.write( gffRec )
                 print "Start Codon %s found at %d pep %d" % (codon, codonLoc, peptidePosition)

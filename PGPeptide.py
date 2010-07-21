@@ -417,7 +417,6 @@ class OpenReadingFrame(object):
         Line = ""
         #first we want the name of the protein (if such exists)
         if self.annotatedProtein:
-            
             Line += "%s,%s\t"%(self.annotatedProtein.GetName(), self.CDS.qualifiers['protein_id'][0])
         else:
             Line += "Unannotated ORF\t"
