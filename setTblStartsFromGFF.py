@@ -25,36 +25,44 @@ class AlterTblStarts:
                 self.newGenes.append( gffRec )
 
     def writeRec(self):
-        self.output.write( "%d\t%d\t%s\n%s" % (self.curBeg,self.curEnd,
+        if self.curRec:
+            self.output.write( "%d\t%d\t%s\n%s" % (self.curBeg,self.curEnd,
                                                self.curType, self.curRec) )
     def processTbl(self):
         tbl = bioseq.FlatFileIO( self.tbl )
+        # RE to match the start of a feature record
         recRE  = re.compile('^(\d+)\t(\d+)\t(\w+)')
+        # RE to match the qualifiers associated in the record
         qualRE = re.compile('^\t\t\t(\w+)\t(.*)')
+        # Accession of current sequence in tbl file
         curSeq = None
+        modifyCDS = False
         for line in tbl.io:
             if line[0] == '>':
                 accStart = line.index('|') + 1
                 curSeq = line[accStart:-2]
-                if self.curRec:
-                    self.writeRec()
+                self.writeRec()
                 self.output.write( line )
                 continue
 
             match = recRE.match( line )
             if match:
                 # Match feature start
-                if self.curRec:
-                    self.writeRec()
+                self.writeRec()
                 self.curRec = ''
                 (b,e,self.curType) = match.groups()
-                (self.curBeg,self.curEnd) =(int(b),int(e))
+                if modifyCDS and self.curType == 'CDS':
+                    # Keep the same begin & end as for the previous gene
+                    modifyCDS = False
+                else:
+                    (self.curBeg,self.curEnd) =(int(b),int(e))
                 continue
 
             match = qualRE.match( line )
             if match:
                 (qual,val) = match.groups()
                 if qual == 'locus_tag' and self.starts.has_key(val):
+                    # We need to modify this records start
                     gff = self.starts[val]
                     seqId = gff.seqid
                     if seqId != curSeq:
@@ -65,6 +73,7 @@ class AlterTblStarts:
                         self.curBeg = gff.start
                     else:
                         self.curEnd = gff.end
+                    modifyCDS = True
                 else:
                     pass
                 self.curRec += line
@@ -74,8 +83,7 @@ class AlterTblStarts:
             else:
                 print "Bad line: %s" % line
         # write out the last record
-        if self.curRec:
-            self.writeRec()
+        self.writeRec()
 
     def Main(self):
         self.readGFF()
