@@ -1,120 +1,183 @@
-"""These are for functions on protein sequences.  Right now it's only hydropathy, but maybe more will come up
+"""These are for functions on nucleotide sequences.  
 """
-import BasicStats
-import Global
-import string
-
-class HydrophobicIndex:
-    """scores Kyte-Doolittle, grouping a la Lehninger"""
-    HI = {}
-    #NonPolar 
-    HI["G"] = -0.4 #Glycine
-    HI["A"] = 1.8 #Alanine
-    HI["P"] = -1.6 #Proline  #### Typo in Lenhinger!!!
-    HI["V"] = 4.2 #Valine
-    HI["L"] = 3.8 #Leucine
-    HI["I"] = 4.5 #Isoleucine
-    HI["M"] = 1.9 #Methionine
-    #Aromatic 
-    HI["F"] = 2.8 #Phenylalanine
-    HI["Y"] = -1.3 #Tyrosine
-    HI["W"] = -0.9 #Tryptophan
-    #polar, uncharged 
-    HI["S"] = -0.8 #Serine
-    HI["T"] = -0.7 #Threonine
-    HI["C"] = 2.5 #Cysteine
-    HI["N"] = -3.5 #Asparagine
-    HI["Q"] = -3.5 #Glutamine
-    #polar, charged 
-    HI["K"] = -3.9 #Lysine
-    HI["H"] = -3.2 #Histidine
-    HI["R"] = -4.5 #Arginine
-    HI["D"] = -3.5 #Aspartate
-    HI["E"] = -3.5 #Glutamate
-    
-class HyrdopathyPlot:
+from DNA import Frequency
+class ProteinTranslationClass:
     def __init__(self):
-        self.Metric = HydrophobicIndex
+        """Simply the translation table, so it can be accessed
+        """
+        self.Table = {}
+        self.Table["ATT"] = "I" #Isoleucine      I    ATT, ATC, ATA
+        self.Table["ATC"] = "I"
+        self.Table["ATA"] = "I"
+        self.Table["CTT"] = "L" #Leucine         L    CTT, CTC, CTA, CTG, TTA, TTG
+        self.Table["CTC"] = "L"
+        self.Table["CTA"] = "L"
+        self.Table["CTG"] = "L"
+        self.Table["TTA"] = "L"
+        self.Table["TTG"] = "L"
+        self.Table["GTT"] = "V" #Valine          V    GTT, GTC, GTA, GTG
+        self.Table["GTC"] = "V"
+        self.Table["GTA"] = "V"
+        self.Table["GTG"] = "V"
+        self.Table["TTT"] = "F" #Phenylalanine   F    TTT, TTC
+        self.Table["TTC"] = "F"
+        self.Table["ATG"] = "M" #Methionine      M    ATG
+        self.Table["TGT"] = "C" #Cysteine        C    TGT, TGC
+        self.Table["TGC"] = "C"
+        self.Table["GCT"] = "A" #Alanine         A    GCT, GCC, GCA, GCG
+        self.Table["GCC"] = "A"
+        self.Table["GCA"] = "A"
+        self.Table["GCG"] = "A"
+        self.Table["GGT"] = "G" #Glycine         G    GGT, GGC, GGA, GGG
+        self.Table["GGC"] = "G"
+        self.Table["GGA"] = "G"
+        self.Table["GGG"] = "G"
+        self.Table["CCT"] = "P" #Proline         P    CCT, CCC, CCA, CCG
+        self.Table["CCC"] = "P"
+        self.Table["CCA"] = "P"
+        self.Table["CCG"] = "P"
+        self.Table["ACT"] = "T" #Threonine       T    ACT, ACC, ACA, ACG
+        self.Table["ACC"] = "T"
+        self.Table["ACA"] = "T"
+        self.Table["ACG"] = "T"
+        self.Table["TCT"] = "S" #Serine          S    TCT, TCC, TCA, TCG, AGT, AGC
+        self.Table["TCC"] = "S"
+        self.Table["TCA"] = "S"
+        self.Table["TCG"] = "S"
+        self.Table["AGT"] = "S"
+        self.Table["AGC"] = "S"
+        self.Table["TAT"] = "Y" #Tyrosine        Y    TAT, TAC
+        self.Table["TAC"] = "Y"
+        self.Table["TGG"] = "W" #Tryptophan      W    TGG
+        self.Table["CAA"] = "Q" #Glutamine       Q    CAA, CAG
+        self.Table["CAG"] = "Q"
+        self.Table["AAT"] = "N" #Asparagine      N    AAT, AAC
+        self.Table["AAC"] = "N"
+        self.Table["CAT"] = "H" #Histidine       H    CAT, CAC
+        self.Table["CAC"] = "H"
+        self.Table["GAA"] = "E" #Glutamic acid   E    GAA, GAG
+        self.Table["GAG"] = "E"
+        self.Table["GAT"] = "D" #Aspartic acid   D    GAT, GAC
+        self.Table["GAC"] = "D"
+        self.Table["AAA"] = "K" #Lysine          K    AAA, AAG
+        self.Table["AAG"] = "K"
+        self.Table["CGT"] = "R" #Arginine        R    CGT, CGC, CGA, CGG, AGA, AGG
+        self.Table["CGC"] = "R"
+        self.Table["CGA"] = "R"
+        self.Table["CGG"] = "R"
+        self.Table["AGA"] = "R"
+        self.Table["AGG"] = "R"
+        self.Table["TAA"] = "*" #Stop codons     *    TAA, TAG, TGA
+        self.Table["TAG"] = "*" 
+        self.Table["TGA"] = "*" 
+
+class CodonCount:
+    def __init__(self):
+        self.Table = {}
+        self.Table["ATT"] = 0 #Isoleucine      I    ATT, ATC, ATA
+        self.Table["ATC"] = 0
+        self.Table["ATA"] = 0
+        self.Table["CTT"] = 0 #Leucine         L    CTT, CTC, CTA, CTG, TTA, TTG
+        self.Table["CTC"] = 0
+        self.Table["CTA"] = 0
+        self.Table["CTG"] = 0
+        self.Table["TTA"] = 0
+        self.Table["TTG"] = 0
+        self.Table["GTT"] = 0 #Valine          V    GTT, GTC, GTA, GTG
+        self.Table["GTC"] = 0
+        self.Table["GTA"] = 0
+        self.Table["GTG"] = 0
+        self.Table["TTT"] = 0 #Phenylalanine   F    TTT, TTC
+        self.Table["TTC"] = 0
+        self.Table["ATG"] = 0 #Methionine      M    ATG
+        self.Table["TGT"] = 0 #Cysteine        C    TGT, TGC
+        self.Table["TGC"] = 0
+        self.Table["GCT"] = 0 #Alanine         A    GCT, GCC, GCA, GCG
+        self.Table["GCC"] = 0
+        self.Table["GCA"] = 0
+        self.Table["GCG"] = 0
+        self.Table["GGT"] = 0 #Glycine         G    GGT, GGC, GGA, GGG
+        self.Table["GGC"] = 0
+        self.Table["GGA"] = 0
+        self.Table["GGG"] = 0
+        self.Table["CCT"] = 0 #Proline         P    CCT, CCC, CCA, CCG
+        self.Table["CCC"] = 0
+        self.Table["CCA"] = 0
+        self.Table["CCG"] = 0
+        self.Table["ACT"] = 0 #Threonine       T    ACT, ACC, ACA, ACG
+        self.Table["ACC"] = 0
+        self.Table["ACA"] = 0
+        self.Table["ACG"] = 0
+        self.Table["TCT"] = 0 #Serine          S    TCT, TCC, TCA, TCG, AGT, AGC
+        self.Table["TCC"] = 0
+        self.Table["TCA"] = 0
+        self.Table["TCG"] = 0
+        self.Table["AGT"] = 0
+        self.Table["AGC"] = 0
+        self.Table["TAT"] = 0 #Tyrosine        Y    TAT, TAC
+        self.Table["TAC"] = 0
+        self.Table["TGG"] = 0 #Tryptophan      W    TGG
+        self.Table["CAA"] = 0 #Glutamine       Q    CAA, CAG
+        self.Table["CAG"] = 0
+        self.Table["AAT"] = 0 #Asparagine      N    AAT, AAC
+        self.Table["AAC"] = 0
+        self.Table["CAT"] = 0 #Histidine       H    CAT, CAC
+        self.Table["CAC"] = 0
+        self.Table["GAA"] = 0 #Glutamic acid   E    GAA, GAG
+        self.Table["GAG"] = 0
+        self.Table["GAT"] = 0 #Aspartic acid   D    GAT, GAC
+        self.Table["GAC"] = 0
+        self.Table["AAA"] = 0 #Lysine          K    AAA, AAG
+        self.Table["AAG"] = 0
+        self.Table["CGT"] = 0 #Arginine        R    CGT, CGC, CGA, CGG, AGA, AGG
+        self.Table["CGC"] = 0
+        self.Table["CGA"] = 0
+        self.Table["CGG"] = 0
+        self.Table["AGA"] = 0
+        self.Table["AGG"] = 0
+        self.Table["TAA"] = 0 #Stop codons     *    TAA, TAG, TGA
+        self.Table["TAG"] = 0
+        self.Table["TGA"] = 0
+
+def GetLength(Sequence):
+    return len(Sequence)
+
+def GetGC(Sequence):
+    NumG = Sequence.count('G')
+    NumC = Sequence.count('C')
+    GCRaw = NumG + NumC
+    PercentGC = GCRaw / float (len(Sequence))
+    return PercentGC
+
+def CodonUsageFractions(Sequence):
+    """Parameters: Sequence of nucleotides
+    Return: a 64 space vector
+    Description: return the fractional usage of each of the 64 codons.
+    """
+    Table = CodonCount()
+    TotalCount = 0.0  #with a decimal, it's now a float and will divide correctly with out casting
+    while 1:
+        Codon = Sequence[:3]
+        Sequence = Sequence[3:]
+        if not Table.Table.has_key(Codon):
+            print "SNAFU in codon counting.  No codon exists for %s"%Codon
+        else:
+            Table.Table[Codon] += 1
+        TotalCount += 1
+        if len(Sequence) < 3:
+            break
+    #now I'm done with the loop I need to normalize everything
+    ToReturn = {}
+    for Key in Table.Table.keys():
+        Count = Table.Table[Key]
+        Frequency = Count / TotalCount
+        ToReturn[Key] = Frequency
+    return ToReturn
+
+ 
+ 
+ 
+if __name__ == "__main__":
+    String = "AAABBBCCCDDDEEEFFFGGGHHHIIIJJJKKK"
+    CodonUsageFractions(String)
     
-    def MakePlot(self, Sequence, BinLen = 5):
-        """given a sequence, do the plot.  you can supply a bin len, but it's your
-        job to figure out what a good length is. I read somewhere 5-7.
-        """
-        EffectiveLength = len(Sequence) - BinLen + 1 #plus one to get the last bin
-        Plot = []
-        for Index in range(EffectiveLength):
-            #now look at the kmer starting at Index
-            Values = []
-            for Jndex in range(Index, Index+BinLen):
-                Letter = Sequence[Jndex]
-                if not Letter in (string.uppercase):
-                    print "I'm barfing on %s"%Sequence
-                    continue
-                Values.append( self.Metric.HI[Letter])
-            Mean = BasicStats.GetMean(Values)
-            Plot.append(Mean)
-        return Plot
-
-    def IsConsistentSignal(self, List, Min = 0.5, Len = 10):
-        """I am trying to see if here is a consistent hydrophobic patch in this
-        plot.  So for standards, we count positive values, at least 10 in a row
-        """
-        Counter  = 0
-        Index = -1 #start at -1 so I can increment right off the bat
-        StartIndex = -1 #start of the hydrophobic patch
-        for Item in List:
-            Index += 1 #index into the array
-            
-            if Item > Min:
-                if not Counter:
-                    #this is the first one in a row
-                    StartIndex = Index
-                Counter += 1
-                if Counter >= Len:
-                    return StartIndex
-            else:
-                Counter =0
-                StartIndex =-1 
-        return -1 # not found
-
-
-
-
-def GetMW(Aminos):
-    Aminos = Aminos.upper()
-    MW = 0
-    for Amino in Aminos:
-        MW += Global.AminoMass.get(Amino, 0)
-    MW += 19
-    return MW
-
-def HasSignalPeptidaseMotif(Aminos):
-    """Looking for the end of the peptide (the prefix to the observed protein) to have
-    AxB.. where A in [ILVAGS] and B in [AGS]
-    """
-    APosition = Aminos[-3]
-    BPosition = Aminos[-1]
-    AcceptableA = ["I","L","V","A","G","S"]
-    AcceptableB = ["A","G","S"]
-    if not APosition in AcceptableA:
-        return 0
-    if not BPosition in AcceptableB:
-        return 0
-    return 1
-
-def HasBasicResidue(Sequence, Start = 0, End = None):
-    """
-    return 0/1 if there is a basic residue in the sequence given,
-    and the bracketed subsequence
-    """
-    SubSequence = Sequence
-    if End:
-        SubSequence = Sequence[Start:End]
-    else:
-        SubSequence = Sequence[Start:]
-    Basic = ["R", "K"]
-    for Letter in SubSequence:
-        if Letter in Basic:
-            return 1
-        
-    return 0
