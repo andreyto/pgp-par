@@ -253,10 +253,7 @@ class PrimaryStructure:
         gffRec.attributes['Parent'] = ORF.name
         if not ORF.CDS:
             # Novel ORF output the Observed Coords
-            if ORF.location.strand == '+':
-                (gffRec.start, gffRec.end) = ORF.GetObservedDNACoords()
-            else:
-                (gffRec.end, gffRec.start) = ORF.GetObservedDNACoords()
+            (gffRec.start, gffRec.end) = ORF.GetObservedDNACoords()
             gffRec.score = 0
             gffRec.strand= ORF.location.strand
             gffRec.attributes['Name'] = "Observed2Stop"
