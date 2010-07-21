@@ -181,11 +181,19 @@ class PrimaryStructure:
         for Peptide in ORF.peptideIter():
             Count += 1
             NovelInfoString += "Peptide %s, %s\n"%(Count, Peptide)
+        ConflictString = ORF.GetConflictString()
+        if ConflictString:
+            NovelInfoString += "%s"%ConflictString
         NovelInfoString += "%s\n\n"%ObservedSequence
         self.NovelInfoHandle.write("%s"%NovelInfoString)
         #print "I got this observed sequence from %s\n%s\n\n"%(ORF, ObservedSequence)
         Fasta = "Observed.%s"%ORF.name
-        self.NovelFastaHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
+        #self.NovelFastaHandle.write(">%s\n%s\n"%(Fasta, ObservedSequence))
+        ## It now appears to me that I want to output the whole ORF, and let blast/HMMs 
+        ## decide the edges.  
+        WholeSequence = ORF.GetTranslation()
+        self.NovelFastaHandle.write(">%s\n%s\n"%(ORF.name, WholeSequence))
+        
         return True
 
     def IsItUnderPredicted(self, ORF):

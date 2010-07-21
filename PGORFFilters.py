@@ -75,7 +75,6 @@ class FilterList:
 
         for Name in KillList:
             del DictionaryOfORFs[Name]
-        print "after filtering I killed %s proteins with %s peptides"%(KilledProteinCount, KilledPeptideCount)
         #now we write out to the report file
         #first the skinny
         for (FilterName, ProteinList) in FiltersKillingORFs.items():

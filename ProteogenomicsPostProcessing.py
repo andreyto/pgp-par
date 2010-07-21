@@ -38,7 +38,7 @@ import PeptideMapper
 import PGPeptide
 import PGORFFilters
 import PGPrimaryStructure
-import SignalPeptide
+#import SignalPeptide
 import PGCleavageAnalysis
 import BasicStats
 import GFFIO
@@ -199,7 +199,7 @@ class FinderClass():
                 elif Len < 40: 
                     ConflictLevelCount[2] += 1
                 else:
-                    State = self.ComplexOverlapAnalysis(ORF1, ORF2, OutHandle)
+                    State = self.ComplexOverlapAnalysis(ORF1, ORF2, Len, OutHandle)
                     ConflictLevelCount[State] += 1
         String = "Conflict States\n"
         String += "0: no conflict, %s\n"%ConflictLevelCount[0]
@@ -212,7 +212,7 @@ class FinderClass():
         OutHandle.write(String)
         print String
                 
-    def ComplexOverlapAnalysis(self, ORF1, ORF2, Handle):
+    def ComplexOverlapAnalysis(self, ORF1, ORF2, Len, Handle):
         """Parameters: two OpenReadingFrame objects, an open file handle
         Return: none
         Description: for ORFs with more than 40bp of overlap, we do some more 
@@ -225,22 +225,30 @@ class FinderClass():
             #no peptides for ORF1.  Is it named "hypothetical"
             ProteinName1 = ORF1.GetProteinName()
             if ProteinName1.find("hypothetical") > -1:
-                Handle.write("Level 3 conflict: overlap an unsupported hypothetical\n" )
+                Handle.write("Level 3 conflict: overlap (%s bp) an unsupported hypothetical\n"%Len )
                 Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+                ORF1.SetConflictString("Level 3 conflict: overlap an unsupported hypothetical\n%s\n"%ORF2)
+                ORF2.SetConflictString("Level 3 conflict: overlap an unsupported hypothetical\n%s\n"%ORF1)
                 return 3
-            Handle.write("Level 4 conflict: overlap an unsupported named protein\n" )
+            Handle.write("Level 4 conflict: overlap (%s bp) an unsupported named protein\n"%Len )
             Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            ORF1.SetConflictString("Level 4 conflict: overlap an unsupported named protein\n%s\n"%ORF2 )
+            ORF2.SetConflictString("Level 4 conflict: overlap an unsupported named protein\n%s\n"%ORF1 )
             return 4
         #now same for ORF2
         if Peps2 == 0:
             #print "%s"%ORF2
             ProteinName2 = ORF2.GetProteinName()
             if ProteinName2.find("hypothetical") > -1:
-                Handle.write("Level 3 conflict: overlap an unsupported hypothetical\n" )
+                Handle.write("Level 3 conflict: overlap (%s bp) an unsupported hypothetical\n"%Len  )
                 Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+                ORF1.SetConflictString("Level 3 conflict: overlap an unsupported hypothetical\n%s\n"%ORF2)
+                ORF2.SetConflictString("Level 3 conflict: overlap an unsupported hypothetical\n%s\n"%ORF1)
                 return 3
-            Handle.write("Level 4 conflict: overlap an unsupported named protein\n" )
+            Handle.write("Level 4 conflict: overlap (%s bp) an unsupported named protein\n"%Len  )
             Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            ORF1.SetConflictString("Level 4 conflict: overlap an unsupported named protein\n%s\n"%ORF2 )
+            ORF2.SetConflictString("Level 4 conflict: overlap an unsupported named protein\n%s\n"%ORF1 )
             return 4
         #now we're both represented. that's not good news
         #we need to make new locations, which are simply the proteomics-stop.  
@@ -254,11 +262,15 @@ class FinderClass():
         Result = Location1.overlap(Location2)
         if not Result:
             #no overlap
-            Handle.write("Level 5 conflict: overlap of two supported proteins, but overlapping region not supported\n" )
+            Handle.write("Level 5 conflict: overlap of two supported proteins (%s bp), but overlapping region not supported\n"%Len  )
             Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+            ORF1.SetConflictString("Level 5 conflict: overlap of two supported proteins, but overlapping region not supported\n%s\n"%ORF2 )
+            ORF2.SetConflictString("Level 5 conflict: overlap of two supported proteins, but overlapping region not supported\n%s\n"%ORF1 )
             return 5
-        Handle.write("Level 6 conflict: overlap of two supported proteins, overlapping region has peptide support\n" )
+        Handle.write("Level 6 conflict: overlap of two supported proteins (%s bp) , overlapping region has peptide support\n"%Len  )
         Handle.write("%s\n%s\n\n"%(ORF1, ORF2))# uses PGPeptide.OpenReadingFrame.__string__
+        ORF1.SetConflictString("Level 6 conflict: overlap of two supported proteins, overlapping region has peptide support\n%s\n"%ORF2 )
+        ORF2.SetConflictString("Level 6 conflict: overlap of two supported proteins, overlapping region has peptide support\n%s\n"%ORF1 )
         return 6   
         
                     
@@ -299,6 +311,9 @@ class FinderClass():
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
         Tryptic = PGORFFilters.TrypticFilter()
+        
+        MinPepONE = PGORFFilters.MinPeptideFilter(1)
+        #FilterList = PGORFFilters.FilterList( [MinPeptide, ], self.OutputPath) # an anonymous list
         FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, Tryptic, MinPeptide], self.OutputPath) # an anonymous list
         genome.filterORFs( FilterList )
 

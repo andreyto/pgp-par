@@ -388,7 +388,9 @@ class OpenReadingFrame(object):
         #set is AddLocatedProtein, this is the offset before the protein starts.  It is
         #set such that if you do a slice aaseq[offset:] you will get the protein sequence
         ##with the exception of the wrong translation for alt start codons.  have to fix that later
-        self.ProteinAminoAcidOffset = None
+        self.ProteinAminoAcidOffset = None 
+        self.ConflictString = None #if we conflict with someone, then it will get stored here.  And
+        #we should print that out during the novel.info
 
 
     def __str__(self):
@@ -476,6 +478,12 @@ class OpenReadingFrame(object):
         #done iterating through the peptides. Done with me
 
 
+    def SetConflictString(self, String):
+        self.ConflictString = String
+        
+    def GetConflictString(self):
+        return self.ConflictString
+    
     def GetStrand(self):
         return self.location.strand
 
