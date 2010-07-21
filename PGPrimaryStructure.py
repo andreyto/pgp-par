@@ -251,6 +251,19 @@ class PrimaryStructure:
         gffRec.type = 'polypeptide'
         gffRec.seqid = ORF.chromosome
         gffRec.attributes['Parent'] = ORF.name
+        if not ORF.CDS:
+            # Novel ORF output the Observed Coords
+            if ORF.location.strand == '+':
+                (gffRec.start, gffRec.end) = ORF.GetObservedDNACoords()
+            else:
+                (gffRec.end, gffRec.start) = ORF.GetObservedDNACoords()
+            gffRec.score = 0
+            gffRec.strand= ORF.location.strand
+            gffRec.attributes['Name'] = "Observed2Stop"
+            gffRec.attributes['ID'] = PrimaryStructure.startCodonCount
+            PrimaryStructure.startCodonCount += 1
+            self.startCodonGFF.write( gffRec )
+
         # For the reverse strand switch postions so we're still going up
         if ORF.location.strand == '-':
             (orfStart, firstNucleotide) = (firstNucleotide, orfStart)
