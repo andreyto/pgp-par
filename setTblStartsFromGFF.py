@@ -37,7 +37,7 @@ class AlterTblStarts:
         # RE to match the start of a feature record
         recRE  = re.compile('^(\d+)\t(\d+)\t(\w+)')
         # RE to match the qualifiers associated in the record
-        qualRE = re.compile('^\t\t\t(\w+)\t(.*)')
+        qualRE = re.compile('^\t\t\t(\w+)\t?(.*)')
         # Accession of current sequence in tbl file
         curSeq = None
         modifyCDS = False
@@ -80,9 +80,6 @@ class AlterTblStarts:
                     modifyCDS = True
                 else:
                     pass
-                self.curRec += line
-            elif line == "\t\t\tpseudo\n":
-                # special case, pseudo lines don't match our qualRE
                 self.curRec += line
             else:
                 print "Bad line: %s" % line
