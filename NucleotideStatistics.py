@@ -143,11 +143,18 @@ def GetLength(Sequence):
     return len(Sequence)
 
 def GetGC(Sequence):
-    NumG = Sequence.count('G')
-    NumC = Sequence.count('C')
-    GCRaw = NumG + NumC
-    PercentGC = GCRaw / float (len(Sequence))
-    return PercentGC
+    """Parameters: DNA sequence
+    Return: integer percent GC, eg 45 for 45%
+    Description: count g and c
+    """
+    GCCount =0
+    TotalCount = len(Sequence)
+    for Letter in Sequence:
+        if Letter in ["G", "C", "g", "c"]:
+            GCCount += 1
+    Fraction = GCCount / float (TotalCount)
+    Percent = int (Fraction *100)
+    return Percent
 
 def CodonUsageFractions(Sequence):
     """Parameters: Sequence of nucleotides

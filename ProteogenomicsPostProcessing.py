@@ -137,25 +137,6 @@ class FinderClass():
         Handle.close()
         
 
-    def CheckComplexity(self, genome):
-        if self.Verbose:
-            print "ProteogenomicsPostProcessing.py:CheckComplexity"
-        LowMW = ["G", "A"]
-        List = []
-        for (chromName, chrom) in genome.chromosomes.items():
-            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
-        
-                PeptideString = ""
-                for PeptideObject in ORF.PeptideLocationList:
-                    PeptideString += PeptideObject.Aminos
-                Count = 0
-                for Letter in PeptideString:
-                    if Letter in LowMW:
-                        Count +=1
-                Normalized = Count / float (len(PeptideString))
-                List.append(Normalized)
-        Histogram = BasicStats.CreateHistogram(List, 0, 0.05)
-        BasicStats.PrettyPrintHistogram(Histogram, None)
 
     def CheckForOverlaps(self, genome, OutputPath):
         """Parameters: none
@@ -317,94 +298,6 @@ class FinderClass():
         FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, Tryptic, MinPeptide], self.OutputPath) # an anonymous list
         genome.filterORFs( FilterList )
 
-
-    def SequenceComplexityHack(self, genome):
-        """hack"""
-        
-        ORFList = []
-        PeptideList = []
-        DiffList = []
-        RealProteinList = []
-        for (chromName, chrom) in genome.chromosomes.items():
-            for (orfName,ORF) in chrom.simpleOrfs.items() + chrom.pepOnlyOrfs.items():
-        
-                #we try for the predicted protein first
-                Sequence =  ORF.GetProteinSequence()
-                if Sequence:
-                    Entropy = self.SequenceEntropy(Sequence)
-                    RealProteinList.append(Entropy)
-                if not Sequence:
-                    Sequence = ORF.GetObservedSequence()
-                ProteinEntropy = self.SequenceEntropy(Sequence)
-                #now do for the peptides
-                PeptideCat = ""
-                for Peptide in ORF.peptideIter():
-                    PeptideCat += Peptide.GetAminos()
-                PeptideEntropy = self.SequenceEntropy(PeptideCat)
-                
-                #put stuff in lists
-                ORFList.append(ProteinEntropy)
-                PeptideList.append(PeptideEntropy)
-                Diff = ProteinEntropy - PeptideEntropy
-                DiffList.append(Diff)
-            
-        ORFHandle = open("ORFEntropy.txt", "wb")
-        ORFLine = "\t".join(map(str, ORFList))
-        ORFHandle.write(ORFLine)
-        ORFHandle.close()
-    
-        PeptideHandle = open("PeptideEntropy.txt", "wb")
-        Line = "\t".join(map(str, PeptideList))
-        PeptideHandle.write(Line)
-        PeptideHandle.close()
-        
-        DiffHandle = open("DiffEntropy.txt", "wb")
-        Line = "\t".join(map(str, DiffList))
-        DiffHandle.write(Line)
-        DiffHandle.close()
-        
-        RealHandle = open("RealProteinEntropy.txt", "wb")
-        Line = "\t".join(map(str, RealProteinList))
-        RealHandle.write(Line)
-        RealHandle.close()
-        
-   
-    def SequenceEntropy(self, Sequence):
-        """Parameters: An amino acid sequence
-        Return: the H(x) entropy
-        Description: Use the classic information entropy equation to calculate
-        the entropy of the input sequence.
-        H(x) = SUM p(xi) * log(1/ p(xi))
-        xi = letter of the sequence
-        e.g. GGGAS
-        x1 = G, p(G) = 3/5
-        x2 = A, p(A) = 1/5
-        X3 = S, p(S) = 1/5
-        """
-        ProbTable = self.GetProbabilityTable(Sequence)
-        Sum =0 
-        for (Letter, Probability) in ProbTable.items():
-            LogValue = math.log(1 / Probability) #currently the natural log.  not sure the base of the log matters
-            Sum += (Probability * LogValue)
-        return Sum
-
-    def GetProbabilityTable(self, Sequence):
-        """Parameters: an amino acid sequence
-        Return: a dictionary of probability (frequence/n) for each letter
-        Description: just convert counts to probability.  easy.
-        """
-        CountDict = {}
-        ProbabilityDict = {}
-        for Letter in Sequence:
-            if not CountDict.has_key(Letter):
-                CountDict[Letter] = 0 #initialize
-            CountDict[Letter] += 1
-        Len = float(len(Sequence)) #cast to float so we can do real division
-        for (Key, Value) in CountDict.items():
-            Probability = Value / Len
-            ProbabilityDict[Key] = Probability
-        return ProbabilityDict
-            
 
 
 
