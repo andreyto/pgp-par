@@ -3,18 +3,28 @@
 import bioseq
 from optparse import OptionParser
 from Bio import SeqIO
-from Bio.SeqFeature import SeqFeature,FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from NucleotideStatistics import GetGC
 from setTblStartsFromGFF import StartsGFF
+
+# Need R_HOME and LD_LIBRARY_PATH. Set I used:
+# export R_HOME=/usr/local/packages/R-2.10.1/lib64/R
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$R_HOME/lib
+import rpy2.robjects as robjects
 
 class SequenceStats(bioseq.FlatFileIO):
     def __init__(self,gbk,startGff):
         bioseq.FlatFileIO.__init__(self,gbk)
         self.gff = StartsGFF(startGff)
+        self.contexts = {}
 
     def genStats(self, dna, context, locus):
         gc = GetGC(dna)
-        print "GC is %f for %s %s" % (gc, context, locus)
+#        print "GC is %f for %s %s" % (gc, context, locus)
+        if not self.contexts.has_key(context):
+            self.contexts[ context ] = []
+        self.contexts[ context ].append( gc )
+
 #        codonVec = CodonUsageFractions(dna)
 
     def processGBK(self):
@@ -38,8 +48,8 @@ class SequenceStats(bioseq.FlatFileIO):
                 if feat.type == 'CDS':
                     dna = feat.extract(gb_rec.seq)
                     locus = feat.qualifiers['locus_tag'][0]
-                    self.genStats(dna, 'Original',locus)
                     if self.gff.starts.has_key( locus ):
+                        self.genStats(dna, 'Original',locus)
                         gffRec = self.gff.starts[locus]
                         print "%s gene %s start %d %d" % ( gffRec.strand,
                                     feat.location, gffRec.start,gffRec.end)
@@ -51,11 +61,40 @@ class SequenceStats(bioseq.FlatFileIO):
                                            strand=-1)
                         dna = f.extract(gb_rec.seq)
                         self.genStats(dna,'Extension',locus)
+                    else:
+                        self.genStats(dna, 'Unchanged',locus)
 
+
+    def plotGC(self):
+        r = robjects.r
+        rdevoff = r['dev.off']
+        rVecs = {}
+        for (key,value) in self.contexts.items():
+            rVecs[key] = robjects.IntVector(value)
+        for key in self.contexts:
+#            out = open("%s.gc.vec"%key,'w')
+#            for v in value:
+#                out.write("%d\n"%v)
+#            out.close()
+
+            r.png("%s_GC.png"%key, width=1024, height=768)
+            r.hist(rVecs[key], freq=False, breaks=10,main=key,xlab="GC percentage")
+            lens = ['Extension','Original']
+            orig = ['Unchanged','Novel']
+            if key in lens:
+                lens.remove(key)
+                alt = lens[0]
+            else:
+                orig.remove(key)
+                alt = orig[0]
+
+            r.lines(r.density(rVecs[alt]), col='Blue')
+            rdevoff()
 
     def Main(self):
         self.gff.readGFF()
         self.processGBK()
+        self.plotGC()
 
 def ParseCommandLine():
     Desc = 'Reads in a genbank file and starts GFF and dumps stats on the genes.'
