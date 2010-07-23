@@ -20,6 +20,19 @@ class StartsGFF(object):
             else:
                 self.newGenes[ gffRec.attributes['Parent']][1].append(gffRec)
 
+    def novelIter(self):
+        for (parent,value) in self.newGenes.items():
+            observedRec = value[0]
+            if len(value[1]) == 0:
+                continue
+            startRec = value[1][0]
+            start = startRec.start
+            end   = observedRec.end
+            if observedRec.strand == '-':
+                start = startRec.end
+                end   = observedRec.start
+            yield( (parent, start, end))
+
 class AlterTblStarts(object):
     def __init__(self, startGFF, tblInput, outputPath):
         self.startGFF = StartsGFF(startGFF)
@@ -94,22 +107,12 @@ class AlterTblStarts(object):
         self.writeRec()
 
     def writeNovel(self):
-        for (parent,value) in self.startGFF.newGenes.items():
-            observedRec = value[0]
-            if len(value[1]) == 0:
-                continue
-            startRec = value[1][0]
-            start = startRec.start
-            end   = observedRec.end
-            if observedRec.strand == '-':
-                start = startRec.end
-                end   = observedRec.start
-
+        for (orfName,start,end) in self.startGFF.novelIter():
             self.output.write( "%d\t%d\t%s\n" % (start,end,'gene'))
             self.output.write("\t\t\tlocus_tag\t%s%d\n" % (self.locusPrefix,self.locusOffset))
             self.locusOffset += 1
             self.output.write( "%d\t%d\t%s\n" % (start,end,'CDS'))
-            self.output.write("\t\t\tproduct\t%s\n" % parent)
+            self.output.write("\t\t\tproduct\t%s\n" % orfName)
 
     def Main(self):
         self.startGFF.readGFF()
