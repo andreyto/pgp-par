@@ -1,6 +1,6 @@
 """These are for functions on nucleotide sequences.  
 """
-from DNA import Frequency
+#from DNA import Frequency
 class ProteinTranslationClass:
     def __init__(self):
         """Simply the translation table, so it can be accessed

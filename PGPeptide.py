@@ -480,10 +480,10 @@ class OpenReadingFrame(object):
 
     def SetConflictString(self, String):
         self.ConflictString = String
-        
+
     def GetConflictString(self):
         return self.ConflictString
-    
+
     def GetStrand(self):
         return self.location.strand
 
@@ -618,7 +618,7 @@ class OpenReadingFrame(object):
             else:
                 SequenceFromCDS = Sequence[Start:] #if there's not a stop, get to the end
             return SequenceFromCDS
-        
+
         if self.ProteinAminoAcidOffset:
             Start += self.ProteinAminoAcidOffset #this is because we are trying to get only the
             ## protein seqeunce, which is already offset into the self.aaseq=== translation of the ORF

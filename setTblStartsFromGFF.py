@@ -4,19 +4,11 @@ from optparse import OptionParser
 
 import re, sys, bioseq, GFFIO
 
-class AlterTblStarts:
-    def __init__(self, startGFF, tblInput, outputPath):
+class StartsGFF(object):
+    def __init__(self,startGFF):
         self.gff    = startGFF
-        self.tbl    = tblInput
-        self.output = bioseq.FlatFileIO(outputPath,'w')
         self.starts = {}
         self.newGenes = {}
-        self.curRec = ''
-        self.curBeg = None
-        self.curEnd = None
-        self.curType = ''
-        self.locusPrefix = 'locus_'
-        self.locusOffset = 5000
 
     def readGFF(self):
         lt = 'locus_tag'
@@ -27,6 +19,21 @@ class AlterTblStarts:
                 self.newGenes[ gffRec.attributes['Parent']] = (gffRec,[])
             else:
                 self.newGenes[ gffRec.attributes['Parent']][1].append(gffRec)
+
+class AlterTblStarts(object):
+    def __init__(self, startGFF, tblInput, outputPath):
+        self.startGFF = StartsGFF(startGFF)
+        self.tbl    = tblInput
+        self.output = bioseq.FlatFileIO(outputPath,'w')
+        self.curRec = ''
+        self.curBeg = None
+        self.curEnd = None
+        self.curType = ''
+        self.locusPrefix = 'locus_'
+        self.locusOffset = 5000
+
+    def starts(self):
+        return self.startGFF.starts
 
     def writeRec(self):
         if self.curRec:
@@ -65,9 +72,9 @@ class AlterTblStarts:
             match = qualRE.match( line )
             if match:
                 (qual,val) = match.groups()
-                if qual == 'locus_tag' and self.starts.has_key(val):
+                if qual == 'locus_tag' and self.starts().has_key(val):
                     # We need to modify this records start
-                    gff = self.starts[val]
+                    gff = self.starts()[val]
                     seqId = gff.seqid
                     if seqId != curSeq:
                         print "Wrong seq for %s, %s, %s" % (val,seqId,curSeq)
@@ -87,7 +94,7 @@ class AlterTblStarts:
         self.writeRec()
 
     def writeNovel(self):
-        for (parent,value) in self.newGenes.items():
+        for (parent,value) in self.startGFF.newGenes.items():
             observedRec = value[0]
             if len(value[1]) == 0:
                 continue
@@ -105,7 +112,7 @@ class AlterTblStarts:
             self.output.write("\t\t\tproduct\t%s\n" % parent)
 
     def Main(self):
-        self.readGFF()
+        self.startGFF.readGFF()
         self.processTbl()
         self.writeNovel()
 
