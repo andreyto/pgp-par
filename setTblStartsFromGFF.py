@@ -76,7 +76,7 @@ class AlterTblStarts:
                     if gff.strand == '+':
                         self.curBeg = gff.start
                     else:
-                        self.curEnd = gff.end
+                        self.curBeg = gff.end
                     modifyCDS = True
                 else:
                     pass
@@ -95,7 +95,9 @@ class AlterTblStarts:
             start = startRec.start
             end   = observedRec.end
             if observedRec.strand == '-':
-                (start,end) = (end,start)
+                start = startRec.end
+                end   = observedRec.start
+
             self.output.write( "%d\t%d\t%s\n" % (start,end,'gene'))
             self.output.write("\t\t\tlocus_tag\t%s%d\n" % (self.locusPrefix,self.locusOffset))
             self.locusOffset += 1
