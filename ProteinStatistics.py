@@ -123,6 +123,9 @@ def HasBasicResidue(Sequence, Start = 0, End = None):
 class SequenceComplexity:
     """this class is meant to measure a growing number of sequence complexity traits
     in protein sequences.
+    
+    It is currently not functional, as the parameters and workflows need to change
+    
     """
     
     def __init__(self):

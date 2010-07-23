@@ -314,6 +314,7 @@ class SequenceComplexityFilter(Filter):
         
         ###### OLD CODE for ENTROPY ########
         #some upfront debugging
+        ### this should be reworked to call ProteinStatistics code which calculated entropy
         Sequence =  ORF.GetProteinSequence()
         if Sequence:
             Entropy = self.SequenceEntropy(Sequence)
@@ -332,42 +333,6 @@ class SequenceComplexityFilter(Filter):
             return 1 # delete ME
         return 0 #keep ME
 
-    def SequenceEntropy(self, Sequence):
-        """Parameters: An amino acid sequence
-        Return: the H(x) entropy
-        Description: Use the classic information entropy equation to calculate
-        the entropy of the input sequence.
-        H(x) = SUM p(xi) * log(1/ p(xi))
-        xi = letter of the sequence
-        e.g. GGGAS
-        x1 = G, p(G) = 3/5
-        x2 = A, p(A) = 1/5
-        X3 = S, p(S) = 1/5
-        """
-        ProbTable = self.GetProbabilityTable(Sequence)
-        Sum =0 
-        for (Letter, Probability) in ProbTable.items():
-            LogValue = math.log(1 / Probability) #currently the natural log.  not sure the base of the log matters
-            Sum += (Probability * LogValue)
-        return Sum
-
-
-    def GetProbabilityTable(self, Sequence):
-        """Parameters: an amino acid sequence
-        Return: a dictionary of probability (frequence/n) for each letter
-        Description: just convert counts to probability.  easy.
-        """
-        CountDict = {}
-        ProbabilityDict = {}
-        for Letter in Sequence:
-            if not CountDict.has_key(Letter):
-                CountDict[Letter] = 0 #initialize
-            CountDict[Letter] += 1
-        Len = float(len(Sequence)) #cast to float so we can do real division
-        for (Key, Value) in CountDict.items():
-            Probability = Value / Len
-            ProbabilityDict[Key] = Probability
-        return ProbabilityDict
 
 
 def FindOverlappingDubiousGeneCalls(Dictionary, MaxOverlap):

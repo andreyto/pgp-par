@@ -35,16 +35,12 @@ class PrimaryStructure:
         self.NovelInfoHandle = open(NovelInfoPath, "a")
         UnderPredictionInfoPath = "%s.%s"%(self.OutputStub, "underprediction.info")
         self.UnderpredictionInfoHandle = open(UnderPredictionInfoPath, "a")
+        UnderPredictionFastaPath = "%s.%s"%(self.OutputStub, "underprediction.faa")
+        self.UnderpredictionFastaHandle = open(UnderPredictionFastaPath, "a")
         ShortProteinPath = "%s.%s"%(self.OutputStub, "shortprotein.info")
         self.ShortProteinHandle = open(ShortProteinPath, "a")
         startCodonPath = "%s.%s"%(self.OutputStub, "starts.gff")
         self.startCodonGFF = GFFIO.File(startCodonPath, "a")
-        self.HypotheticalCount =0
-        self.NamedCount = 0
-        self.NovelGC = []
-        self.NotNovelGC = []
-        self.NovelLen = []
-        self.NotNovelLen = []
         self.DNA = NucleotideSequence
         # Start codons to look for
         self.StartCodonTable = [ 'ATG', 'GTG', 'TTG' ]
@@ -68,11 +64,6 @@ class PrimaryStructure:
 
         self.ShortProteins(ORF)
         ProteinName = ORF.annotatedProtein.name
-        Location = ProteinName.find("hypothetical")
-        if Location == -1:
-            self.NamedCount += 1
-        else:
-            self.HypotheticalCount += 1
         UnderPredicted = self.IsItUnderPredicted(ORF)
         if UnderPredicted:
             self.FindAllUpstreamStartCodons(ORF)
@@ -89,90 +80,16 @@ class PrimaryStructure:
 
 
 
-    def CalculateGC(self, Sequence):
-        """Parameters: DNA sequence
-        Return: integer percent GC, eg 45 for 45%
-        Description: count g and c
-        """
-        GCCount =0
-        TotalCount = len(Sequence)
-        for Letter in Sequence:
-            if Letter in ["G", "C", "g", "c"]:
-                GCCount += 1
-        Fraction = GCCount / float (TotalCount)
-        Percent = int (Fraction *100)
-        return Percent
-
-    def OutputGCFiles(self):
-        """
-        Parameters: None
-        Return: None
-        Description: I have spent some time in the Novel checker to
-        save the GC content of the observed sequences.  This Function
-        will take these lists and put them out to a file
-        """
-
-        NovelPath = "%s.%s"%(self.OutputStub, "GC.novel.txt")
-        Handle = open(NovelPath, "wb")
-        String = "\t".join(map(str, self.NovelGC))
-        Handle.write(String)
-        Handle.close()
-
-        NotNovelPath = "%s.%s"%(self.OutputStub, "GC.notnovel.txt")
-        Handle = open(NotNovelPath, "wb")
-        String = "\t".join(map(str, self.NotNovelGC))
-        Handle.write(String)
-        Handle.close()
-
-
-    def OutputLenFiles(self):
-        NovelPath = "%s.%s"%(self.OutputStub, "len.novel.txt")
-        Handle = open(NovelPath, "wb")
-        String = "\t".join(map(str, self.NovelLen))
-        Handle.write(String)
-        Handle.close()
-
-        NotNovelPath = "%s.%s"%(self.OutputStub, "len.notnovel.txt")
-        Handle = open(NotNovelPath, "wb")
-        String = "\t".join(map(str, self.NotNovelLen))
-        Handle.write(String)
-        Handle.close()
-
-
     def IsItNovel(self, ORF):
         """
         Parameters: a PGPeptide.OpenReadingFrame object
         Return: true/false
         Description: check to see if this ORF has peptides but not a
         predicted protein
-
-        NOTE: in the old version of this, I had a minimum ORF length.  Should
-        I put that in here? I'm not inclined yet, ,mostly because I don't
-        remember why I put that in there, and don't have any really solid
-        research compelling me to do so.
         """
-        #One quick thing here before we start the novelty.
-        # I want to get the GC content , and store that separately
-        #for the Novel ones and the normal ones
-        (Start, Stop) = ORF.GetObservedDNACoords()
-        Sequence = self.DNA[Start:Stop]
-        if Sequence:
-            GC = self.CalculateGC(Sequence)
-        else:
-            print "WARNING: cannot extract observed sequence for %s (%s, %s)"%(ORF, Start, Stop)
-            GC = 0
-            for pep in ORF.peptideIter():
-                print "A Pep %s" % pep
-
-        #now on with the novelty, I swear
         PredictedProtein = ORF.GetLocatedProtein()
         if PredictedProtein:
-            self.NotNovelGC.append(GC)
-            self.NotNovelLen.append(len(Sequence)/3) #div by three because it's protein length that I care about
             return False #there is something here, so no it's not novel
-        #put in the GC quickly
-        self.NovelGC.append(GC)
-        self.NovelLen.append(len(Sequence)/3)
         #well, if we get here, then we have something interesting
         #let's try and get the observed sequence.  That's firstpeptide->stop
         ObservedSequence = ORF.GetObservedSequence()
@@ -215,6 +132,8 @@ class PrimaryStructure:
         Strand = ORF.GetStrand()
         # we'd also like to get a count on the number of peptides upstream.
         NumPeptidesUpstream = ORF.GetUpstreamPeptideCount()
+        WholeSequence = ORF.GetTranslation()
+        
 
         #2. Strand switch that we use all over the place
         if Strand == "+":
@@ -223,6 +142,7 @@ class PrimaryStructure:
                 UpstreamExtent = StartCodon - FirstObservedNucleotide
                 self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
                 self.UnderpredictionInfoHandle.write("There are %s peptides upstream\n\n"%NumPeptidesUpstream)
+                self.UnderpredictionFastaHandle.write(">%s\n%s\n"%(ORF.name, WholeSequence))
                 #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
         else:
@@ -230,6 +150,7 @@ class PrimaryStructure:
                 UpstreamExtent = FirstObservedNucleotide - StartCodon
                 self.UnderpredictionInfoHandle.write("Peptide %s is %s bases upstream of protein in %s\n"%(FirstObservedPeptide, UpstreamExtent, ORF))
                 self.UnderpredictionInfoHandle.write("There are %s peptides upstream\n\n"%NumPeptidesUpstream)
+                self.UnderpredictionFastaHandle.write(">%s\n%s\n"%(ORF.name, WholeSequence))
                 #print "Peptide %s is %s bases upstream of protein in %s\n\n"%(FirstObservedPeptide, UpstreamExtent, ORF)
                 return True
 
@@ -238,6 +159,7 @@ class PrimaryStructure:
             FirstObservedAminoAcid = FirstObservedPeptide.aminos[0]
             if not FirstObservedAminoAcid == "M":
                 self.UnderpredictionInfoHandle.write("Peptide %s is at the start codon of protein in %s\n\n"%(FirstObservedPeptide, ORF))
+                self.UnderpredictionFastaHandle.write(">%s\n%s\n"%(ORF.name, WholeSequence))
                 #print "Peptide %s is at the start codon of protein %s\n\n"%(FirstObservedPeptide, ORF)
                 return True
 
