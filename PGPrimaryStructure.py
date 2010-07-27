@@ -205,6 +205,7 @@ class PrimaryStructure:
         print "Looking for upstream starts from %d-%d for %s 1st codons %s" % (
             orfStart, firstNucleotide, ORF, self.DNA[orfStart-1:orfStart+8])
         first = True
+        startCount = PrimaryStructure.startCodonCount
         while (orfStart < firstNucleotide):
             # Need zero base based coordinates for the array access
             codon = self.DNA[orfStart-1:orfStart+2].upper()
@@ -229,3 +230,6 @@ class PrimaryStructure:
             orfStart += 3
             peptidePosition += peptideIncr
             first = False
+        # End while looking for starts 
+        if startCount == PrimaryStructure.startCodonCount:
+            self.startCodonGFF.io.write("# No start found for %s" % ORF)
