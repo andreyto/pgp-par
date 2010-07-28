@@ -232,4 +232,4 @@ class PrimaryStructure:
             first = False
         # End while looking for starts 
         if startCount == PrimaryStructure.startCodonCount:
-            self.startCodonGFF.io.write("# No start found for %s" % ORF)
+            self.startCodonGFF.io.write("# No start found for %s\n" % ORF)
