@@ -11,21 +11,25 @@ from setTblStartsFromGFF import StartsGFF
 # export R_HOME=/usr/local/packages/R-2.10.1/lib64/R
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$R_HOME/lib
 import rpy2.robjects as robjects
+from rpy2.robjects.packages import importr
 
 class SequenceStats(bioseq.FlatFileIO):
     def __init__(self,gbk,startGff):
         bioseq.FlatFileIO.__init__(self,gbk)
         self.gff = StartsGFF(startGff)
-        self.contexts = {}
+        self.gcContent = {}
+        self.geneLen   = {}
 
     def genStats(self, dna, context, locus):
-        gc = GetGC(dna)
-#        print "GC is %f for %s %s" % (gc, context, locus)
-        if not self.contexts.has_key(context):
-            self.contexts[ context ] = []
-        self.contexts[ context ].append( gc )
+#       codonVec = CodonUsageFractions(dna)
+#        print "stats for %s %s" % (context,locus)
+        for (vecs,func) in ((self.gcContent, GetGC), (self.geneLen,len)):
+            data = func(dna)
+            if not vecs.has_key(context):
+                vecs[ context ] = []
+            vecs[ context ].append( data )
+#        print "stats for %s %s %d" % (context,locus,len(vecs[context]))
 
-#        codonVec = CodonUsageFractions(dna)
 
     def processGBK(self):
         novelCount = 0
@@ -65,20 +69,25 @@ class SequenceStats(bioseq.FlatFileIO):
                         self.genStats(dna, 'Unchanged',locus)
 
 
-    def plotGC(self):
+    def writeDataVecs(self,vecs,outName):
+        for (key,value) in vecs.items():
+            out = open("%s.%s.vec"%(key,outName),'w')
+            for v in value:
+                out.write("%d\n"%v)
+            out.close()
+
+    def plotVecs(self,data,dataName):
         r = robjects.r
         rdevoff = r['dev.off']
         rVecs = {}
-        for (key,value) in self.contexts.items():
+        self.writeDataVecs( data, dataName)
+        for (key,value) in data.items():
             rVecs[key] = robjects.IntVector(value)
-        for key in self.contexts:
-#            out = open("%s.gc.vec"%key,'w')
-#            for v in value:
-#                out.write("%d\n"%v)
-#            out.close()
 
-            r.png("%s_GC.png"%key, width=1024, height=768)
-            r.hist(rVecs[key], freq=False, breaks=10,main=key,xlab="GC percentage")
+#        r.png("geneTypes_GC.png", width=1024, height=768)
+        for key in data:
+            r.png("%s_%s.png"%(key,dataName), width=1024, height=768)
+            r.hist(rVecs[key], freq=False, breaks=10,main=key,xlab=dataName)
             lens = ['Extension','Original']
             orig = ['Unchanged','Novel']
             if key in lens:
@@ -90,11 +99,21 @@ class SequenceStats(bioseq.FlatFileIO):
 
             r.lines(r.density(rVecs[alt]), col='Blue')
             rdevoff()
+#        colors = ['grey','blue','green','red']
+        #r.require("plotrix",lib_loc="~eventer/R")
+#        plotrix = importr("plotrix", lib_loc='/home/eventer/R')
+#        plotrix.multhist(r.list(rVecs.values()), freq=False, col=colors,
+#                   xlab="GC %",ylab="Density",main="Gene Type GC")
+#        r.legend(0,0.08,['Unchanged','Novel','Original','Extension'],
+#                text_col=colors)
+
+#        rdevoff()
 
     def Main(self):
         self.gff.readGFF()
         self.processGBK()
-        self.plotGC()
+        self.plotVecs(self.geneLen,'Length')
+        self.plotVecs(self.gcContent,'GC')
 
 def ParseCommandLine():
     Desc = 'Reads in a genbank file and starts GFF and dumps stats on the genes.'
