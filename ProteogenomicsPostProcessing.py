@@ -297,6 +297,11 @@ class FinderClass():
         #FilterList = PGORFFilters.FilterList( [MinPeptide, ], self.OutputPath) # an anonymous list
         FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, Tryptic, MinPeptide], self.OutputPath) # an anonymous list
         genome.filterORFs( FilterList )
+        #last thing is to set the report for filters
+        ListString = FilterList.GetListString()
+        print "I got this list\n\n %s \n\n"%ListString
+        self.Report.SetValue("FiltersUsed", ListString)
+        
 
 
 

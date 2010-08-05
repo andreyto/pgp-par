@@ -398,6 +398,12 @@ class OpenReadingFrame(object):
         for Peptide in self.peptideIter():
             if Peptide.isUnique:
                 NumUniquePeptides += 1
+        #
+        # I'm redoing this output to not use the self.annotatedProtein, because that does not give what I want.  also it may disappear
+        #because we have the gbk file parsed and linked.
+        if self.CDS:
+            ProteinDescriptor = "%s, %s"%(self.CDS.qualifiers['protein_id'][0], self.CDS.qualifiers['product'][0])
+            return "%s as %s; %s (%s) peptides, %s"%(self.name, ProteinDescriptor, self.numPeptides(), NumUniquePeptides, self.location)
         return "%s as %s, %s (%s) peptides, %s"%(self.name, self.annotatedProtein, self.numPeptides(), NumUniquePeptides, self.location)
 
     @property

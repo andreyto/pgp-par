@@ -90,6 +90,13 @@ class FilterList:
             self.Handle.write("\n")
         return DictionaryOfORFs
 
+    def GetListString(self):
+        """return the string names of all the filters in this list"""
+        String = ""
+        for Item in self.List:
+            String += " %s,"%Item.name
+        
+        return String
 
 
 class Filter:

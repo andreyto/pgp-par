@@ -157,7 +157,12 @@ def EvaluateSignalPeptide(ORF):
     #now some trickery
     Plot = HPlot.MakePlot(PrefixSequence)
     LongerSignal = HPlot.IsConsistentSignal(Plot) #default to 10
-    ShorterSignalStartIndex = HPlot.IsConsistentSignal(Plot, 0.5, 8)
+    #### WARNING  !!!!!!!!!!!!!! MAGIC NUMBER
+    #in the line below there is a '3 +' which is a magic number
+    #it is because the Plot variable is not the hydrophobic index of a single
+    #amino acid, but a 5 residue floating window, centered over the middle.  Thus the 
+    #array 'Plot' is indexed +3 into the array "PrefixSequence"
+    ShorterSignalStartIndex = 3 + HPlot.IsConsistentSignal(Plot, 0.5, 8)
     ShorterSignal = 0 #assume that there is no shorter signal
     if ShorterSignalStartIndex > -1:
         ShorterSignal = 1 #reset if you get one
