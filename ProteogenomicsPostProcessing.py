@@ -318,6 +318,7 @@ class FinderClass():
         2 = too long
         3 = no patch
         4 = patch 
+        5 = all three signals
         """
 
         #make ourselves a file handle here
@@ -330,6 +331,7 @@ class FinderClass():
         ProteinsWithNonTrypticNTermTotal = 0
         ProteinsWithHydrophobicPatch = 0
         ProteinLackHydrophobicPatch = 0
+        ProteinsWithItAll = 0
         WrongLength = 0
         if self.Verbose:
             print "ProteogenomicsPostProcessing.py:AnalyzeCleavage"
@@ -355,8 +357,10 @@ class FinderClass():
                     WrongLength +=  1
                 if Decision == 3:
                     ProteinLackHydrophobicPatch += 1
-                if Decision == 4:
+                if Decision >= 4:
                     ProteinsWithHydrophobicPatch += 1
+                if Decision == 5:
+                    ProteinsWithItAll += 1
                 if Decision >= 3:
                     #these are thing I want to print out, conveniently they also have a non NULL String
                     Handle.write(String)
@@ -365,6 +369,7 @@ class FinderClass():
         print "wrong length: %s"%WrongLength
         print "no patch: %s"%ProteinLackHydrophobicPatch
         print "Have Patch: %s"%ProteinsWithHydrophobicPatch
+        print "Have All required motifs: %s"%ProteinsWithItAll
         Handle.close()
 
     def LoadResultsFromGFF(self, GFFFile):

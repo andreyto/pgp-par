@@ -110,7 +110,7 @@ def GetSignalPeptideHeader():
     
     
     """
-    Header = "ProteinName\tFirstPeptideIndex\tPrefixSequence\tSuffixSequence\tHasHydrophobicPatch\tHasAxBMotif\tHasBasicEarly\n"
+    Header = "ProteinName\tFirstPeptideIndex\tPrefixSequence\tProposedMotif\tSuffixSequence\tHasHydrophobicPatch\tHasAxBMotif\tHasBasicEarly\n"
     return Header
 
     
@@ -128,6 +128,7 @@ def EvaluateSignalPeptide(ORF):
         2 = too long - no evidence
         3 = no patch - evidence against
         4 = patch  - evidence supporting signal peptide cleavage
+        5 = All three signals: patch, motif, basic residue
     NOTE: if decision <3, then the string will be None, the NULL variable, 
     not the string 'None'
     """
@@ -153,6 +154,7 @@ def EvaluateSignalPeptide(ORF):
     #meet's level 2
     PrefixSequence = ORF.GetProteinSequence(0, PeptideOffsetIntoProtein) # zero is the start.
     AfterCut = ORF.GetProteinSequence(PeptideOffsetIntoProtein, PeptideOffsetIntoProtein + 2)
+    ProposedMotif = PrefixSequence[-3:]
     ProteinName = ORF.GetProteinName()
     #now some trickery
     Plot = HPlot.MakePlot(PrefixSequence)
@@ -162,7 +164,8 @@ def EvaluateSignalPeptide(ORF):
     #it is because the Plot variable is not the hydrophobic index of a single
     #amino acid, but a 5 residue floating window, centered over the middle.  Thus the 
     #array 'Plot' is indexed +3 into the array "PrefixSequence"
-    ShorterSignalStartIndex = 3 + HPlot.IsConsistentSignal(Plot, 0.5, 8)
+    ShorterSignalStartIndex = HPlot.IsConsistentSignal(Plot, 0.5, 8) #can't directly add three because -1 is our FALSE return
+    ShorterSignalAdjustedStartIndex = 3 + ShorterSignalStartIndex
     ShorterSignal = 0 #assume that there is no shorter signal
     if ShorterSignalStartIndex > -1:
         ShorterSignal = 1 #reset if you get one
@@ -170,9 +173,10 @@ def EvaluateSignalPeptide(ORF):
     #we look for the basic residue
     HasBasicEarlyResidue = 0 # assume guilt
     if ShorterSignal:
-        HasBasicEarlyResidue = ProteinStatistics.HasBasicResidue(PrefixSequence, 0, ShorterSignalStartIndex)
+        HasBasicEarlyResidue = ProteinStatistics.HasBasicResidue(PrefixSequence, 0, ShorterSignalAdjustedStartIndex)
     #I decided to go with the shorter hydrophobic patch length, but I kept the other var in there just incase
-    String = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideOffsetIntoProtein, PrefixSequence, AfterCut, ShorterSignal, AxBMotif, HasBasicEarlyResidue)
+    ProteinDescriptor = "%s, %s"%(ORF.CDS.qualifiers['protein_id'][0], ORF.CDS.qualifiers['product'][0])
+    String = "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t"%(ProteinName, PeptideOffsetIntoProtein, PrefixSequence, ProposedMotif, AfterCut, ShorterSignal, AxBMotif, HasBasicEarlyResidue)
     PlotString =""
     # need to front pad these with zeros
     PadLen = MaxLen - len(Plot)
@@ -184,6 +188,8 @@ def EvaluateSignalPeptide(ORF):
     ReturnString = "%s%s\n"%(String, PlotString) #plotString has an explicit \t at start. .Put \n to make it completely self enclosed
     if not ShorterSignal:
         return (3, ReturnString) #lacks the hydrophobic patch
+    if (AxBMotif and HasBasicEarlyResidue):
+        return (5, ReturnString)
     return  (4, ReturnString) #it has a hyrophobic patch 
             
 

@@ -660,6 +660,9 @@ class OpenReadingFrame(object):
         return self.name
 
     def GetProteinName(self):
+        if self.CDS:
+            ProteinDescriptor = "%s, %s"%(self.CDS.qualifiers['protein_id'][0], self.CDS.qualifiers['product'][0])
+            return ProteinDescriptor
         return self.annotatedProtein.GetName()
 
     def peptideIter( self ):
