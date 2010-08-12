@@ -17,7 +17,10 @@ from rpy2.robjects.packages import importr
 class SequenceStats(bioseq.FlatFileIO):
     def __init__(self,gbk,startGff):
         bioseq.FlatFileIO.__init__(self,gbk)
-        self.gff = StartsGFF(startGff)
+        if startGff == 'None':
+            self.gff = None
+        else:
+            self.gff = StartsGFF(startGff)
         self.gcContent = {}
         self.geneLen   = {}
         self.CodonMatrix = {}
@@ -38,26 +41,29 @@ class SequenceStats(bioseq.FlatFileIO):
     def processGBK(self):
         novelCount = 0
         for gb_rec in SeqIO.parse(self.io, 'genbank'):
-            # First check for novel genes on this sequence
-            for (orfName, start, end) in self.gff.novelIter():
-                acc = orfName[ 0:orfName.index('.') ]
-                if acc == gb_rec.name:
-                    print "Novel %d %d" % (start,end)
-                    if start < end:
-                        f = SeqFeature(FeatureLocation( start, end), strand=1)
-                    else:
-                        f = SeqFeature(FeatureLocation( end, start), strand=-1)
-                    dna = f.extract(gb_rec.seq)
-                    self.genStats(dna,'Novel',"Novel%d"%novelCount)
-                    novelCount+=1
-                
+            if self.gff:
+                # First check for novel genes on this sequence
+                for (orfName, start, end) in self.gff.novelIter():
+                    acc = orfName[ 0:orfName.index('.') ]
+                    if acc == gb_rec.name:
+                        print "Novel %d %d" % (start,end)
+                        if start < end:
+                            f = SeqFeature(FeatureLocation( start, end), strand=1)
+                        else:
+                            f = SeqFeature(FeatureLocation( end, start), strand=-1)
+                        dna = f.extract(gb_rec.seq)
+                        self.genStats(dna,'Novel',"Novel%d"%novelCount)
+                        novelCount+=1
 
             # Now do the regular genes and extensions
             for feat in gb_rec.features:
                 if feat.type == 'CDS':
                     dna = feat.extract(gb_rec.seq)
+                    if not feat.qualifiers.has_key('locus_tag'):
+                        print "Bad CDS without locus_tag: %s" % feat
+                        continue
                     locus = feat.qualifiers['locus_tag'][0]
-                    if self.gff.starts.has_key( locus ):
+                    if self.gff and self.gff.starts.has_key( locus ):
                         self.genStats(dna, 'Original',locus)
                         gffRec = self.gff.starts[locus]
                         print "%s gene %s start %d %d" % ( gffRec.strand,
@@ -80,7 +86,7 @@ class SequenceStats(bioseq.FlatFileIO):
             for v in value:
                 out.write("%d\n"%v)
             out.close()
-            
+
     def writeDataMatrix(self,matrix, outName):
         print matrix.keys()
         for (key, value) in matrix.items():
@@ -113,7 +119,8 @@ class SequenceStats(bioseq.FlatFileIO):
                 orig.remove(key)
                 alt = orig[0]
 
-            r.lines(r.density(rVecs[alt]), col='Blue')
+            if rVecs.has_key(alt):
+                r.lines(r.density(rVecs[alt]), col='Blue')
             rdevoff()
 #        colors = ['grey','blue','green','red']
         #r.require("plotrix",lib_loc="~eventer/R")
@@ -126,7 +133,8 @@ class SequenceStats(bioseq.FlatFileIO):
 #        rdevoff()
 
     def Main(self):
-        self.gff.readGFF()
+        if self.gff:
+            self.gff.readGFF()
         self.processGBK()
         self.plotVecs(self.geneLen,'Length')
         self.plotVecs(self.gcContent,'GC')
