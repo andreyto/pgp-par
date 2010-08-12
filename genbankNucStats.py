@@ -4,7 +4,8 @@ import bioseq
 from optparse import OptionParser
 from Bio import SeqIO
 from Bio.SeqFeature import SeqFeature, FeatureLocation
-from NucleotideStatistics import GetGC
+#from NucleotideStatistics import GetGC, CodonUsageFractions, CodonCount #make these functions locally scoped
+import NucleotideStatistics
 from setTblStartsFromGFF import StartsGFF
 
 # Need R_HOME and LD_LIBRARY_PATH. Set I used:
@@ -19,14 +20,17 @@ class SequenceStats(bioseq.FlatFileIO):
         self.gff = StartsGFF(startGff)
         self.gcContent = {}
         self.geneLen   = {}
+        self.CodonMatrix = {}
 
     def genStats(self, dna, context, locus):
-#       codonVec = CodonUsageFractions(dna)
-#        print "stats for %s %s" % (context,locus)
-        for (vecs,func) in ((self.gcContent, GetGC), (self.geneLen,len)):
-            data = func(dna)
+        for (vecs,func, kludge) in ((self.gcContent, NucleotideStatistics.GetGC, "a"), (self.geneLen,len, "b"), (self.CodonMatrix, NucleotideStatistics.CodonUsageFractions, "c")):
+            data = func(dna) # apply the function from the list of tuples
+            
             if not vecs.has_key(context):
                 vecs[ context ] = []
+                if kludge == "c":
+                    print "I am making a context %s "%context
+                    print vecs.keys()
             vecs[ context ].append( data )
 #        print "stats for %s %s %d" % (context,locus,len(vecs[context]))
 
@@ -46,6 +50,7 @@ class SequenceStats(bioseq.FlatFileIO):
                     dna = f.extract(gb_rec.seq)
                     self.genStats(dna,'Novel',"Novel%d"%novelCount)
                     novelCount+=1
+                
 
             # Now do the regular genes and extensions
             for feat in gb_rec.features:
@@ -63,7 +68,7 @@ class SequenceStats(bioseq.FlatFileIO):
                         else:
                             f = SeqFeature(FeatureLocation( feat.location.end, gffRec.end),
                                            strand=-1)
-                        dna = f.extract(gb_rec.seq)
+                        dna = f.extract(gb_rec.seq)# the extracted dna sequence
                         self.genStats(dna,'Extension',locus)
                     else:
                         self.genStats(dna, 'Unchanged',locus)
@@ -74,6 +79,17 @@ class SequenceStats(bioseq.FlatFileIO):
             out = open("%s.%s.vec"%(key,outName),'w')
             for v in value:
                 out.write("%d\n"%v)
+            out.close()
+            
+    def writeDataMatrix(self,matrix, outName):
+        print matrix.keys()
+        for (key, value) in matrix.items():
+            print "Now using key %s"%key
+            out = open("%s.%s.matrix"%(key,outName), 'w')
+            #this value is a list of lists.  We need to get each list tab separated onto a line
+            for List in value:
+                ListAsAString =  "\t".join(map(str, List))#tab separate this list, cast numbers to string
+                out.write("%s\n"%ListAsAString)
             out.close()
 
     def plotVecs(self,data,dataName):
@@ -114,6 +130,8 @@ class SequenceStats(bioseq.FlatFileIO):
         self.processGBK()
         self.plotVecs(self.geneLen,'Length')
         self.plotVecs(self.gcContent,'GC')
+        print self.CodonMatrix.keys()
+        self.writeDataMatrix(self.CodonMatrix, 'CodonMatrix')
 
 def ParseCommandLine():
     Desc = 'Reads in a genbank file and starts GFF and dumps stats on the genes.'

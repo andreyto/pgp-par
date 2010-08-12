@@ -299,7 +299,6 @@ class FinderClass():
         genome.filterORFs( FilterList )
         #last thing is to set the report for filters
         ListString = FilterList.GetListString()
-        print "I got this list\n\n %s \n\n"%ListString
         self.Report.SetValue("FiltersUsed", ListString)
         
 

@@ -158,27 +158,44 @@ def GetGC(Sequence):
 
 def CodonUsageFractions(Sequence):
     """Parameters: Sequence of nucleotides
-    Return: a 64 space vector
+    Return: a 64 space vector (the alhpabetical list of codons, e.g. AAA, AAC, AAG ...)
     Description: return the fractional usage of each of the 64 codons.
     """
+    #first I have to make sure that this is a simple string, otherwise things fail
+    if type(Sequence) == "str":
+        #this is a naked, plain string, 
+        pass
+    else:
+        try :
+            Sequence = str(Sequence)
+        except:
+            print "You gave me something which does not transform into a string. ABORT"
     Table = CodonCount()
     TotalCount = 0.0  #with a decimal, it's now a float and will divide correctly with out casting
     while 1:
+        #print "My sequence is %s"%Sequence
+        
         Codon = Sequence[:3]
         Sequence = Sequence[3:]
         if not Table.Table.has_key(Codon):
-            print "SNAFU in codon counting.  No codon exists for %s"%Codon
+            print "SNAFU in codon counting.  No codon exists for :%s:"%Codon
         else:
             Table.Table[Codon] += 1
+
         TotalCount += 1
         if len(Sequence) < 3:
             break
     #now I'm done with the loop I need to normalize everything
-    ToReturn = {}
+    TempHash = {}
     for Key in Table.Table.keys():
         Count = Table.Table[Key]
         Frequency = Count / TotalCount
-        ToReturn[Key] = Frequency
+        TempHash[Key] = Frequency
+    ToReturn = [] # a list of frequency values sorted by their codon
+    Keys = Table.Table.keys()
+    Keys.sort()
+    for Key in Keys:
+        ToReturn.append(TempHash[Key])
     return ToReturn
 
  
