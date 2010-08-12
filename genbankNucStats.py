@@ -28,7 +28,7 @@ class SequenceStats(bioseq.FlatFileIO):
     def genStats(self, dna, context, locus):
         for (vecs,func, kludge) in ((self.gcContent, NucleotideStatistics.GetGC, "a"), (self.geneLen,len, "b"), (self.CodonMatrix, NucleotideStatistics.CodonUsageFractions, "c")):
             data = func(dna) # apply the function from the list of tuples
-            
+
             if not vecs.has_key(context):
                 vecs[ context ] = []
                 if kludge == "c":
@@ -132,6 +132,38 @@ class SequenceStats(bioseq.FlatFileIO):
 
 #        rdevoff()
 
+    def plotMatrix(self,matrix):
+        r = robjects.r
+        s = importr('stats')
+
+        rdevoff = r['dev.off']
+        codonVec = []
+        # Make codonVec a long list of vectors, in row order
+        [codonVec.extend(x) for x in matrix['Unchanged']]
+        uMatrix = r.matrix(robjects.FloatVector(codonVec),ncol=64,byrow=True)
+        codonVec = []
+        # Make codonVec a long list of vectors, in row order
+        [codonVec.extend(x) for x in matrix['Novel']]
+        nMatrix = r.matrix(robjects.FloatVector(codonVec),ncol=64,byrow=True)
+
+        upca = s.prcomp(uMatrix, scale=True)
+        pred = s.predict( upca, nMatrix)
+        novelLen = len(matrix['Novel'])
+        xlab = list('*' * len(matrix['Unchanged']))
+        ylab = list('.' * 64) # 64 codons
+
+        r.pdf("CodonUsage.biplot.pdf",width=8.5,height=11)
+        s.biplot(upca, var_axes=False, xlabs=xlab, ylabs=ylab, col=['Black','White'])
+        pointsX = pred[0:novelLen]
+        pointsY = pred[novelLen:novelLen*2]
+        r.points(pointsX, pointsY, col='blue',pch=16)
+        rdevoff()
+
+        # biplot(upca,var.axes=F,xlabs=rep('*',nrow(um)),ylabs=rep('.',ncol(um)), col=c('black','white'))
+        #p = predict(upca,nm)
+        # points(p[,1],p[,2],col='blue',pch=16)
+
+
     def Main(self):
         if self.gff:
             self.gff.readGFF()
@@ -140,6 +172,7 @@ class SequenceStats(bioseq.FlatFileIO):
         self.plotVecs(self.gcContent,'GC')
         print self.CodonMatrix.keys()
         self.writeDataMatrix(self.CodonMatrix, 'CodonMatrix')
+#        self.plotMatrix(self.CodonMatrix)
 
 def ParseCommandLine():
     Desc = 'Reads in a genbank file and starts GFF and dumps stats on the genes.'
