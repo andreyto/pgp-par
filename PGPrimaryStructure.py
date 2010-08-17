@@ -203,7 +203,7 @@ class PrimaryStructure:
             peptideIncr = -1
         else:
             # On the plus strand, make sure to test the 1st AA of the peptide
-            firstNucleotide += 2
+            firstNucleotide += 3
 
         print "Looking for upstream starts from %d-%d for %s 1st codons %s" % (
             orfStart, firstNucleotide, ORF, self.DNA[orfStart-1:orfStart+8])
