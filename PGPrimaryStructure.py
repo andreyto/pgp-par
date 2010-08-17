@@ -201,6 +201,9 @@ class PrimaryStructure:
                 print "Warning frame is off diff is %d" % nucDiff
             peptidePosition = nucDiff / 3
             peptideIncr = -1
+        else:
+            # On the plus strand, make sure to test the 1st AA of the peptide
+            firstNucleotide += 2
 
         print "Looking for upstream starts from %d-%d for %s 1st codons %s" % (
             orfStart, firstNucleotide, ORF, self.DNA[orfStart-1:orfStart+8])
