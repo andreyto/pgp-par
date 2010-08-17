@@ -10,14 +10,20 @@ class StartsGFF(object):
         self.starts = {}
         self.newGenes = {}
 
+    def checkStart(self,gffRec):
+        if gffRec.end - gffRec.start != 2:
+            raise ValueError("Start codon wrong size: %s" % gffRec)
+
     def readGFF(self):
         lt = 'locus_tag'
         for gffRec in GFFIO.File(self.gff):
             if gffRec.attributes.has_key( lt ):
+                self.checkStart( gffRec )
                 self.starts[gffRec.attributes[ lt ] ] = gffRec
             elif gffRec.attributes['Name'] == 'Observed2Stop':
                 self.newGenes[ gffRec.attributes['Parent']] = (gffRec,[])
             else:
+                self.checkStart( gffRec )
                 self.newGenes[ gffRec.attributes['Parent']][1].append(gffRec)
 
     def novelIter(self):
