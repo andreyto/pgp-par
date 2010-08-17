@@ -201,13 +201,14 @@ class PrimaryStructure:
                 print "Warning frame is off diff is %d" % nucDiff
             peptidePosition = nucDiff / 3
             peptideIncr = -1
+            first = orfStart
         else:
             # On the plus strand, make sure to test the 1st AA of the peptide
+            first = firstNucleotide
             firstNucleotide += 3
 
         print "Looking for upstream starts from %d-%d for %s 1st codons %s" % (
             orfStart, firstNucleotide, ORF, self.DNA[orfStart-1:orfStart+8])
-        first = True
         startCount = PrimaryStructure.startCodonCount
         while (orfStart < firstNucleotide):
             # Need zero base based coordinates for the array access
@@ -216,8 +217,8 @@ class PrimaryStructure:
             if ORF.location.strand == '-':
                 codon = DNA.ReverseComplement( codon )
 
-            if (first and codon == 'ATG') or (
-            not first and codon in self.StartCodonTable):
+            if (orfStart == first and codon == 'ATG') or (
+                orfStart != first and codon in self.StartCodonTable):
                 gffRec.start = codonLoc
                 gffRec.end   = codonLoc+2
                 gffRec.score = 0
@@ -232,7 +233,6 @@ class PrimaryStructure:
                 print "Start Codon %s found at %d pep %d" % (codon, codonLoc, peptidePosition)
             orfStart += 3
             peptidePosition += peptideIncr
-            first = False
         # End while looking for starts 
         if startCount == PrimaryStructure.startCodonCount:
             self.startCodonGFF.io.write("# No start found for %s\n" % ORF)
