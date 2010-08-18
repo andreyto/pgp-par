@@ -40,11 +40,9 @@ import PGORFFilters
 import PGPrimaryStructure
 #import SignalPeptide
 import PGCleavageAnalysis
-import BasicStats
 import GFFIO
 from Utils import *
 Initialize()
-import math #for the log
 from itertools import combinations # for the combinations of double for loops
 
 class FinderClass():
@@ -270,7 +268,6 @@ class FinderClass():
         Strand = ORF.GetStrand()
         Location = PGPeptide.GenomicLocation(Start, Stop, Strand)
         return Location
-        
 
     def FilterORFs(self,genome):
         """
@@ -289,20 +286,20 @@ class FinderClass():
         #magic for us.
 
         SequenceComplexity = PGORFFilters.SequenceComplexityFilter()
+        PeptideDistance = PGORFFilters.PeptideDistance()
         MinPeptide = PGORFFilters.MinPeptideFilter(2)
         Uniqueness = PGORFFilters.UniquenessFilter()
         Tryptic = PGORFFilters.TrypticFilter()
-        
+
         MinPepONE = PGORFFilters.MinPeptideFilter(1)
         #FilterList = PGORFFilters.FilterList( [MinPeptide, ], self.OutputPath) # an anonymous list
-        FilterList = PGORFFilters.FilterList([SequenceComplexity, Uniqueness, Tryptic, MinPeptide], self.OutputPath) # an anonymous list
+        FilterList = PGORFFilters.FilterList([ # an anonymous list
+            SequenceComplexity, PeptideDistance, Uniqueness, Tryptic, MinPeptide
+                                             ], self.OutputPath)
         genome.filterORFs( FilterList )
         #last thing is to set the report for filters
         ListString = FilterList.GetListString()
         self.Report.SetValue("FiltersUsed", ListString)
-        
-
-
 
 
     def AnalyzeCleavage(self, genome):

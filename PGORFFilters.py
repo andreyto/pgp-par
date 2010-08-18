@@ -2,12 +2,12 @@
 THis is a set of classes designed to help filter out spurious 
 ORFs from the proteogenomics pipeline.  Each new filter should
 be added as a new class, inheriting from 'Filter' and implementing
-a method called 'apply' where the magic gets done.
+a method called 'filterORF' where the magic gets done.
  
 NOTE: this is a utility, and not executable from the command line
 
 """
-import math #used to calculate logs
+#import math #used to calculate logs
 import os
 
 class FilterList:
@@ -32,7 +32,7 @@ class FilterList:
         """
         Parameters: A dict of ORF objects, where the key = name, value = ORF object
         Return: a filtered dict of ORF objects
-        Description: apply the filters one at a time, deleting
+        Description: run the filters one at a time, deleting
         the ORF objects that the filters tell me to delete
         """
         KilledPeptideCount =0
@@ -43,13 +43,13 @@ class FilterList:
         for (Name, ORF) in DictionaryOfORFs.items():
             #now cycle through all our filters.  We use the ordering
             #of the list, meaning that you should have throught about
-            #what order you wanted to apply them in when you created 
+            #what order you wanted to filter them in when you created 
             #me as an object
             DeleteMe = 0 #assume innnocence
             CurrFilter = None
-            for Filter in self.List:
-                CurrFilter = Filter.name
-                DeleteMe = Filter.apply(ORF)
+            for aFilter in self.List:
+                CurrFilter = aFilter.name
+                DeleteMe = aFilter.filterORF(ORF)
                 if DeleteMe:
                     break #quit cycling through all the filters already, we know it sucks
             # so here's the deal.  We have created ORFs for two reasons
@@ -106,7 +106,7 @@ class Filter:
     Variables:
         self.name
     Functions:
-        apply(ORF)
+        filterORF(ORF)
     """
     def __init__(self):
         """Parameters: none
@@ -115,7 +115,7 @@ class Filter:
         """
         self.name = "Filter Parent Class"
 
-    def apply(self, ORF):
+    def filterORF(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
         Return: don't know
@@ -146,7 +146,7 @@ class UniquenessFilter(Filter):
         self.name = "UniquenessFilter"
 
 
-    def apply(self, ORF):
+    def filterORF(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
         Return: 0/1 keep/destroy
@@ -187,7 +187,7 @@ class TrypticFilter(Filter):
         self.name = "TrypticFilter"
 
 
-    def apply(self, ORF):
+    def filterORF(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
         Return: 0/1 keep/destroy
@@ -226,7 +226,7 @@ class MinPeptideFilter(Filter):
         self.name = "MinPeptideFilter"
         self.MinimumPeptides = MinimumPeptides
 
-    def apply(self, ORF):
+    def filterORF(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
         Return: 0/1 keep/destroy
@@ -238,6 +238,62 @@ class MinPeptideFilter(Filter):
             return 0 #keep me around
         return 1 # delete me NOW
 
+
+class PeptideDistance(Filter):
+    """Class PeptideDistance: an ORF level filter that removes peptides
+    that are greater then some specified distance from another peptide
+    in the ORF.
+    """
+    def __init__(self,maxDistance=750):
+        "Parameter: the maximum distance a peptide can be from another peptide."
+        Filter.__init__(self)
+        self.name = "PeptideDistance"
+        self.maxDistance = maxDistance
+
+    def filterORF(self, ORF):
+        """
+        Parameters: an ORF object that is filled with peptides
+        Return: 0 keep the ORF, this filter only deletes peptides.
+        Description: Apply the filter. Check to see if there are any
+        peptides greater then maxDistance away from each other, and if so
+        delete the isolated peptide.
+        """
+        numPeptides = ORF.numPeptides()
+        # Make sure the peptides are sorted by start
+        prevPep = ORF.GetFivePrimePeptide()
+        # The first peptide is always to far on it's left from the previous
+        left2far = True
+        # these next 2 are set up here so they are still in scope after the loop
+        lower = 0
+        prevStop = 0
+        for peptide in ORF.peptideIter():
+            # Skip the 1st peptide, since we're need to look at both sides
+            if peptide == prevPep:
+                continue
+            lower = peptide.GetStart()
+            prevStop = prevPep.GetStop()
+            right2far = lower - prevStop > self.maxDistance
+#            print "left,right2far %s,%s lower %s prevStop %s %d" % (
+#                left2far,right2far,lower,prevStop,lower-prevStop)
+
+            # if the previous peptide is 2 far from others on both sides, delete
+            if left2far and right2far:
+                ORF.deletePeptide( prevPep )
+                numPeptides -= 1
+            prevPep = peptide
+            left2far = right2far
+
+        if numPeptides > 0:
+#            print "left2far %s lower %s prevStop %s %d" % (
+#                left2far,lower,prevStop,lower-prevStop)
+
+            # For the last peptide the right is always too far, so just check left
+            if left2far:
+                ORF.deletePeptide( prevPep )
+                numPeptides -= 1
+
+        # We want to keep the ORF, we only delete peptides so return 0
+        return 0
 
 class SequenceComplexityFilter(Filter):
     """Class SequenceComplexityFilter: this is an ORF level filter for 
@@ -259,7 +315,7 @@ class SequenceComplexityFilter(Filter):
     Variables:
         self.name
     Functions:
-        apply (ORF)
+        filterORF (ORF)
     """
     def __init__(self):
         """
@@ -305,7 +361,7 @@ class SequenceComplexityFilter(Filter):
         else:
             return False
 
-    def apply(self, ORF):
+    def filterORF(self, ORF):
         """
         Parameters: an ORF object that is filled with peptides 
         Return: None
