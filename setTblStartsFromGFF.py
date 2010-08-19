@@ -44,6 +44,7 @@ class AlterTblStarts(object):
         self.startGFF = StartsGFF(startGFF)
         self.tbl    = tblInput
         self.output = bioseq.FlatFileIO(outputPath,'w')
+        self.excludes = []
         self.curRec = ''
         self.curBeg = None
         self.curEnd = None
@@ -54,9 +55,19 @@ class AlterTblStarts(object):
     def starts(self):
         return self.startGFF.starts
 
+    def readExcludeFile(self, excludeFile):
+        for line in open(excludeFile):
+            l = line.strip()
+            # Tbl file has it's protein_id's wrapped in ref| |
+            # so make sure the exclude list has them as such
+            if l[0:4] == 'ref|':
+                self.excludes.append( l )
+            else:
+                self.excludes.append("ref|%s|"%l)
+
     def writeRec(self):
         if self.curRec:
-            self.output.write( "%d\t%d\t%s\n%s" % (self.curBeg,self.curEnd,
+            self.output.write( "%d\t%d\t%s\n%s" % (self.curBeg, self.curEnd,
                                                self.curType, self.curRec) )
     def processTbl(self):
         tbl = bioseq.FlatFileIO( self.tbl )
@@ -67,7 +78,11 @@ class AlterTblStarts(object):
         # Accession of current sequence in tbl file
         curSeq = None
         modifyCDS = False
+        origBeg = None
+        # Iterate through the tbl file a line at at time, reading it's features
+        # and modifing the begin coordinates of both gene and CDS records
         for line in tbl.io:
+            # Match start of a contig sequence and get it's ID
             if line[0] == '>':
                 accStart = line.index('|') + 1
                 curSeq = line[accStart:-2]
@@ -75,35 +90,54 @@ class AlterTblStarts(object):
                 self.output.write( line )
                 continue
 
+            # Match beginning of a record
             match = recRE.match( line )
             if match:
-                # Match feature start
+                # Write the previous record
                 self.writeRec()
                 self.curRec = ''
+                # begin, end and keep track of the current record type
                 (b,e,self.curType) = match.groups()
                 if modifyCDS and self.curType == 'CDS':
-                    # Keep the same begin & end as for the previous gene
+                    # Keep the same begin & end as for the preceeding gene record
                     modifyCDS = False
                 else:
+                    # Use the begin and end from the tbl Record
                     (self.curBeg,self.curEnd) =(int(b),int(e))
+                    origBeg = self.curBeg
                 continue
 
             match = qualRE.match( line )
+            # Match the qualifiers in the tbl records
             if match:
                 (qual,val) = match.groups()
                 if qual == 'locus_tag' and self.starts().has_key(val):
                     # We need to modify this records start
                     gff = self.starts()[val]
                     seqId = gff.seqid
-                    if seqId != curSeq:
-                        print "Wrong seq for %s, %s, %s" % (val,seqId,curSeq)
+                    # Sometimes GFF sequence don't have the .# so check for that
+                    tSeq = curSeq
+                    if -1 == seqId.find('.'):
+                        print "Warning, unversioned sequence from GFF %s."%seqId
+                        tSeq = curSeq[0:curSeq.index('.')]
+
+                    if seqId != tSeq:
+                        print "Wrong seq for %s, %s, %s." % (val,seqId,tSeq)
                         self.curRec += line
                         continue
+                    # Save the original begin, in case we end up excluding this protein
+                    origBeg = self.curBeg
                     if gff.strand == '+':
                         self.curBeg = gff.start
                     else:
                         self.curBeg = gff.end
                     modifyCDS = True
+                elif qual == 'protein_id':
+                    for exclude in self.excludes:
+                        if -1 != val.find( exclude ):
+                            # This protein matches our exclude list, so don't change it
+                            self.curBeg = origBeg
+                            break
                 else:
                     pass
                 self.curRec += line
@@ -138,6 +172,8 @@ def ParseCommandLine():
                help='Prefix for locus_tag written out for novel genes.')
     opts.add_option('-s','--locusStart', type='int',
                help='Start number to use for locus counting.')
+    opts.add_option('-x','--excludeFile',
+               help='File of protein_ids, 1 per line, to exclude from modification.')
     (options,args) = opts.parse_args()
 
     if options.startGFF and options.inTbl and options.output and \
@@ -153,4 +189,6 @@ if __name__ == '__main__':
     driver = AlterTblStarts( options.startGFF, options.inTbl, options.output)
     driver.locusPrefix = options.locusPrefix
     driver.locusOffset = options.locusStart
+    if options.excludeFile:
+        driver.readExcludeFile( options.excludeFile )
     driver.Main()
