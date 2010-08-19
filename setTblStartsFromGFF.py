@@ -19,7 +19,12 @@ class StartsGFF(object):
         for gffRec in GFFIO.File(self.gff):
             if gffRec.attributes.has_key( lt ):
                 self.checkStart( gffRec )
+                if self.starts.has_key( gffRec.attributes[ lt ] ):
+                    print "Warning multiple starts for %s, skipping" % gffRec.attributes[lt]
+                    self.starts[gffRec.attributes[ lt ] ] = None
+                    continue
                 self.starts[gffRec.attributes[ lt ] ] = gffRec
+
             elif gffRec.attributes['Name'] == 'Observed2Stop':
                 self.newGenes[ gffRec.attributes['Parent']] = (gffRec,[])
             else:
@@ -30,6 +35,9 @@ class StartsGFF(object):
         for (parent,value) in self.newGenes.items():
             observedRec = value[0]
             if len(value[1]) == 0:
+                continue
+            elif len(value[1]) > 1:
+                print "Warning multiple starts for %s, skipping" % parent
                 continue
             startRec = value[1][0]
             start = startRec.start
@@ -114,6 +122,8 @@ class AlterTblStarts(object):
                 if qual == 'locus_tag' and self.starts().has_key(val):
                     # We need to modify this records start
                     gff = self.starts()[val]
+                    if not gff: # Get none if multiple starts set, so skip
+                        continue
                     seqId = gff.seqid
                     # Sometimes GFF sequence don't have the .# so check for that
                     tSeq = curSeq
