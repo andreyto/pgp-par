@@ -2,7 +2,7 @@
 
 from optparse import OptionParser
 
-import re, sys, bioseq, GFFIO
+import os, re, sys, bioseq, GFFIO
 
 class StartsGFF(object):
     def __init__(self,startGFF):
@@ -51,6 +51,7 @@ class AlterTblStarts(object):
     def __init__(self, startGFF, tblInput, outputPath):
         self.startGFF = StartsGFF(startGFF)
         self.tbl    = tblInput
+        self.outputPath = outputPath
         self.output = bioseq.FlatFileIO(outputPath,'w')
         self.excludes = []
         self.curRec = ''
@@ -168,6 +169,9 @@ class AlterTblStarts(object):
         self.startGFF.readGFF()
         self.processTbl()
         self.writeNovel()
+        # Record the differences between the original and our alternate
+        self.output.close()
+        os.system("diff -u %s %s > %s.diff" % (self.tbl, self.outputPath, self.outputPath))
 
 def ParseCommandLine():
     Desc = 'Alter the starts of genes in a tbl file using a GFF file of starts.'
