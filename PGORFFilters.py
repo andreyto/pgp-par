@@ -272,7 +272,7 @@ class PeptideDistance(Filter):
                 continue
             lower = peptide.GetStart()
             prevStop = prevPep.GetStop()
-            right2far = lower - prevStop > self.maxDistance
+            right2far = abs(lower - prevStop) > self.maxDistance
 #            print "left,right2far %s,%s lower %s prevStop %s %d" % (
 #                left2far,right2far,lower,prevStop,lower-prevStop)
 
@@ -284,8 +284,8 @@ class PeptideDistance(Filter):
             left2far = right2far
 
         if numPeptides > 0:
-#            print "left2far %s lower %s prevStop %s %d" % (
-#                left2far,lower,prevStop,lower-prevStop)
+#            print "left2far %s lower %s prevStop %s %d\n%s" % (
+#                left2far,lower,prevStop,lower-prevStop,ORF)
 
             # For the last peptide the right is always too far, so just check left
             if left2far:
