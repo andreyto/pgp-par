@@ -129,7 +129,7 @@ class AlterTblStarts(object):
                     # Sometimes GFF sequence don't have the .# so check for that
                     tSeq = curSeq
                     if -1 == seqId.find('.'):
-                        print "Warning, unversioned sequence from GFF %s."%seqId
+#                        print "Warning, unversioned sequence from GFF %s."%seqId
                         tSeq = curSeq[0:curSeq.index('.')]
 
                     if seqId != tSeq:
@@ -153,6 +153,7 @@ class AlterTblStarts(object):
                     pass
                 self.curRec += line
             else:
+                self.curRec += line
                 print "Bad line: %s" % line
         # write out the last record
         self.writeRec()
@@ -163,7 +164,7 @@ class AlterTblStarts(object):
             self.output.write("\t\t\tlocus_tag\t%s%d\n" % (self.locusPrefix,self.locusOffset))
             self.locusOffset += 1
             self.output.write( "%d\t%d\t%s\n" % (start,end,'CDS'))
-            self.output.write("\t\t\tproduct\t%s\n" % orfName)
+            self.output.write("\t\t\tproduct\thypothetical protein\n" )
 
     def Main(self):
         self.startGFF.readGFF()
