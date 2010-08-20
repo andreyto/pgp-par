@@ -54,12 +54,16 @@ class AlterTblStarts(object):
         self.outputPath = outputPath
         self.output = bioseq.FlatFileIO(outputPath,'w')
         self.excludes = []
-        self.curRec = ''
+        self.cdsRec = ''
+        self.otherRec = ''
+        self.notFirst = False
         self.curBeg = None
         self.curEnd = None
         self.curType = ''
+        self.prevType = ''
         self.locusPrefix = 'locus_'
         self.locusOffset = 5000
+        self.excludeCurrent = False
 
     def starts(self):
         return self.startGFF.starts
@@ -74,10 +78,30 @@ class AlterTblStarts(object):
             else:
                 self.excludes.append("ref|%s|"%l)
 
-    def writeRec(self):
-        if self.curRec:
-            self.output.write( "%d\t%d\t%s\n%s" % (self.curBeg, self.curEnd,
-                                               self.curType, self.curRec) )
+    def writeRec(self,last=False):
+        if self.curType == 'CDS' and not last:
+            return # Don't write out CDS features, unless it's the last
+        elif self.prevType == 'CDS' or last:
+            if not self.excludeCurrent:
+                self.output.write( "%d\t%d\tgene\n%s" % ( self.curBeg, self.curEnd, self.otherRec) )
+                self.output.write( "%d\t%d\tCDS\n%s" % ( self.curBeg, self.curEnd, self.cdsRec) )
+            # Reset everything
+            self.excludeCurrent = False
+            self.otherRec = ''
+            self.cdsRec = ''
+        elif self.notFirst and self.otherRec:
+            # output other records like RNA's that still have gene's
+            self.output.write( "%d\t%d\t%s\n%s" % (
+                self.curBeg, self.curEnd, self.prevType, self.otherRec) )
+            self.otherRec = ''
+        self.notFirst = True
+
+    def saveLine(self,line):
+        if self.curType == 'CDS':
+            self.cdsRec += line
+        else:
+            self.otherRec += line
+
     def processTbl(self):
         tbl = bioseq.FlatFileIO( self.tbl )
         # RE to match the start of a feature record
@@ -86,10 +110,14 @@ class AlterTblStarts(object):
         qualRE = re.compile('^\t\t\t(\w+)\t?(.*)')
         # Accession of current sequence in tbl file
         curSeq = None
+        # Flag set when reading a gene to indicate changing the coords
         modifyCDS = False
-        origBeg = None
         # Iterate through the tbl file a line at at time, reading it's features
         # and modifing the begin coordinates of both gene and CDS records
+        # Flow is, read 1st record and store. Read next record and output previous
+        # unless new record is a CDS then save it until the record after when
+        # both the gene and CDS can be output (or rejected). Also, when we get
+        # a gene record check for coordinate modification
         for line in tbl.io:
             # Match start of a contig sequence and get it's ID
             if line[0] == '>':
@@ -102,18 +130,17 @@ class AlterTblStarts(object):
             # Match beginning of a record
             match = recRE.match( line )
             if match:
-                # Write the previous record
-                self.writeRec()
-                self.curRec = ''
+                self.prevType = self.curType
                 # begin, end and keep track of the current record type
                 (b,e,self.curType) = match.groups()
-                if modifyCDS and self.curType == 'CDS':
-                    # Keep the same begin & end as for the preceeding gene record
+                # Write the previous record
+                self.writeRec()
+                if modifyCDS:
+                    # Use the begin and end from the gff, and reset modify
                     modifyCDS = False
                 else:
                     # Use the begin and end from the tbl Record
-                    (self.curBeg,self.curEnd) =(int(b),int(e))
-                    origBeg = self.curBeg
+                    (self.curBeg, self.curEnd) = (int(b),int(e))
                 continue
 
             match = qualRE.match( line )
@@ -134,10 +161,8 @@ class AlterTblStarts(object):
 
                     if seqId != tSeq:
                         print "Wrong seq for %s, %s, %s." % (val,seqId,tSeq)
-                        self.curRec += line
+                        self.saveLine( line )
                         continue
-                    # Save the original begin, in case we end up excluding this protein
-                    origBeg = self.curBeg
                     if gff.strand == '+':
                         self.curBeg = gff.start
                     else:
@@ -146,17 +171,17 @@ class AlterTblStarts(object):
                 elif qual == 'protein_id':
                     for exclude in self.excludes:
                         if -1 != val.find( exclude ):
-                            # This protein matches our exclude list, so don't change it
-                            self.curBeg = origBeg
+                            # This protein matches our exclude list, don't output it
+                            self.excludeCurrent = True
                             break
                 else:
                     pass
-                self.curRec += line
+                self.saveLine( line )
             else:
-                self.curRec += line
-                print "Bad line: %s" % line
+                print "Unknown line: %s" % line
+                self.saveLine( line )
         # write out the last record
-        self.writeRec()
+        self.writeRec(True)
 
     def writeNovel(self):
         for (orfName,start,end) in self.startGFF.novelIter():
