@@ -1,11 +1,12 @@
-import IndexSearch
+from IndexSearch import IndexSearch
 import sys, os
 
 
 def testSearchs(db):
     pep = 'ERIERVEELL'
 
-    search = IndexSearch.IndexSearch(db)
+    #search = IndexSearch.IndexSearch(db)
+    search = IndexSearch(db)
     for p in search.find(pep):
         print p
 

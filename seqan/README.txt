@@ -14,7 +14,10 @@ About the files
     ends and may be deleted.
 
 How to Build the module
-    A copy of the seqan libraries and boost libraries must be available.
+    A copy of the seqan libraries and boost libraries must be available. This
+    can be as simple as downloading and unpacking the latest versions:
+    http://www.boost.org/users/download/
+    http://www.seqan.de/downloads/
     The boost build tool bjam is also needed to build the module.
     By default it appears the user needs write access to the boost libraries for
     the bjam build.
@@ -23,7 +26,7 @@ How to Build the module
     in the users home dir.
 
     The Jamroot and boost-build.jam files control the bjam build. This is where
-    the seqan and boost library paths are specified.
+    the seqan and boost library paths must be specified.
 
     To use a newer g++ /usr/local/packages/gcc-4.4.3/bin should be in the users
     PATH before /usr/local/bin and /usr/bin.
@@ -41,3 +44,11 @@ Running the code
     /usr/local/packages/gcc-4.4.3/lib64:/usr/local/packages/boost-1.43.0/lib
 
     Then the users should be able to run the test_indexSearch.py program.
+
+Using the python module:
+    The IndexSearch module is loaded using python's import statement.
+    The IndexSearch constructor takes a single peptide string. This is the
+    search database. 
+    An IndexSearch object has only one method find() which takes a single
+    peptide string. This string is searched against the database and a list of
+    locations it was found in the db is returned.

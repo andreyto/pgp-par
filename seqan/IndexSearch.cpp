@@ -28,6 +28,9 @@ namespace { // Avoid cluttering the global namespace.
   {
     public:
       //IndexSearch(PyObject* dbStringList)
+      /* Constructor takes a single string which is the Peptide database
+       * to search against.
+       */
       IndexSearch(const std::string& dbString)
       {
           /*
@@ -53,6 +56,12 @@ namespace { // Avoid cluttering the global namespace.
           delete dbStr;
       }
 
+      /* find takes a single peptide string which is searched against the db.
+       * It locates the 1st kmer in the database using seqan::find. Finally,
+       * it does an exact string compare of the search string on all the kmer
+       * positions in the database to find the full matches, which are returned
+       * in a python list.
+       */
       PyObject* find(const std::string& pepStr)
       {
           seqan::Finder<MyIndex> finder( *dbIndex );
