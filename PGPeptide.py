@@ -647,7 +647,7 @@ class OpenReadingFrame(object):
     def deletePeptide(self,peptide):
         if peptide:
             self.__peptides.remove(peptide)
-            print "Deleted Peptide %s" % (peptide)
+            #print "Deleted Peptide %s" % (peptide)
 
     def DeleteAllPeptides(self):
         """Parameters: None

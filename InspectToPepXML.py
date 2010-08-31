@@ -438,14 +438,16 @@ class InspectToPepXMLClass(ResultsParser.ResultsParser):
                     #PrecursorNeutralMass = float(MgfPepMass)
                 elif self.SpectrumFileType == ".mzXML":
                   if not retentionTimeDict.has_key(this_scan.ScanNumber):
-                    print "WARNING: RT for scan %s not found in spectrum file; using RT of -1"
-                    this_scan.RetentionTime = "-1.0"
+                    print "WARNING: RT for scan %s not found in spectrum file; using RT of -1"%this_scan.ScanNumber
+                    #this_scan.RetentionTime = "-1.0"
+                    this_scan.RetentionTime = -1
                   else:
                     this_scan.RetentionTime = \
                           retentionTimeDict[this_scan.ScanNumber]
                   if not precursorMzDict.has_key(this_scan.ScanNumber):
-                    print "WARNING: m/z for scan %s not found in spectrum file; using m/z of -1"
-                    this_scan.PrecursorMz = "-1.0"
+                    print "WARNING: m/z for scan %s not found in spectrum file; using m/z of -1"%this_scan.ScanNumber
+                    #this_scan.PrecursorMz = "-1.0" # you idiot.  That's a string!!
+                    this_scan.PrecursorMz = -1
                   else:
                     this_scan.PrecursorMz = \
                            precursorMzDict[this_scan.ScanNumber]

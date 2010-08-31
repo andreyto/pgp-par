@@ -366,6 +366,7 @@ class FinderClass():
         print "no patch: %s"%ProteinLackHydrophobicPatch
         print "Have Patch: %s"%ProteinsWithHydrophobicPatch
         print "Have All required motifs: %s"%ProteinsWithItAll
+        self.Report.SetValue("SignalPeptides", ProteinsWithItAll)
         Handle.close()
 
     def LoadResultsFromGFF(self, GFFFile):
@@ -662,6 +663,7 @@ class PGPReport():
         self.Info["PGPVersion"] = None
         self.Info["FiltersUsed"] = None
         self.Info["PeptidesMappingOutsideAnnotation"]= None
+        self.Info["SignalPeptides"] = None
         self.FileName = "renameyourreport.txt"
 
     def WriteReport(self):
@@ -683,6 +685,7 @@ class PGPReport():
         String += "Filters employed %s\n"%self.Info["FiltersUsed"]
         String += "Novel proteins: %s\n"%self.Info["NovelORFCount"]
         String += "Underpredicted proteins: %s\n"%self.Info["ORFWrongStartCount"]
+        String += "Likely Signal Peptide cleavages: %s\n"%self.Info["SignalPeptides"]
 
         Handle = open(self.FileName, "w")
         Handle.write(String)

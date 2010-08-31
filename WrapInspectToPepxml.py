@@ -6,6 +6,7 @@ Required Options:
  -s [Directory] the top directory for a set of mzxml spectra 
  -r [Directory] Directory of Inspect results
  -w [Directory] Directory to dump all the pepxml files
+ -m Flag for asking to make a mapping of the files
 """
 
 import os
@@ -32,10 +33,35 @@ class WrapperClass:
         self.ResultsDir = None
         self.SpectraDir = None
         self.OutDir = None
+        self.MakeMappingFlag =0 #this is a flag for mapping between filenames like 123.msgf -> spectrum1.msgf
+        self.FileNameMaps = {} #
         
     def Main(self):
+        if self.MakeMappingFlag:
+            self.MakeMapping()
         AllSpectraDirs = self.FindSubDirs(self.SpectraDir)
         self.WrapIt(AllSpectraDirs)
+        
+    def MakeMapping(self):
+        """Parameters: non
+        return: none
+        Description: 0ur pipeline renames everything to be 1.txt and 2.txt for ease of
+        working with the grid.  That means that the inspect (and other) results files no
+        longer have the same name as their corresponding mzXML file.  So let's make that
+        mapping
+        """
+        for ResultFile in os.listdir(self.ResultsDir):
+            ResultFilePath = os.path.join(self.ResultsDir, ResultFile)
+            Handle = open(ResultFilePath, "r") #like the msgf result file /path/to/1.msgf
+            Data = Handle.readline() # the inspect header perhaps
+            if Data[0] == "#":
+                Data = Handle.readline()
+            #some check here for empty results
+            Bits = Data.strip().split("\t")
+            FullPath = Bits[0]
+            (Path, FullFileName) = os.path.split(FullPath)
+            (FileName, Ext) = os.path.splitext(FullFileName)
+            self.FileNameMaps[FileName] = ResultFilePath #want the full path
         
     def WrapIt(self, Directories):
         """Parameters: a list of directories
@@ -64,7 +90,7 @@ class WrapperClass:
                     print "WARNING: No results found for %s"%SpectraPath
                     continue
                 ParamPath = self.GenerateParameterFile(SpectraPath)
-                OutPath = self.MakeOutPath(ResultsPath)
+                OutPath = self.MakeOutPath(SpectraPath)
                 ## system call
                 ConvertCommand = "python InspectToPepXML.py -i %s -o %s -p %s -m %s"%(ResultsPath, OutPath, ParamPath, Directory)
                 print ConvertCommand
@@ -95,9 +121,16 @@ class WrapperClass:
         Return: Path to the corresponding results file
         Description: root around in the results dir to find the file
         """
-        Extension = "rescore.txt"
         (Path, SpectrumFile) = os.path.split(SpectraPath)
         (File, Ext) = os.path.splitext(SpectrumFile)
+        if self.MakeMappingFlag:
+            #now we just look for this spectrumfile name in our mapping
+            if not self.FileNameMaps.has_key(File):
+                return None
+            return self.FileNameMaps[File] #the full path where this thing lives
+        
+        Extension = "rescore.txt"
+        
         ResultsFile = "%s.%s"%(File, Extension)
         ResultsPath = os.path.join(self.ResultsDir, ResultsFile)
         if not os.path.exists(ResultsPath):
@@ -118,7 +151,7 @@ class WrapperClass:
     
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:s:w:")
+        (Options, Args) = getopt.getopt(Arguments, "r:s:w:m")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -141,6 +174,8 @@ class WrapperClass:
                     print UsageInfo
                     sys.exit(1)
                 self.OutDir = Value
+            if Option == "-m":
+                self.MakeMappingFlag = 1
                 
         if not OptionsSeen.has_key("-r") or not OptionsSeen.has_key("-s") or not OptionsSeen.has_key("-w")  :
             print UsageInfo

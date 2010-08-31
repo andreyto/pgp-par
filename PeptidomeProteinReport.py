@@ -79,6 +79,7 @@ class AbacusClass(ResultsParser.ResultsParser):
                 Spectrum = result.ScanNumber
                 (Path, File) = os.path.split(FilePath)
                 DictValue = "%s:%s"%(File, Spectrum)
+
             except:
                 traceback.print_exc()
                 continue # SNAFU
@@ -147,7 +148,8 @@ class AbacusClass(ResultsParser.ResultsParser):
         Handle = open(self.OutputFile, "wb")
         PrintHeader = "Protein\tPeptide\tSpectrum Files\n"
         Handle.write(PrintHeader)
-        print "Writing results for %s proteins"%len(self.ProteinObjects)
+        print "Processing results for %s proteins"%len(self.ProteinObjects)
+        Count = 0
         for Protein in self.ProteinObjects.values():
             ### first line
             ## protein      peptide           file:spectrum, file:spectrum
@@ -155,6 +157,7 @@ class AbacusClass(ResultsParser.ResultsParser):
             if (NumPeptides == 1) and self.FilterTwoPeptideFlag:
                 continue
             First =1
+            Count += 1
             for (Aminos, Spectra) in Protein.Peptides.items():
                 if First:
                     Line = "%s\t%s\t%s\n"%(Protein.Name, Aminos, Spectra)
@@ -163,7 +166,7 @@ class AbacusClass(ResultsParser.ResultsParser):
                 else:
                     Line = " \t%s\t%s\n"%(Aminos, Spectra)
                     Handle.write(Line)
-
+        print "%s proteins passed the input filters"%Count
         Handle.close()
                     
 
