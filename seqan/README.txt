@@ -26,7 +26,8 @@ How to Build the module
     in the users home dir.
 
     The Jamroot and boost-build.jam files control the bjam build. This is where
-    the seqan and boost library paths must be specified.
+    the seqan and boost library paths must be specified. Boost in both files,
+    and seqan only in the Jamroot <include> section for the python-extension.
 
     To use a newer g++ /usr/local/packages/gcc-4.4.3/bin should be in the users
     PATH before /usr/local/bin and /usr/bin.
