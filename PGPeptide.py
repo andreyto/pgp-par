@@ -779,8 +779,8 @@ class GFFPeptide(GFFIO.File):
 
 class Chromosome(object):
     """A collection of ORFs and annotated proteins across a single large NA sequence.
-    Currently, ORFs are stored in three separate collections, simpleOrfs,
-    complexOrfs and pepOnlyOrfs.
+    Currently, ORFs are stored in four separate collections: simpleOrfs,
+    complexOrfs, pepOnlyOrfs and other.
     Simple ORFs correspond directly to a contiguous annotated protein.
     Complex ORFs are noncontiguous,
     Other ORFs are what is left over
@@ -909,6 +909,9 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
     """Returns a single Genome object populated with Chromosomes from each
     sequence in a genbank file, and locates ORFs from a six frame sequence file
     onto their annotated proteins. Uses biopython to parse the Genbank file.
+    The BioPython SeqFeature object is store in the ORF object as the CDS
+    member. The BioPython Seq object is stored in the Chromosome object
+    as the seq member variable. 
     """
     def __init__(self, gbFile, sixFrameFile):
         bioseq.FlatFileIO.__init__(self,gbFile)
@@ -917,6 +920,9 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
     def makeGenomeWithProteinORFs(self):
         genome = Genome()
         # First read in all the CDS features from the genbank file
+        # we store these based on their 3' coordinate so we can 
+        # later read in the ORFs and match up the genbank CDS
+        # and the ORF based on having the same exact 3' coordinate
         for gb_rec in SeqIO.parse(self.io, 'genbank'):
             # Each gb record becomes it's own chromsome
             chrom = genome.makeChromosome( gb_rec.name, gb_rec.seq )
@@ -946,7 +952,7 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
 
             if chrom.endToCDS.has_key( orfThreePrime ):
                 cds = chrom.endToCDS.pop( orfThreePrime )
-                tmpOrf.CDS = cds # Not sure if we really need this but keep around for a little while
+                tmpOrf.CDS = cds # Keep the SeqFeature object for future reference
                 orfStart = tmpOrf.location.start
                 orfStop  = tmpOrf.location.stop
                 # +1 is back to 1 based
@@ -954,7 +960,7 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
                 if cds.strand == -1:
                     prot5Prime = cds.location.end.position
 
-                # separate simple ORF from complex ORFs for now
+                # separate simple ORFs from complex ORFs for now
                 # not sure if we'll need to further separate complex ORFs
                 if prot5Prime >= orfStart and prot5Prime <= orfStop:
                     # Create a LocatedProtein object for this protein
@@ -964,6 +970,8 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
                         cds.strand == 1 and '+' or '-',
                         tmpOrf.chromosome
                     ))
+                    # BioPython SeqFeature.qualifiers always seem to be lists
+                    # so take the 1st element. Should probably check list size
                     locProt.name = cds.qualifiers['product'][0]
                     locProt.ORFName = tmpOrf.name
                     # and add it to the ORF
@@ -971,6 +979,7 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
                     chrom.addOrf( tmpOrf, 'Simple' )
 
                 elif len(cds.sub_features) > 0:
+                    # More then 1 sub_feature, meaning some sort of splicing
                     chrom.addOrf( tmpOrf, 'Complex' )
                     print "Complex ORF for protein %s" % cds.qualifiers['protein_id'][0]
                 else:
@@ -980,6 +989,7 @@ class GenbankGenomeReader(bioseq.FlatFileIO):
                 # ORF without a 3' mapping to a protein
                 unusedOrfs += 1
 
+        # Some QC checks and info
         print "Read %d chromosomes with %d Simple, %d Complex, %d Other ORFs" % (
             genome.numChromosomes(),
             genome.numOrfs('Simple'),
