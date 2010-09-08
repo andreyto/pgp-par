@@ -30,8 +30,7 @@ class CompileClass():
         self.MundanePeptideOutPath = None
         self.ReferenceDatabasePath = [] #possibly multiple
         self.PeptideScores = {} # {Aminos} => pvalue
-        self.PValueCutoff = None
-        self.LFDRCutoff = None
+        self.PValueLimit = None
         self.PeptideORFs = {} #aminos => ORFs
         
 
@@ -67,7 +66,7 @@ class CompileClass():
                 if self.MundanePeptideOutPath:
                     MundaneOutHandle.write("%s\n"%Aminos)
                 #print Aminos
-        print "Out of %d total peptides, I found %s"%(TotalPeptides, FoundCount)
+        print "Out of %d total peptides, I found %s novel"%(TotalPeptides, FoundCount)
         if self.AllPeptideOutPath:
             AllOutHandle.close()
         if self.NovelPeptideOutPath:
@@ -77,6 +76,8 @@ class CompileClass():
 
     def ParseInspect(self, FilePath):
         inspectParser = InspectResults.Parser( FilePath )
+        SpectrumCount = 0
+        FalseAminos = []
         for result in inspectParser:
             try:
                 Annotation = result.Annotation
@@ -87,16 +88,36 @@ class CompileClass():
             except:
                 traceback.print_exc()
                 continue # SNAFU
+            #now insert the pvalue check
+            if result.LFDR == None: #meaning that I don't have the column in question
+                if PValue > self.PValueLimit: #substitute pvalue for LFDR
+                    continue
+            else:
+                PValue = result.LFDR
+                if PValue > self.PValueLimit:
+                    continue
+            #everybody passed this line gets a cookie (you passed pvalue cutoff)
+            SpectrumCount += 1
+            #just a little damage control here.  We want to count the number of false positive peptides
+            if ORF[:3] == "XXX":
+                #this is a true negative.  let's count them
+                if not Aminos in FalseAminos:
+                    FalseAminos.append(Aminos)
+                continue
+            
+            
+            
             if not self.PeptideScores.has_key(Peptide.Aminos):
                 self.PeptideScores[Peptide.Aminos] = PValue
                 self.PeptideORFs[Peptide.Aminos] = ORF
             else:
                 if PValue < self.PeptideScores[Peptide.Aminos]:
                     self.PeptideScores[Peptide.Aminos] = PValue
+        print "I got %s truedb peptides, and %s decoy peptides (%s spectra)"%(len(self.PeptideScores), len(FalseAminos), SpectrumCount)
 
 
     def ParseCommandLine(self,Arguments):
-        (Options, Args) = getopt.getopt(Arguments, "r:d:w:n:m:p:l:")
+        (Options, Args) = getopt.getopt(Arguments, "r:d:w:n:m:p:")
         OptionsSeen = {}
         for (Option, Value) in Options:
             OptionsSeen[Option] = 1
@@ -121,9 +142,7 @@ class CompileClass():
                 self.MundanePeptideOutPath = Value
             #two secret undocumented options to limit stuff by pvalue, in case I need that option
             if Option == "-p":
-                self.PValueCutoff = float(Value)
-            if Option == "-l":
-                self.LFDRCutoff = float(Value)
+                self.PValueLimit = float(Value)
         if not OptionsSeen.has_key("-r") or not OptionsSeen.has_key("-d"):
             print UsageInfo
             sys.exit(1)
