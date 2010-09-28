@@ -256,7 +256,7 @@ PMTolerance,3.0
         else:
             JobList = self.BuildJobsStandardSearch(SpectrumFileNames)
         ########
-        qsubPath = os.path.join(self.projectDir,'runQsub.sh')
+        qsubPath = os.path.join(self.gridEnv.ScratchDir,'runQsub.sh')
         qsubFile = open(qsubPath,'w')
         qsub = "qsub -P %s -cwd -j y -o 'output/$TASK_ID.log' -t 1-%i %s/sgeInspect.sh" % (
             self.gridEnv.projectCode, len(JobList), sys.path[0] )
@@ -264,7 +264,7 @@ PMTolerance,3.0
         qsubFile.write(qsub)
         qsubFile.close()
         os.system("chmod +x %s" % qsubPath)
-        print "Remember to cd to %s before running qsub." % self.projectDir
+        print "Remember to cd to %s before running qsub." % self.gridEnv.ScratchDir
         ########
         return JobList
 
