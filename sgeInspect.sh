@@ -13,10 +13,11 @@ $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 rundir=$PWD
 results=$rundir/ResultsX
 filter=$results/filter
+pvalDir=$results/pvalue.$SGE_TASK_ID
 inspectOut=$results/$SGE_TASK_ID.txt
-pepnovoOut=${inspectOut/.txt/.res}
+pepnovoOut=${inspectOut/.txt/.out}
 pvalueIn=$results/$SGE_TASK_ID.txt
-pvalueOut=${inspectOut/.txt/.pval}
+pvalueOut=$pvalDir/$SGE_TASK_ID.???
 msgfOut=${inspectOut/.txt/.msgf}
 filterOut=${msgfOut/ResultsX/ResultsX/filter}
 
@@ -45,10 +46,21 @@ else
     pepnovoOut=''
 fi
 
-# PValue the inspect or pepnovo results
-$exe_path/PValue.py -r $pvalueIn -w $pvalueOut -p 0.1 -S 0.5 -1 -H &> pvalue.log 
+# go to the output dir for PValue
+if [ ! -d $pvalDir ]
+then
+    mkdir $pvalDir
+fi
 
-if $java -jar $MSGF -inspect $pvalueOut -d mzxml -x 0 > $msgfOut
+# PValue the inspect or pepnovo results
+cd $pvalDir && $exe_path/PValue.py -r $pvalueIn -w . -p 0.1 -S 0.5 -1 -H &> pvalue.log
+
+# MSGF requires the inspect header line, so make sure it's there
+hdr=inspect.header
+head -n 1 $inspectOut > $hdr
+cat $pvalueOut >> $hdr && mv -f $hdr $pvalueOut 
+
+if $java -jar $MSGF -inspect $pvalueOut -d ../../mzxml -x 0 > $msgfOut
 then
     echo "MSGF success"
     if [ ! -d $filter ]
@@ -62,6 +74,6 @@ else
     filterOut=''
 fi
     
-bzip2 $inspectOut $pepnovoOut $pvalueOut $msgfOut $filterOut
+bzip2 $inspectOut $pepnovoOut $pvalDir/* $msgfOut $filterOut
 
 touch $rundir/Done/$SGE_TASK_ID
