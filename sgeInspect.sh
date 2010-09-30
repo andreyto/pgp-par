@@ -13,7 +13,7 @@ $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 rundir=$PWD
 results=$rundir/ResultsX
 filter=$results/filter
-pvalDir=$results/pvalue.$SGE_TASK_ID
+pvalDir=$results/$SGE_TASK_ID.pvalue
 inspectOut=$results/$SGE_TASK_ID.txt
 pepnovoOut=${inspectOut/.txt/.out}
 pvalueIn=$results/$SGE_TASK_ID.txt
