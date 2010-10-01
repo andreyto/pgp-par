@@ -44,4 +44,4 @@ else
     cp -f $inspectOut $pepnovoOut
 fi
 
-bzip2 $inspectOut $pepnovoOut 
+bzip2 $inspectOut
