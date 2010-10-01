@@ -13,8 +13,8 @@ $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
 rundir=$PWD
 results=$rundir/ResultsX
 inspectOut=$results/$SGE_TASK_ID.txt
-pepnovoOut=${inspectOut/.txt//pepnovo/.res}
 pepOutDir=$results/pepnovo
+pepnovoOut=$pepOutDir/$SGE_TASK_ID.res
 PepNovoDir=/usr/local/depot/projects/PGP/productionPepNovo
 
 mzxml=`awk -F, '/spectra/ {print $2}' $inspectIn`
