@@ -36,12 +36,9 @@ ulimit -c 0 # PepNovo cores have filled up the disk before
 if ./PepNovo_bin -model CID_IT_TRYP -PTMs 'C+57' -file $mzxml -rescore_inspect $inspectOut $pepnovoOut
 then
     echo "PepNovo success"
-    pvalueIn=$pepnovoOut
 else
-    echo "PepNovo failure"
-    pepnovoOut=''
+    echo "PepNovo failure, copying inspect output into $pepOutDir"
+    cp -f $inspectOut $pepnovoOut
 fi
 
 bzip2 $inspectOut $pepnovoOut 
-
-
