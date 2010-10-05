@@ -83,15 +83,15 @@ class JobClass:
         if self.SpectrumFileName:
             FileNameList.append(self.SpectrumFileName)
         return FileNameList
-      
+
 class ScriptMongler:
     def __init__(self):
         self.CheckDoneFlags = 1
         self.MZXMLListFile = None
-        self.DBPath = [] 
+        self.DBPath = []
         self.BlindSearchFlag = 0
         # number of PTMs allowed per peptide; passed along to ClusterRunInspect
-        self.PTMLimit = 0 
+        self.PTMLimit = 0
         self.ScanCounts = {} # stub -> number of scans
         self.gridEnv = None
         self.scanCountFile = None
@@ -99,6 +99,8 @@ class ScriptMongler:
         self.master_job_count = 0
         # set the number of spectra to put in a single inspect job run
         self.SpectraPerJob = 1
+        # Allow user to specify an alternate base for the output directory
+        self.scratchBase = None
 
     def createMainJob(self, CurrentMasterJob, SpectrumFileName, BlockNumber):
         MainJob = JobClass()
@@ -462,14 +464,14 @@ PMTolerance,3.0
 
         self.copyAndPrepDBs( archiveDir, False )
         self.copyAndPrepDBs( archiveDir, True )
-        
+
         os.chdir( currentDir )
 
     def ParseCommandLine(self):
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:t:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:s:t:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -493,12 +495,14 @@ PMTolerance,3.0
             elif Option == "-p":
                 # -p PTM count
                 self.PTMLimit = int(Value)
+            elif Option == "-s":
+                self.scratchBase = Value
             elif Option == "-t":
                 self.projectDir = Value
             else:
                 print UsageInfo
                 sys.exit(1)
-                
+
         if not self.projectDir:
             print UsageInfo
             sys.exit(1)
@@ -507,7 +511,7 @@ PMTolerance,3.0
         if self.BlindSearchFlag and self.PTMLimit == 0:
             print "* Setting PTM limit to 1, since blind search was requested!"
             self.PTMLimit = 1
-        
+
 UsageInfo = """
 ClusterSub.py - Prepare scripts to search mzXML files over a grid.
 
@@ -519,6 +523,7 @@ Options:
  -m [FileName] - Specify a text file listing the mzxml file names to search.
  -b Blind search - for PTMs!
  -p [Int] number of PTMs desired in the search
+ -s [Path] Alternate path to use for base output (scratch)
 
 See the comments in this script for more details.
 """
@@ -527,6 +532,9 @@ if __name__ == "__main__":
     # Parse command-line options; see UsageInfo for explanations
     Mongler = ScriptMongler()
     Mongler.ParseCommandLine()
-    Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.projectDir)
+    if Mongler.scratchBase:
+        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.scratchBase,Mongler.projectDir)
+    else:
+        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.projectDir)
     Mongler.gridEnv.MakeGridDirectories()
     Mongler.BuildJobs()
