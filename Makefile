@@ -1,7 +1,7 @@
 SHELL = /bin/sh
 .SUFFIXES:
 .SUFFIXES: .c .o
-CC = cc
+CC = gcc
 CFLAGS = -std=c99 -Wall -g -DDEBUG -D_CONSOLE -O3 -funroll-loops
 LDFLAGS = -lm -lexpat
 

@@ -6,6 +6,8 @@ exe_path=${exe%/*}  # dirname
 
 set -o errexit
 
+[ -n "$PGP_PEPNOVO_HOME" ] || exit 1
+
 inspectIn=jobs/$SGE_TASK_ID.in
 
 $exe_path/inspect -i $inspectIn -o ResultsX/$SGE_TASK_ID.txt -r $exe_path
@@ -15,7 +17,7 @@ results=$rundir/ResultsX
 inspectOut=$results/$SGE_TASK_ID.txt
 pepOutDir=$results/pepnovo
 pepnovoOut=$pepOutDir/$SGE_TASK_ID.res
-PepNovoDir=/usr/local/depot/projects/PGP/productionPepNovo
+PepNovoDir=$PGP_PEPNOVO_HOME
 
 mzxml=`awk -F, '/spectra/ {print $2}' $inspectIn`
 specCnt=`echo $spectra | wc -l`

@@ -340,6 +340,7 @@ if __name__ == "__main__":
     pgp_home = os.path.dirname(sys.argv[0])
     opt,args = getProgOptions()
     assert opt.inp_dir is not None,"--inp-dir is mandatory argument"
+    opt.inp_dir = os.path.abspath(opt.inp_dir)
     if opt.config_file:
         config_file = opt.config_file
     else:

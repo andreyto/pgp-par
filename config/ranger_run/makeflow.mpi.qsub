@@ -1,0 +1,18 @@
+#!/bin/bash
+#$ -A TG-DEB100001
+#$ -V # Inherit the submission environment
+#$ -cwd # Start job in submission directory
+#$ -N pgp_makeflow # Job Name
+#$ -j y # Combine stderr and stdout
+#$ -o $JOB_NAME.o$JOB_ID # Name of the output file (eg. myMPI.oJobID)
+#$ -pe 16way 64 # Requests 16 tasks/node, 32 cores total
+#$ -q normal # Queue name "normal"
+#$ -l h_rt=12:00:00 # Run time (hh:mm:ss)
+##$ -M # Use email notification address
+##$ -m be # Email at Begin and End of job
+
+export MPI_QUEUE_PORT=10000
+ibrun mpi_queue_worker localhost $MPI_QUEUE_PORT &
+makeflow -T mpi-queue -J 40000 pgp_proc.mkf
+wait
+

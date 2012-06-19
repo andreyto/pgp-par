@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -ex
+
+MPI_PATH=$MPICH_HOME
+PREFIX=$INST
+
+NAME=cctools
+VER=3.4.3
+#using our patched sources
+BUILD=$NAME-$VER-src.at
+SOURCE=$BUILD.tar.gz
+rm -rf $BUILD
+tar -zxf $SOURCE
+
+pushd $BUILD
+#needs GLOBUS 4 on Ranger, no way seen to disable GLOBUS altogether once found
+./configure --with-mpi-path $MPI_PATH --with-globus-path $GLOBUS_PATH --prefix $PREFIX
+make
+make install
+
