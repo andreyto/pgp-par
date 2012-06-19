@@ -21,7 +21,7 @@ namespace { // Avoid cluttering the global namespace.
 //  typedef seqan::String<char> Peptide;
 //  typedef seqan::StringSet<Peptide> PepSet;
   typedef seqan::Index< Peptide,
-          seqan::Index_QGram<
+          seqan::IndexQGram<
           seqan::UngappedShape< MER_SIZE > > > MyIndex;
 
   class IndexSearch
