@@ -2,12 +2,12 @@
 #$ -A TG-DEB100001
 #$ -V # Inherit the submission environment
 #$ -cwd # Start job in submission directory
-#$ -N mrblast # Job Name
+#$ -N pgp_makeflow_test # Job Name
 #$ -j y # Combine stderr and stdout
 #$ -o $JOB_NAME.o$JOB_ID # Name of the output file (eg. myMPI.oJobID)
 #$ -pe 16way 16 # Requests 16 tasks/node, 32 cores total
 #$ -q development # Queue name "normal"
-#$ -l h_rt=12:00:00 # Run time (hh:mm:ss)
+#$ -l h_rt=2:00:00 # Run time (hh:mm:ss)
 ##$ -M # Use email notification address
 ##$ -m be # Email at Begin and End of job
 
