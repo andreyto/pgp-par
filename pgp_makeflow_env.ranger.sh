@@ -11,10 +11,10 @@ export PGP_VENDOR_HOME=$PGP_ROOT/vendor
 export PGP_PYTHON_PREFIX=$PGP_VENDOR_HOME
 export PYTHONPATH=$PGP_HOME:$PYTHONPATH
 
-[ -n "$JAVA_HOME" ] || exit 1
+[ -n "$JAVA_HOME" ] || echo "JAVA_HOME undefined"
 export PGP_JAVA=$JAVA_HOME/bin/java
 
-[ -n "$PYTHONHOME" ] || exit 1
+[ -n "$PYTHONHOME" ] || echo "PYTHONHOME undefined"
 export PGP_PYTHON=$PYTHONHOME/bin/python
 
 if [ -f "$PGP_PYTHON" ]; then
