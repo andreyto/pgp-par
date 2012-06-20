@@ -1,0 +1,9 @@
+#!/bin/bash
+#Install Python modules needed by the pipeline
+set -ex
+#you need to source PGP environment file first
+[ -n "$PGP_PYTHON_PREFIX" ] || exit 1
+mkdir -p $PGP_PYCOMMON
+mkdir -p $PGP_PYDIST
+easy_install --prefix=$PGP_PYTHON_PREFIX biopython
+
