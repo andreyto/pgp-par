@@ -73,7 +73,7 @@ msgf_script_tpl = """\
 source %(env)s
 set -e
 #rsync ../1739749481324218539/test.vics/ResultsX/msgfOfPepnovo/$(basename $3) ResultsX/msgfOfPepnovo/
-$PGP_JAVA %(msgf_java_args)s -jar %(msgf_jar)s -inspect $1 -d $2 > $3
+%(msgf_java)s %(msgf_java_args)s -jar %(msgf_jar)s -inspect $1 -d $2 > $3
 """
 
 postproc_script_tpl = """\
@@ -233,9 +233,19 @@ class pgp_makeflow(object):
         pvalue_dir = config.get(ini_section,"pvalue_dir")
         mzxml_dir = config.get(ini_section,"mzxml_dir")
         msgf_dir = config.get(ini_section,"msgf_dir")
+        #somehow on TACC Ranger JAVA_HOME defined by 'module add'
+        #does not transfer to compute nodes as it should with 
+        #qsub -V, so we pull it here on submit node from our
+        #current environment.
+        try:
+            msgf_java = os.environ["PGP_JAVA"]
+        except KeyError:
+            logger.error("PGP_JAVA not defined. Have you sourced PGP environment file?")
+            raise
         makedir(msgf_dir)
         script = msgf_script_tpl % dict(
                 env=task_env,
+                msgf_java=msgf_java,
                 msgf_java_args=config.get(ini_section,"msgf_java_args"),
                 msgf_jar=config.get(ini_section,"msgf_jar"),
                 )
