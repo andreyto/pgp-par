@@ -4,6 +4,7 @@
 #get the dir of this file - works on BASH > 3.
 config_dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
 master_env=$config_dir/pgp_env_master.sh
-[ -f $master_env ] && . $master_env
+#Ignore errors from sourcing the master host environment
+#[ -f $master_env ] && (. $master_env || true)
 . $config_dir/pgp_makeflow_env.sh
 

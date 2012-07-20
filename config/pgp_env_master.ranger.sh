@@ -11,6 +11,9 @@
 #running or even worse, getting stuck eating your allocation
 #time.
 
+if [ -z "PGP_ENV_MASTER_ENTERED" ]; then
+export PGP_ENV_MASTER_ENTERED=1
+
 #we need gcc compiler toolchain as the only one that has
 #a working combination of boost and python builds
 #associated with it
@@ -25,4 +28,5 @@ module add globus/4.0.8
 #1.6 that PGP MSGF needs is default java here
 module add java
 
+fi
 
