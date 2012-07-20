@@ -15,9 +15,11 @@ SOURCE=$BUILD.tar.gz
 rm -rf $BUILD
 tar -zxf $SOURCE
 
-pushd $BUILD/src
+pushd $BUILD
+pushd src
 make
 mkdir $PREFIX
 cp -a PepNovo_bin $PREFIX
+popd
 cp -a copyright.txt  Models  MS-Filter.readme.txt readme.txt $PREFIX
 
