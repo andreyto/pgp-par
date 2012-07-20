@@ -23,7 +23,7 @@ def assert_log(cond,msg,logger):
 
 log = logging.getLogger(__name__)
 
-config_file_def = "pgp_makeflow.ini"
+config_file_def = "config/pgp_makeflow.ini"
 ini_section = "main"
 
 makeflow_rule_tpl = """\

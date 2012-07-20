@@ -2,8 +2,11 @@
 
 set -ex
 
+#you need to source PGP environment file first
+[ -n "$PGP_VENDOR_HOME" ] || exit 1
+
 MPI_PATH=$MPICH_HOME
-PREFIX=$INST
+PREFIX=$PGP_VENDOR_HOME
 
 NAME=cctools
 VER=3.4.3

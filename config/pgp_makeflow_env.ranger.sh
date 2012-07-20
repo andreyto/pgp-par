@@ -5,9 +5,11 @@
 #Boost Python library.
 #This should be sourced from task scripts generated to be called from
 #the makeflow makefile
-PGP_ROOT=/work/01241/atovchig/PGP
+export PGP_ROOT=/work/01241/atovchig/PGP
 export PGP_HOME=$PGP_ROOT/proteogenomics
 export PGP_VENDOR_HOME=$PGP_ROOT/vendor
+export PGP_VENDOR_BIN=$PGP_VENDOR_HOME/bin
+export PATH=$PGP_VENDOR_BIN:$PATH
 export PGP_PYTHON_PREFIX=$PGP_VENDOR_HOME
 export PYTHONPATH=$PGP_HOME:$PYTHONPATH
 

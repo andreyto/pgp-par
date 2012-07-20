@@ -1,0 +1,38 @@
+#!/bin/bash
+set -ex
+#First step, you might need to execute config/ranger_setup_env.sh
+#from the proteogenomics source repository, so that at least
+#git works.
+#Make sure that your login shell is BASH. Ranger Manual has
+#instructions for changing the login shell. Note that it might
+#be an hour or so for the change to get activated.
+#
+#Create a directory under which everything will be installed
+#(we call it PGP_ROOT, e.g. PGP_ROOT=$WORK/PGP)
+export PGP_ROOT=$WORK/PGP_test
+mkdir -p $PGP_ROOT
+cd $PGP_ROOT
+#checkout the source - it will create 'proteogenomics' directory
+git clone git@bitbucket.org:andreyto/proteogenomics.git
+mkdir -p build
+pushd build
+#get and unpack the dependencies
+wget https://bitbucket.org/andreyto/proteogenomics/downloads/vendor.tar.gz
+tar -zxf vendor.tar.gz
+popd
+config_dir=proteogenomics/config
+#@todo This should be made conditional so that system-specific files
+#are copied (e.g. ranger or jcvi)
+cp $config_dir/pgp_makeflow.ranger.ini $config_dir/pgp_makeflow.ini
+cp $config_dir/pgp_makeflow_env.ranger.sh $config_dir/pgp_makeflow_env.sh
+cp $config_dir/pgp_env_master.ranger.sh $config_dir/pgp_env_master.sh
+#Edit proteogenomics/pgp_makeflow.ini. Set pgp_root correctly.
+#Edit the task profile proteogenomics/pgp_makeflow_env.sh -
+#you at least should edit PGP_ROOT definition.
+#
+#Edit your ~/.bashrc and ~/.profile. 
+#See proteogenomics/config/{ranger_bashrc.samp,ranger_profile.samp} for
+#the examples.
+#(You should exit here and do all edits, then re-login, cd to PGP_ROOT
+#and run proteogenomics/config/install_stage_2)
+

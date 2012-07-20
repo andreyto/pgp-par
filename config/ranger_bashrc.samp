@@ -1,0 +1,8 @@
+if [ -z "$__BASHRC_READ__" -a "$ENVIRONMENT" != BATCH ]; then
+  export __BASHRC_READ__="read"
+  # place module commands below this line
+  . $WORK/PGP/proteogenomics/config/ranger_setup_env.sh
+  export GIT_SSH=$HOME/bin/git_ssh
+fi
+# no module commands below this line
+
