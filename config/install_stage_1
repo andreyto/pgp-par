@@ -17,7 +17,9 @@ git clone git@bitbucket.org:andreyto/proteogenomics.git
 mkdir -p build
 pushd build
 #get and unpack the dependencies
-wget https://bitbucket.org/andreyto/proteogenomics/downloads/vendor.tar.gz
+#TMP: get from local until we make the repo public (otherwise wget needs password)
+#wget https://bitbucket.org/andreyto/proteogenomics/downloads/vendor.tar.gz
+cp /work/01241/atovchig/PGP/vendor.tar.gz .
 tar -zxf vendor.tar.gz
 popd
 config_dir=proteogenomics/config
