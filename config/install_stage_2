@@ -25,3 +25,12 @@ $config_dir/install_pepnovo
 #no build for MSGF, source is not available, just unpack the jar
 (cd $PGP_VENDOR_HOME && tar -zxf $PGP_VENDOR_BUILD/MSGF.tar.gz)
 
+echo "BUILD COMPLETE!!!"
+echo "To generate the Makeflow input for the pipeline:"
+echo "source $config_dir/pgp_makeflow_env_master.sh"
+echo "python $PGP_HOME/PGPMakeflow.py --help"
+echo "and follow the help printout."
+echo "Once the Makeflow file is generated,"
+echo "you can copy and modify a sample qsub script"
+echo "from $config_dir/ranger_run"
+
