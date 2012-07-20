@@ -10,7 +10,7 @@ NAME=productionPepNovo
 PREFIX=$PGP_VENDOR_HOME/$NAME
 
 #using our patched sources (include <cstring>)
-BUILD=$NAME.at
+BUILD=$NAME
 SOURCE=$BUILD.tar.gz
 rm -rf $BUILD
 tar -zxf $SOURCE

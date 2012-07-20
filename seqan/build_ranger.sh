@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 #build IndexSearch python extension on TACC Ranger
-[ -n "$PGP_SEQAN_HOME" || exit 1 ]
+[ -n "$PGP_SEQAN_HOME" ] || exit 1
 #optimized build
 SEQAN_CFLAGS="-O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0"
 #debugging build

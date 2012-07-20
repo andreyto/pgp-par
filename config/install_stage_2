@@ -16,7 +16,7 @@ $config_dir/install_makeflow
 #unpack seqan and build the Python extension
 PGP_SEQAN_VER=1.3.1
 unzip seqan-$PGP_SEQAN_VER.zip
-PGP_SEQAN_HOME=$PGP_VENDOR_BUILD/seqan-$PGP_SEQAN_VER
+export PGP_SEQAN_HOME=$PGP_VENDOR_BUILD/seqan-$PGP_SEQAN_VER
 #@todo: make it generic to build at JCVI too, and use setup.py
 (cd $PGP_HOME/seqan && ./build_ranger.sh)
 
