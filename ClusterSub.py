@@ -262,11 +262,11 @@ PMTolerance,3.0
         qsubFile = open(qsubPath,'w')
         qsub = "qsub -P %s -cwd -j y -o 'output/$TASK_ID.log' -t 1-%i %s/sgeInspect.sh" % (
             self.gridEnv.projectCode, len(JobList), sys.path[0] )
-        print qsub
+        #print qsub
         qsubFile.write(qsub)
         qsubFile.close()
         os.system("chmod +x %s" % qsubPath)
-        print "Remember to cd to %s before running qsub." % self.gridEnv.ScratchDir
+        #print "Remember to cd to %s before running qsub." % self.gridEnv.ScratchDir
         ########
         return JobList
 

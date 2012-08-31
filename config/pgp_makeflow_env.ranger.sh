@@ -1,4 +1,13 @@
 #!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
 #This is responsible for setting up the proper environment
 #as expected by the PGP components
 #E.g. PValue.py uses extensions compiled against a specific version of

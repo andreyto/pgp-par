@@ -1,4 +1,13 @@
 #!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
 #This sets up the system environment needed to
 #both build and run the PGP pipeline on TACC Ranger.
 #Source (not execute) this file on your login node.
@@ -11,7 +20,7 @@
 #running or even worse, getting stuck eating your allocation
 #time.
 
-if [ -z "PGP_ENV_MASTER_ENTERED" ]; then
+if [ -z "$PGP_ENV_MASTER_ENTERED" ]; then
 export PGP_ENV_MASTER_ENTERED=1
 
 #we need gcc compiler toolchain as the only one that has
@@ -29,4 +38,3 @@ module add globus/4.0.8
 module add java
 
 fi
-

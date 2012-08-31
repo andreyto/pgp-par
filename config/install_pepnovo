@@ -1,5 +1,13 @@
 #!/bin/sh
 
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
 set -ex
 
 #you need to source PGP environment file first
@@ -22,4 +30,3 @@ mkdir $PREFIX
 cp -a PepNovo_bin $PREFIX
 popd
 cp -a copyright.txt  Models  MS-Filter.readme.txt readme.txt $PREFIX
-
