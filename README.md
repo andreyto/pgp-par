@@ -1,9 +1,9 @@
 Automated Proteogenomics Pipeline for MPI clusters, high-througput batch clusters and multicore workstations
-------------------------------------------------------------------------
+========================================================================
 
 The open source, automated proteogenomics pipeline (PGP) described here is freely accessible to the scientific community. It is designed to run in different kinds of parallel Linux computing environments:
 
-- HPC (high-performance computing) clusters that are set up to efficiently schedule only large (100s+ of cores) parallel MPI jobs under a control of batch queuing system such as (formerly) Sun Grid Engine (SGE), SLURM or PBS/Torque. Our primary targets for this use case were compute clusters of XSEDE (https://www.xsede.org/), the federation of supercomputers supported by the US National Science Foundation. XSEDE allocates its resources to outside researchers through a peer reviewed proposal system. We considered it as an important requirement that the biologists could use our software on this major computational resource.
+- HPC (high-performance computing) clusters that are set up to efficiently schedule only large (100s+ of cores) parallel MPI jobs under a control of batch queuing system such as (formerly) Sun Grid Engine (SGE), SLURM or PBS/Torque. Our primary targets for this use case were compute clusters of XSEDE ([https://www.xsede.org/][1]), the federation of supercomputers supported by the US National Science Foundation. XSEDE allocates its resources to outside researchers through a peer reviewed proposal system. We considered it as an important requirement that the biologists could use our software on this major computational resource.
 
 - HTC (high-throughput computing) clusters widely used as local bioinformaics computing resources. These clusters are configured to efficiently schedule large numbers of serial jobs under a control of batch queuing system.
 
@@ -11,64 +11,92 @@ The open source, automated proteogenomics pipeline (PGP) described here is freel
 
 Parallel execution ability is important for proteogenomic annotation software due to a high volume of required computations \(order of XXX CPU*hrs for a typical bacterial genome\).
 
-**Intended use:** The pipeline is a tool for improving the
+###Value of proteogenomic annotation
+Our pipeline is a tool for improving the
 existing genomic annotations from available proteomics mass
-spectrometry data. The resulting improvements might include discovering
-novel genes, post-translational modifications (PTMs) and correction of
-the erroneous primary sequence annotations.
+spectrometry data. As most genome annotation pipelines consist of automated gene finding, they lack experimental validation of primary structure [[PMC2265698](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2265698/), [PMC2238897](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2238897/)], having to rely on DNA centric sources of data such as sequence homology, transcriptome mapping, codon frequency, etc. By incorporating the orthogonal set of data, proteogenomics is able to discover novel genes, post-translational modifications (PTMs) and correct the erroneous primary sequence annotations.
 
-**I). The PGP Process:** The pipeline runs the following steps,
-developed at (http://proteomics.ucsd.edu), in sequence:  
+Quick Start
+-----------
+To test the pipeline, you can run it on a single workstation (preferably multicore one).
 
-**1). InsPecT:** Inspect generates peptide/spectrum matches (PSM) by
-comparing MS/MS data with 6-frame translated amino acid sequence
-database [1]. It uses peptide sequence tags (PSTs) to filter the
-database and is designed to detect post-translational modifications
-(PTM) [2, 3].  
-  
+Make sure that your are in a directory where you have write access and enough free space (20G).
 
-**2). PepNovo:** In addition to serving as a de novo sequencing program
-based on probabilistic network modeling [4], PepNovo can also verify the
-database search results produced by tools such as InsPecT in the
-previous step. PepNovo rescores the raw results from InsPecT, replacing
-the MQScore and delta score fields with the scores obtained with the
-rank models.
+Follow the Installation instructions below, using the installation command: `<path to checked out source>/config/installPGP.sh -e htc -r PGP`
 
-**3). Validation:** Statistical validation of PSMs, to filter out false
-matches, are performed by p-value estimation using two different
-algorithms: Initially, the PSMs identified by Inspect are assigned
-p-value based on the score distribution of hits to the target and decoy
-databases [5, 6] and those with p \< 0.01 are retained. These results
-are then processed by a second algorithm (MS\_GF) [7], which provides
-its own p-value estimations for identifying false hits.
+The pipeline should get installed into a directory PGP in your working directory.
 
-**4). Post-processing:** The final stage performs proteogenomics
-analyses and saves the annotation results. Some of the analyses include:
-A). mapping peptides to the genome, B). clustering and filtering of the
-peptides, C). identifying mis-predicted and novel proteins, D). protein
-inference & E). Cleavage Analysis, etc.
+Download and unpack sample input directory with reduced (subsampled) spectra data.
 
-**II). Installation:**
+Execute:
+    
+    sh PGP/proteogenomics/config/run.PGP.htc.sh Cyanobacterium.synechocystis.PCC6803  Cyanobacterium.synechocystis.PCC6803.results -t local
+
+Check Cyanobacterium.synechocystis.PCC6803.results/GFFs to make sure that there are output GFF3 files where. You can load the GFF3 files and corresponding reference from Cyanobacterium.synechocystis.PCC6803/Databases/Genomic into any of the genomic browsers such as NCBI Genome workbench,
+Artemis or CLC Genomics workbench in order to check the newly created annotations visually.
+
+I). The PGP Algorithm
+----------------------
+
+The full protocol of our pipeline is described in detail in  [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]. In that study, we have applied the pipeline to 46 genomes spanning eight bacterial and archaeal phyla across the tree of life. These diverse datasets facilitated the development of a robust approach for proteogenomics that is functional across genomes varying in %GC, gene content, proteomic sampling depth, phylogeny, and genome size. In addition to finding evidence for 682 novel proteins, 1336 new start sites, and numerous likely misannotations, we discovered sites of post-translational maturation in the form of proteolytic cleavage of 1175 signal peptides. The output files from this study are available at ([http://omics.pnl.gov/pgp/overview.php][2]).
+
+The pipeline combines the open sources proteomics tools from ([http://proteomics.ucsd.edu][3]) with our own post-processing steps.
+
+Briefly, tandem mass spectra are searched by Inspect [PMID:16013882] against a translation of the genome and subsequently rescored with PepNovo [PMID:15858974] and MSGF [PMID:18597511]. The pipeline  translates the DNA sequence in all six frames to generate a reference protein database.
+
+Each stop to stop open reading frame (ORF) is included regardless of
+coding potential. The concatenated decoy records for estimating the statistical significance of the predicted peptides are generated by shuffling each ORF.
+Significant peptide/spectrum matches (PSM) are those with a pvalue of
+e-10 or better, which leads to a peptide level false discovery rate of ~0.3%. All confident peptides are mapped onto their genomic location
+(nucleotide coordinates) and grouped into sets within an ORF. 
+
+The last stage of the pipeline employs five ORF filters. First, we remove low complexity peptides and peptides which are more than 750 bp from the next in-frame peptide. We remove ORFs which lack a uniquely mapping peptide or which lack a fully tryptic
+peptide. Finally, we require two peptides per protein.
+
+Peptides from ORFs which meet all of the above criteria are saved in the output GFF3 files in coordinates relative to the reference genome. The user can load these files into genomic browsers such as NCBI Genome workbench or Artemis for subsequent analysis.
+
+### Example of interpreting the output
+
+Peptides mapping to regions of the genome which lack a protein
+annotation represent either novel genes, or 5' extensions of current
+genes. For example, at 3.376 MB in the B. anthracis Sterne genome lies
+the BAS3403 gene, the small spore protein Tlp. Many peptides from this
+protein were discovered by the pipeline. In the open reading frame
+directly upstream, the protocol detected other peptides which were not part of any currently annotated protein. Blasting this ORF revealed homology to another spore coat protein from B. cereus, not annotated
+in any anthrax genome.
+
+![Novel Anthrax Sporecoat Protein](docs.PGP/anthrax_sporecoat.png)
+
+
+II). Installation
+-----------------
 
 **A).** Dependencies
 
-- The integrated installation procedure uses: 
-- *Git* to checkout the source from the public repository on BitBucket (https://bitbucket.org/andreyto/proteogenomics)
-- *Wget* to download dependencies
-- *BASH* scripting
-- C++ compiler (gcc or MPI wrappers, depending on the targeted execution environment), Python development libraries and Boost Python interface library are needed to build and install the pipeline Python extension modules, compiled executables and Makeflow workflow engine
-- You can modify the installation procedure to use, for example, other means of getting the sources to your target system, in which case you will not need Git.
-- For run-time:
-- Java, Python, Boost Python shared libraries, MPI environment if MPI backend if used for execution
+The integrated installation procedure needs the following tools to be present on the system: 
+
+> - *Git* to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][4])
+> - *Wget* to download dependencies
+> - *BASH* shell
+> - C++ compiler (gcc or MPI wrappers, depending on the targeted execution environment), Python development libraries and Boost Python
+> interface library are needed to build and install the pipeline Python
+> extension modules, compiled executables and Makeflow workflow engine
+> - You can modify the installation procedure to use, for example, other means of getting the sources to your target system, in which case you
+> will not need Git.
+
+For run-time, you will need:
+
+> - Java, Python, Boost Python shared libraries
+> - MPI environment if MPI backend if used for execution
 
 **B).** ***installPGP.sh*** : This is a script that attempts to automatically install the package and other dependencies required by the pipeline, 
 
   i). download the ***installPGP.sh*** script
-(**wget** [**https://bitbucket.org/andreyto/proteogenomics/raw/320bd5e412f0/config/installPGP.sh**](https://bitbucket.org/andreyto/proteogenomics/raw/320bd5e412f0/config/installPGP.sh)),
+(wget --no-check-certificate  [https://bitbucket.org/andreyto/proteogenomics/raw/HEAD/config/installPGP.sh][5]),
 
   ii). make it executable (`chmod +x installPGP.sh`) 
   
-  iii). run it from a directory of your choice
+  iii). run it from a directory of your choice ("working directory")
 as shown below under **Usage**. It only needs to be run once. The
 directory in which the software is installed by the ***installPGP.sh*** is
 referred to as **PGP\_ROOT** in the document and the script. The PGP
@@ -96,25 +124,28 @@ OPTIONS:
 
 -   When the script exits successfully after installing the software, it will print messages to standard output, informing what to do to next for executing the pipeline.
 
-**III). Running the pipeline**: We achieve the portability across different parallel execution environments by using the Makeflow workflow execution engine (http://nd.edu/~ccl/software/makeflow/). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
+III). Running the pipeline
+--------------------------
+
+We achieve the portability across different parallel execution environments by using the Makeflow workflow execution engine ([http://nd.edu/~ccl/software/makeflow/][6]). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
 
 Our installation procedure builds its own local copy of the CCTools package that contains Makeflow and associated backend executables.
 
 Given a directory with input data, our pipeline's code generates a description of the workflow (in a language that is based on the `make` file format). Makeflow can then execute this workflow using different parallel "backends" selected by the user at run-time. For example, Makeflow supports execution of complex workflows composed of many interdependent serial jobs on large MPI clusters through a "glide-in" mechanism. The user submits the MPI backend executable of Makeflow as a single parallel MPI job (e.g. with 100 ranks). Then, the user starts the Makeflow master on a single node. The individual MPI process ranks connect to the master, and the master farms out single serial tasks to the ranks following the order of workflow dependencies. 
 
-When the user selects "ranger" installation environment, our pipeline instantiates several scripts that make it more simple for the user to execute the pipeline under the MPI Makeflow backend described above. TACC Ranger was the XSEDE cluster where we have tested the MPI execution mode. At build time, the "ranger" option also uses "module" commands to make available the proper dependencies such as MPI compilers for building Makeflow as well as Boost libraries. "Module" command is a standardised user environment management script used by XSEDE clusters (https://www.xsede.org/software-environments). The users will have to modify the details of specific package versions activated my the "module" command in order to adapt the building and execution environment to their specific XSEDE cluster. 
+When the user selects "ranger" installation environment, our pipeline instantiates several scripts that make it more simple for the user to execute the pipeline under the MPI Makeflow backend described above. TACC Ranger was the XSEDE cluster where we have tested the MPI execution mode. At build time, the "ranger" option also uses "module" commands to make available the proper dependencies such as MPI compilers for building Makeflow as well as Boost libraries. "Module" command is a standardised user environment management script used by XSEDE clusters ([https://www.xsede.org/software-environments][7]). The users will have to modify the details of specific package versions activated my the "module" command in order to adapt the building and execution environment to their specific XSEDE cluster. 
 
-Using other Makeflow backends such as SGE serial job submission or multicore workstation is much more simple, and those cases are covered by the sample execution scripts instantiated when "generic" environment is selected during installation. The users can always modify the parameters of Makeflow execution and backend job submission following Makeflow User Manual (http://www3.nd.edu/~ccl/software/manuals/makeflow.html), possibly using our scipts as the starting point. Our scripts have extensive annotations in inline comments. Some site-specific tuning of job submission scripts will likely to be required on any computational cluster, considering the multitude of customizations of both the operating and batch systems that cluster administrators typically employ.
+Using other Makeflow backends such as SGE serial job submission or multicore workstation is much more simple, and those cases are covered by the sample execution scripts instantiated when "generic" environment is selected during installation. The users can always modify the parameters of Makeflow execution and backend job submission following Makeflow User Manual ([http://www3.nd.edu/~ccl/software/manuals/makeflow.html][8]), possibly using our scipts as the starting point. Our scripts have extensive annotations in inline comments. Some site-specific tuning of job submission scripts will likely to be required on any computational cluster, considering the multitude of customizations of both the operating and batch systems that cluster administrators typically employ.
 
 At high level, the pipeline execution consists of two stages. The first, serial stage prepares the input data and generates the workflow file for the second stage. The second stage performs the analysis in multiple parallel processes (with some internal barrier synchronisation steps, for example, for computing the *p-values*). Because scheduling policies and node availability are typically vastly different between serial and parallel jobs on MPI clusters like XSEDE systems, we have given to the user the control over launching these two stages as described below.
 
 **A). Data Requirements: Genomic & Proteomic Data.**
 
 1). Annotated nucleotide (mandatory) and protein (optional) sequence
-files (e.g. **gbk**, **fna** and **faa** RefSeq files from NCBI (http://www.ncbi.nlm.nih.gov/refseq/)).
+files (e.g. **gbk**, **fna** and **faa** RefSeq files from NCBI ([http://www.ncbi.nlm.nih.gov/refseq/][9])).
 
 2). Mass spectrometric data (spectra) in mzxml format (mzXML conversion tools can be found at
-http://tools.proteomecenter.org/wiki/index.php?title=Formats:mzXML),
+[http://tools.proteomecenter.org/wiki/index.php?title=Formats:mzXML][10]),
 
 **B). Structured Input Data Directory:**
 
@@ -143,8 +174,8 @@ proteogenomics folder (PGP\_HOME) downloaded by the pipeline. Assuming the annot
     drwxr-x--- 2 user tigr 4096 Aug 30 12:01 mzxml
 
 2). Put your RefSeq fna and gbk files for speciesX into
-`Database/Genomic` folder and faa file(s) - into
-`Database/Predictions` folder. Any additional protein databases including common contaminants such as trypsin and keratin (but not the DNA), which also need to be searched with Inspect, go into the `Databases/Proteomic` folder. The template directory already has some
+`Databases/Genomic` folder and faa file(s) - into
+`Databases/Predictions` folder. Any additional protein databases including common contaminants such as trypsin and keratin (but not the DNA), which also need to be searched with Inspect, go into the `Databases/Proteomic` folder. The template directory already has some
 unpacked Common.RS files in this directory (as shown below).
 
     user@assembly [\~/tmp/db/Databases]: [12:07:22]% ls -l
@@ -205,61 +236,61 @@ files
 
 **RefseqSubmission** - originals submitted - contains new annotations generated by the PGP
 
-**C). Preparation of Data & the Workflow (prepPGPdata.ranger.qsub):** 
+**C). Preparation of Data & the Workflow (prepPGPdata.*.qsub):** 
 
 In this step, the input data for the pipeline are prepared and a workflow specifying the various PGP analyses to be executed on the target distributed computed environment is generated.
 
-***Note:*** the default options in this qsub script
-(prepPGPdata.ranger.qsub) are 'ranger-specific'. If the cluster
-environment is not Ranger, modify these options as required by the
-user's own environment. 
+Copy a proper prepPGPdata.*.qsub template script to your working directory and edit it to reflect your actual data location and batch system parameters as per the instructions below. For example, `prepPGPdata.ranger.qsub` would a template to use on XSEDE cluster. `prepPGPdata.generic.qsub` would be the template for a high-throughput SGE cluster or a workstation without a batch system. Modify a script accordingly if you have a different batch system or different OS configuration.
 
-Make sure to do the following before executing the qsub script:
+Make sure to do the following before executing the qsub script (substitute actual location for `config_dir` below:
 
-a) `. source config_dir/pgp_makeflow_env_master.sh`
+a) `source config_dir/pgp_makeflow_env_master.sh`
     
-b) SGE-specific options `-A (account name), -pe (number of nodes and cores), -l h_rt (requested
-run-time)` are properly modified **in the qsub script**; 
+b) For example, SGE-specific options `-A (account name), -pe (number of nodes and cores), -l h_rt (requested
+run-time)` have to be properly modified in the qsub script on a XSEDE cluster; 
 
 c) values for INPUT (--input-dir path for input directory in the format described above) and OUT
-(--work-dir path for output results) are set **in the qsub script**. These are MANDATORY.
+(--work-dir path for output results) are set in the qsub script. These are MANDATORY.
 
 **Usage**:
 
-    qsub config_dir/prepPGPdata.ranger.qsub
+Submit the job to your batch system. In case of SGE or PBS, it will look like:
+
+    qsub prepPGPdata.ranger.qsub
+    
+Alternatively, you can simply execute this script locally on your current node (assuming that the file system is mounted identically across the cluster or you intend to execute the entire pipeline on that node). In that case you do not have to edit any batch system related options inside the script.
+
+    sh prepPGPdata.ranger.qsub
 
 -   After successful execution of the qsub script, the **log** file
-    should contain the instructions (at the end) needed for running the next qsub
-    script (runPGP.ranger.qsub) for PGP analysis.   
+    should contain the instructions (at the end) needed for running the next qsub script (runPGP.ranger.qsub) for PGP analysis.   
       
 
-**D). Running the Analysis (runPGP.ranger.qsub):** This qsub script
-performs the various proteogenomics analyses and the post-processing of
+**D). Running the Analysis (runPGP.*.qsub):** This qsub script
+performs the actual proteogenomics analysis and the post-processing of
 the resulting data according to the workflow generated in the previous
-step. The default options in this qsub script are 'ranger-specific'. if
-the environment is not Ranger cluster, modify these options as required
-by the user's own environment.
+step. Copy a corresponding script (`runPGP.ranger.qsub` or `runPGP.generic.qsub`) to your working directory and modify the options inside the script to fit your execution environment.
 
 **Note:** Make sure to do the following before
-executing **runPGP.ranger.qsub** script:
+executing **runPGP.*.qsub** script:
 
 a) `source config_dir/pgp_makeflow_env_master.sh` 
 
 b) SGE-specific options `-A (account name), -pe (number of nodes and cores), -l h_rt (run-time
-requested)` are properly modified **in the qsub script**. These are MANDATORY. 
+requested)` are properly modified in the qsub script. These are MANDATORY. 
 
-c) change directory (‘cd’) to `--work-dir/<speciesX>` (as defined in the
-previous qsub script ‘ prepPGPdata.ranger.qsub’. 
+c) change directory (‘cd’) to `--work-dir/<speciesX>` (as defined in the previous qsub script `prepPGPdata.ranger.qsub`. 
 
 **Usage:**
 
-`qsub config_dir/runPGP.ranger.qsub`
+`qsub <edited script location>/runPGP.ranger.qsub`
 
 -   if the script is executed successfully, the results of the analysis
     are written to --work-dir/speciesX ( --work-dir = OUT variable as
     defined in prepPGPdata.ranger.qsub).
 
-**IV). Results:**
+IV). Results
+------------
 
 **Structured Output Data Directory:** When the PGP analysis is complete,
 in addition to some log files, the following directories are created in
@@ -289,34 +320,18 @@ validation.
 **jobs, Done, output:** other directories with pipeline working data
 (could be empty).
 
-**V) Testing:** We have created a sample archive of an input directory completely populated with spectra and genomic data for *Cyanobacterium synechocystis PCC6803*. You can download it **wget URL**, unpack with `tar -xzf` and supply the path of the resulting directory as input to the pipeline. Note that this is a real size dataset, and it will take about 100 CPU*hrs to process it.
+V). Testing
+-----------
 
-**VI). Citations:**
+We have created a sample archive of an input directory completely populated with spectra and genomic data for *Cyanobacterium synechocystis PCC6803*. You can download it **wget URL**, unpack with `tar -xzf` and supply the path of the resulting directory as input to the pipeline. Note that this is a real size dataset, and it will take about 100 CPU*hrs to process it.
 
-[1]. S. Tanner, H. Shu, A. Frank, L.Wang, E. Zandi, M. Mumby, P.A.
-Pevzner, and V. Bafna. Inspect: Fast and accurate identification of
-post-translationally modified peptides from tandem mass spectra. Anal.
-Chem., 77(14):4626–4639, 2005.
-
-[2]. Identification of Post-translational Modifications via Blind Search
-of Mass-Spectra. Dekel Tsur, Stephen Tanner, Ebrahim Zandi, Vineet
-Bafna, Pavel A. Pevzner. Nature Biotechnology 23, 1562-2567 (2005).
-
-[3]. Frank, A., Tanner, S., Bafna, V. and Pevzner, P. "Peptide sequence
-tags for fast database search in mass-spectrometry", J. Proteome Res.
-2005 Jul-Aug;4(4):1287-95.
-
-[4]. Frank, A. and Pevzner, P. "PepNovo: De Novo Peptide Sequencing via
-Probabilistic Network Modeling", Analytical Chemistry 77:964-973, 2005.
-
-[5]. Elias J.E., Gygi S.P. Target-decoy search strategy for increased
-confidence in large-scale protein identifications by mass spectrometry.
-Nat Methods 4,(3):207-14 (2007)
-
-[6]. Castellana NE, Payne SH, Shen Z, Stanke M, Bafna V, et al.
-Discovery and revision of Arabidopsis genes by proteogenomics. Proc Natl
-Acad Sci U S A. 2008;105:21034–21038.
-
-[7]. Sangtae Kim, Nitin Gupta and Pavel Pevzner. Spectral Probabilities
-and Generating Functions of Tandem Mass Spectra: A Strike against Decoy
-Databases. J. Proteome Res., 7 (8), 3354-3363, 2008.
+  [1]: https://www.xsede.org/
+  [2]: http://omics.pnl.gov/pgp/overview.php
+  [3]: http://proteomics.ucsd.edu
+  [4]: https://bitbucket.org/andreyto/proteogenomics
+  [5]: https://bitbucket.org/andreyto/proteogenomics/raw/HEAD/config/installPGP.sh
+  [6]: http://nd.edu/~ccl/software/makeflow/
+  [7]: https://www.xsede.org/software-environments
+  [8]: http://www3.nd.edu/~ccl/software/manuals/makeflow.html
+  [9]: http://www.ncbi.nlm.nih.gov/refseq/
+  [10]: http://tools.proteomecenter.org/wiki/index.php?title=Formats:mzXML
