@@ -65,7 +65,7 @@ protein were discovered by the pipeline. In the open reading frame
 directly upstream, the protocol detected other peptides which were not part of any currently annotated protein. Blasting this ORF revealed homology to another spore coat protein from B. cereus, not annotated
 in any anthrax genome.
 
-![Novel Anthrax Sporecoat Protein](docs.PGP/anthrax_sporecoat.png)
+![Novel Anthrax Sporecoat Protein](https://bitbucket.org/andreyto/proteogenomics/raw/master/docs.PGP/anthrax_sporecoat.png)
 
 
 II). Installation
