@@ -45,9 +45,9 @@ This will take about 100 CPU*hrs. Following completion, check Cyanobacterium.syn
 I). The PGP Algorithm
 ----------------------
 
-The full protocol of our pipeline is described in detail in  [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]. In that study, we have applied the pipeline to 46 genomes spanning eight bacterial and archaeal phyla across the tree of life. These diverse datasets facilitated the development of a robust approach for proteogenomics that is functional across genomes varying in %GC, gene content, proteomic sampling depth, phylogeny, and genome size. In addition to finding evidence for 682 novel proteins, 1336 new start sites, and numerous likely misannotations, we discovered sites of post-translational maturation in the form of proteolytic cleavage of 1175 signal peptides. The output files from this study are available at ([http://omics.pnl.gov/pgp/overview.php][2]).
+The full protocol of our pipeline is described in detail in  [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]. In that study, we have applied the pipeline to 46 genomes spanning eight bacterial and archaeal phyla across the tree of life. These diverse datasets facilitated the development of a robust approach for proteogenomics that is functional across genomes varying in %GC, gene content, proteomic sampling depth, phylogeny, and genome size. In addition to finding evidence for 682 novel proteins, 1336 new start sites, and numerous likely misannotations, we discovered sites of post-translational maturation in the form of proteolytic cleavage of 1175 signal peptides. The output files from this study are available at ([http://omics.pnl.gov/pgp/overview.php][2]). These results have been submitted back to the NCBI that is in the process of using them for generating the improved updated RefSeq files. The NCBI RefSeq updates can be seen in the Genbank flat files (.gbk) of the corresponding genomes wherever the proteomics data is listed as an experimental evidence. The example is this [Mycobacterium tuberculosis H37Rv genome][3] containing the CDS attributes `/experiment="EXISTENCE: identified in proteomics study"`.
 
-The pipeline combines several open source proteomics tools from ([http://proteomics.ucsd.edu][3]) with our own post-processing steps.
+The pipeline combines several open source proteomics tools from ([http://proteomics.ucsd.edu][4]) with our own post-processing steps.
 
 Briefly, tandem mass spectra are searched by Inspect [[PMID:16013882](http://www.ncbi.nlm.nih.gov/pubmed/16013882)] against a translation of the genome and subsequently rescored with PepNovo [[PMID:15858974](http://www.ncbi.nlm.nih.gov/pubmed/15858974)] and MSGF [[PMC2689316](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2689316/)]. The pipeline  translates the DNA sequence in all six frames to generate a reference protein database.
 
@@ -78,7 +78,7 @@ II). Parallelization strategy
 -----------------
 Our goal was to build a pipeline that would be portable across different parallel execution environments that users might encounter. The overall algorithm is embarassingly parallel for the most part. Specifically, it is possible to process each spectrum file independently throughout all computationally intensive stages of the algorithm. There is a global synchronization point in a middle of the workflow when the algorithm needs to build a histogram of all scores for p-value computation. We have selected a distributed workflow model where multiple serial processes are executed cuncurrently following a dependency graph defined by required input and output files. This model exploits inherent parallelism of the problem sufficiently well while being compatible with a wide variety of execution environments such as standalone multicore machines, high-throughput compute clusters and MPI clusters (more on the latter below).
 
-We achieve the portability across different execution environments by using the Makeflow workflow execution engine ([http://nd.edu/~ccl/software/makeflow/][4]). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
+We achieve the portability across different execution environments by using the Makeflow workflow execution engine ([http://nd.edu/~ccl/software/makeflow/][5]). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
 
 Our installation procedure builds its own local copy of the CCTools package that contains Makeflow and associated backend executables.
 
@@ -93,7 +93,7 @@ III). Installation
 
 The integrated installation procedure needs: 
 
-> - [Git](http://git-scm.com/) version control system to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][5]). If you instead downlaod the package archive from BitBucket, you will not need Git
+> - [Git](http://git-scm.com/) version control system to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][6]). If you instead downlaod the package archive from BitBucket, you will not need Git
 > - [CMake](http://www.cmake.org/) configuration and build utility (version 2.8 or higher)
 > - *Wget* to download dependencies
 > - *BASH* shell
@@ -392,10 +392,10 @@ There is also the input archive for the same genome (as referenced in the Quick 
 
   [1]: https://www.xsede.org/
   [2]: http://omics.pnl.gov/pgp/overview.php
-  [3]: http://proteomics.ucsd.edu
-  [4]: http://nd.edu/~ccl/software/makeflow/
-  [5]: https://bitbucket.org/andreyto/proteogenomics
-  [6]: Customizing%20the%20build%20procedure
+  [3]: ftp://ftp.ncbi.nih.gov/genomes/Bacteria/Mycobacterium_tuberculosis_H37Rv_uid57777/NC_000962.gbk
+  [4]: http://proteomics.ucsd.edu
+  [5]: http://nd.edu/~ccl/software/makeflow/
+  [6]: https://bitbucket.org/andreyto/proteogenomics
   [7]: https://www.xsede.org/software-environments
   [8]: http://www3.nd.edu/~ccl/software/manuals/makeflow.html
   [9]: http://www.ncbi.nlm.nih.gov/refseq/
