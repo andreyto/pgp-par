@@ -26,7 +26,7 @@ Follow the Installation instructions below, first editing environment scripts an
 
 This will install the pipeline into a directory `PGP` in your working directory.
 
-The installation procedure will automatically test the pipeline in a local (multicore) execution mode on reduced (subsampled) spectra data included in the package distribution and report the test status.
+The installation procedure will automatically test the pipeline in a local (multicore) execution mode on reduced (subsampled) spectra data included in the package distribution as  `proteogenomics/data/test.directory.tar.gz` and report the test status.
 
 You can also download the full size version of the testing dataset (8.3GB in size) as:
 
@@ -84,7 +84,7 @@ Our installation procedure builds its own local copy of the CCTools package that
 
 Given a directory with input data, our pipeline's code generates a description of the workflow (in a language that is based on the `make` file syntax). Makeflow can then execute this workflow using different parallel "backends" selected by the user at run-time. While its backend implementations are straigtforward on high-throughput clusters (they submit each task to the batch queuing system) and multicore workstations (they run multiple subprocesses), the architecture is more complicated on HPC clusters that often have scheduling policies tuned to efficiently allocate only large MPI jobs. On such MPI clusters,  Makeflow supports execution of complex workflows composed of many interdependent serial jobs through a "glide-in" mechanism. Specifically, the user submits the MPI backend executable of Makeflow as a single parallel MPI job (e.g. with 100 MPI process ranks). Then, the user starts the Makeflow master on a single node. The individual MPI process ranks connect to the master, and the master farms out single serial tasks to the ranks following the order of workflow dependencies. A given backend rank executes each incoming task as a separate subprocess.
 
-For both HTC and MPI clusters, the pipeline assumes that there is a shared file system mounted in the same location on all compute nodes as well as on the job submition ("login") node.
+For both HTC and MPI clusters, the pipeline assumes that there is a shared file system mounted in the same location on all compute nodes as well as on the job submission ("login") node.
 
 III). Installation
 -----------------
@@ -93,7 +93,7 @@ III). Installation
 
 The integrated installation procedure needs: 
 
-> - [Git](http://git-scm.com/) version control system to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][6]). If you instead downlaod the package archive from BitBucket, you will not need Git
+> - [Git](http://git-scm.com/) version control system to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][6]). If you instead download the package archive from BitBucket, you will not need Git
 > - [CMake](http://www.cmake.org/) configuration and build utility (version 2.8 or higher)
 > - *Wget* to download dependencies
 > - *BASH* shell
@@ -153,7 +153,7 @@ We customize CMake variables through the so called "toolchain" files in `proteog
 
 When the user selects "ranger" installation environment, our pipeline instantiates several scripts that make it more simple for the user to later execute the pipeline under the MPI Makeflow backend described above. At build time, the "ranger" option also uses "module" commands to make available the proper dependencies such as MPI compilers for building Makeflow as well as Boost libraries. "Module" command is a standardised user environment management script used by XSEDE clusters ([https://www.xsede.org/software-environments][7]). 
 
-On XSEDE systems, the users will have to modify the details of specific package versions activated my the "module" command in order to adapt the building and execution environment to their specific cluster. If they decide to call their cluster `my_cluster`, they can copy every file that has a name like `*.ranger.*` in the source `proteogenomics/config` directory to a file that has the word `ranger` replaced with the word `my_cluster`, modify the necessary content in the new files, and then run the installation procedure as `installPGP.sh -e my_cluster -r <path to PGP_ROOT>`. Alternatively, the users can simply edit the `*.ranger.*` files and use `installPGP.sh -e ranger -r <path to PGP_ROOT>`.
+On XSEDE systems, the users will have to modify the details of specific package versions activated by the "module" command in order to adapt the building and execution environment to their specific cluster. If they decide to call their cluster `my_cluster`, they can copy every file that has a name like `*.ranger.*` in the source `proteogenomics/config` directory to a file that has the word `ranger` replaced with the word `my_cluster`, modify the necessary content in the new files, and then run the installation procedure as `installPGP.sh -e my_cluster -r <path to PGP_ROOT>`. Alternatively, the users can simply edit the `*.ranger.*` files and use `installPGP.sh -e ranger -r <path to PGP_ROOT>`.
 
 Using other Makeflow backends such as SGE serial job submission or multicore workstation is much more simple, and those cases are covered by the sample execution scripts instantiated when "htc" environment is selected during installation. 
 
@@ -238,7 +238,7 @@ unpacked Common.RS files in this directory (as shown below).
 3). Your spectra mzxml file(s) should be compressed in gz tar format and placed in the `mzxml` directory.
 
 4). The remaining empty directories (some optional) serve as
-placeholders to be populated by the data generated during the analysis. Some of them are the suggested locations for the last, manual curation stages of the proteogenomic re-annotation process aimed to culminate in the submission of results to NCBI Peptidome and RefSeq as described in the pipeline protocol publication []. If the user is only interested in the results of the automatic annotation but not in the NCBI submission, those directories can be ignored.
+placeholders to be populated by the data generated during the analysis. Some of them are the suggested locations for the last, manual curation stages of the proteogenomic re-annotation process aimed to culminate in the submission of results to NCBI Peptidome and RefSeq as described in the pipeline protocol publication [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]. If the user is only interested in the results of the automatic annotation but not in the NCBI submission, those directories can be ignored.
 
 **DerivedData** - copied from output directory (see below). Specific
 files or results that should be produced with every dataset
@@ -269,59 +269,53 @@ files
 
 **C). Execution on XSEDE MPI clusters**
 
-**i. Preparation of Data & the Workflow**
+**i). Preprosessing of the Data and the Workflow generation**
 
-In this step, the input data for the pipeline are prepared and a workflow specifying the various PGP analyses to be executed on the target distributed computed environment is generated.
+In this step, the input data for the pipeline are prepared for the analysis and a workflow is generated combining the various PGP analyses for subsequent execution.
 
 Copy a config_dir/prepPGPdata.ranger.qsub template script to your working directory and edit it to reflect your actual data location and batch system parameters as per the instructions below.
 
 Make sure to do the following before executing the qsub script (substitute actual location for `config_dir` below):
 
-a) `source config_dir/pgp_makeflow_env_master.sh`
+- `source config_dir/pgp_makeflow_env_master.sh`
     
-b) For example, SGE-specific options `-A (account name), -pe (number of nodes and cores), -l h_rt (requested
-run-time)` have to be properly modified in the qsub script on a XSEDE cluster. A "serial" queue is specified in the script - 
-edit the script if such queue does not exist on your cluster. This serial job needs only the minimum number of cores allowed on the particular cluster. 
+- Set the correct batch system options inside the qsub scripts. For example, at least these options have to be modified under SGE on XSEDE: `-A (account name), -pe (number of nodes and cores), -l h_rt (requested
+run-time)`. A "serial" queue is specified in the script - edit the script if such queue does not exist on your cluster. This serial job needs only the minimum number of cores allowed on the particular cluster. 
 
-c) values for INPUT (--input-dir path for input directory in the format described above) and OUT
-(--work-dir path for output results) are set in the qsub script. These are MANDATORY.
+- In the qsub script, set values for INPUT (--input-dir path for input directory in the format described above) and OUT (--work-dir path for output results) variables. These arguments have to be specified.
 
-**Usage**:
+**Run**:
 
 Submit the job to your batch system. In case of SGE or PBS, it will look like:
 
     qsub prepPGPdata.ranger.qsub
     
-Alternatively, you can execute this script locally on your login node if this is tolerated by the cluster user policy. In that case you do not have to edit any batch system related options inside the script, but still need to edit the data locations:
+The script mostly spends time unpacking the spectra files. If running such jobs on the login node is tolerated by your cluster user policy, you can execute this script locally instead of submitting it for the batch execution. In that case you do not have to edit any batch system related options inside the script, but still need to edit the data locations, and then run:
 
     bash prepPGPdata.ranger.qsub
 
--   After successful execution of the qsub script, the **log** file
-    should contain the instructions (at the end) needed for running the next qsub script (runPGP.ranger.qsub) for PGP analysis.   
-      
+After successful execution of the qsub script, the **log** file should contain the instructions (at the end) needed for running the next qsub script (runPGP.ranger.qsub) that performs PGP analysis.
 
-**ii. Running the Analysis:** 
+**ii). Running the Analysis:** 
 
-This qsub script performs the actual proteogenomics analysis and the post-processing of
-the resulting data according to the workflow generated in the previous
-step. Copy the template script `config_dir/runPGP.ranger.qsub` to your working directory and modify the options inside the script to fit your execution environment.
+This qsub script performs the actual proteogenomics analysis and the post-processing of the resulting data according to the workflow generated in the previous step. Copy the template script `config_dir/runPGP.ranger.qsub` to your working directory and modify the options inside the script to fit your execution environment.
 
 **Note:** Make sure to do the following before submitting **runPGP.ranger.qsub** script:
 
-a) `source config_dir/pgp_makeflow_env_master.sh`. The reason for this to be done on the login node of the XSEDE cluster before submitting the script is because the XSEDE `module` commands must be executed only on the login node. The batch system is configured to propagate the resulting environment variables to the compute nodes. This process might have some quirks depending on your specific cluster. You might have to tune this script accordingly.
+- `source config_dir/pgp_makeflow_env_master.sh`. The reason for this to be done on the login node of the XSEDE cluster before submitting the script is because the XSEDE `module` commands must be executed only on the login node. The batch system is configured to propagate the resulting environment variables to the compute nodes. This process might have some quirks depending on your specific cluster. You might have to tune this script accordingly.
 
-b) SGE-specific options `-A (account name), -pe (number of nodes and cores), -l h_rt (run-time
-requested)` are properly modified in the qsub script. These are MANDATORY. Also edit the queue name if necessary. Replace the options if your cluster uses a different queuing system, such as PBS or SLURM. Also make sure that the commands for starting MPI jobs inside the script match your environment (e.g. XSEDE clusters that have Infiniband interconnect use `ibrun` instead of `mpirun`).
+- Set the correct batch system options inside the qsub scripts. For example, at least these options have to be modified under SGE on XSEDE: `-A (account name), -pe (number of nodes and cores), -l h_rt (requested
+run-time)`. Set the total number of cores to be at least three times less than the total number of spectra files in your input archive. Also edit the queue name if necessary. Replace the options if your cluster uses a different queuing system, such as PBS or SLURM. Also make sure that the commands for starting MPI jobs inside the script match your environment (e.g. XSEDE clusters that have Infiniband interconnect use `ibrun` instead of `mpirun`).
 
-c) change directory (‘cd’) to `--work-dir/<speciesX>` (as defined in the previous qsub script `prepPGPdata.ranger.qsub`. 
+- change directory (‘cd’) to `--work-dir/<speciesX>` (as defined in the previous qsub script `prepPGPdata.ranger.qsub`. 
 
-**Usage:**
+**Run:**
 
 `qsub <edited script location>/runPGP.ranger.qsub`
 
--   if the script is executed successfully, the results of the analysis
-    are written to --work-dir/speciesX ( --work-dir = OUT variable as
-    defined in prepPGPdata.ranger.qsub).
+If the script is executed successfully, the results of the analysis
+are written to --work-dir/speciesX ( --work-dir = OUT variable as
+defined in prepPGPdata.ranger.qsub).
 
 **D). Execution on HTC clusters or multicore workstations**
 
@@ -349,7 +343,7 @@ where the string `SGE options` (must be in quotes as shown above) is passed verb
 
 You can look at the Makeflow manual for possible command line arguments if you want to use other backends such as Condor or modify the behavior of Makeflow (e.g. to constrain the number of concurrent jobs).
 
-In the commands above, both the data preparation as well as the controlling process of the Makeflow (the "master") will run on the login node, and the script `run.PGP.htc.sh` will keep running until the entire workflow has finished. It will use very little resources during the data processing stage, merely farming out tasks to the batch system. You can also submit the command above itself to your batch system through a standard (e.g. qsub) mechanism in case you do not want to wait for it to finish on the login node. This would require that your compute nodes are allowed to submit new jobs themselves, because Makeflow will be submitting new jobs from the node where the master script is executing.
+In the commands above, both the data preparation as well as the controlling process of the Makeflow (the "master") will run on the login node, and the script `run.PGP.htc.sh` will keep running until the entire workflow has finished. It will use very little resources during the data processing stage, merely farming out tasks to the batch system. You can also submit the command above in turn to your batch system through a standard (e.g. qsub) mechanism in case you do not want to wait for it to finish on the login node. This would require that your compute nodes are allowed to submit new jobs themselves, because Makeflow will be submitting new jobs from the node where the master script is executing.
 
 V). Results
 ------------
