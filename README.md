@@ -11,7 +11,7 @@ The open source, automated proteogenomics pipeline (PGP) described here is freel
 
 Parallel execution ability is important for proteogenomic annotation software due to a high volume of required computations \(order of 100 CPU*hrs for a typical bacterial genome\).
 
-###Value of proteogenomic annotation
+###The significance of proteogenomic annotation
 Our pipeline is a tool for improving the
 existing genomic annotations from available proteomics mass
 spectrometry data. As most genome annotation pipelines consist of automated gene finding, they lack experimental validation of primary structure [[PMC2265698](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2265698/), [PMC2238897](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2238897/)], having to rely on DNA centric sources of data such as sequence homology, transcriptome mapping, codon frequency, etc. By incorporating the orthogonal set of data, proteogenomics is able to discover novel genes, post-translational modifications (PTMs) and correct the erroneous primary sequence annotations.
@@ -22,18 +22,25 @@ To test the pipeline, you can run it on a single workstation (preferably multico
 
 Make sure that your are in a directory where you have write access and enough free space (20G).
 
-Follow the Installation instructions below, editing CMake configuration variables if necessary, and then running the installation command: `<path to checked out source>/config/installPGP.sh -e htc -r PGP`
+Follow the Installation instructions below, first editing environment scripts and CMake configuration variables if necessary, and then running the installation command: `proteogenomics/config/installPGP.sh -e htc -r PGP`
 
 This will install the pipeline into a directory `PGP` in your working directory.
 
-Download and unpack sample input directory with reduced (subsampled) spectra data.
+The installation procedure will automatically test the pipeline in a local (multicore) execution mode on reduced (subsampled) spectra data included in the package distribution and report the test status.
 
-Execute:
+You can also download the full size version of the testing dataset (8.3GB in size) as:
+
+    **URL** 
+
+Unpack it in your current working directory:
+
+    tar -zxf Cyanobacterium.synechocystis.PCC6803.tar.gz
+
+And execute:
     
     PGP/proteogenomics/config/run.PGP.htc.sh Cyanobacterium.synechocystis.PCC6803  Cyanobacterium.synechocystis.PCC6803.results
 
-Check Cyanobacterium.synechocystis.PCC6803.results/GFFs to make sure that there are output GFF3 files where. You can load the GFF3 files and corresponding reference from Cyanobacterium.synechocystis.PCC6803/Databases/Genomic into any of the genomic browsers such as NCBI Genome workbench,
-Artemis or CLC Genomics workbench in order to check the newly created annotations visually.
+This will take about 100 CPU*hrs. Following completion, check Cyanobacterium.synechocystis.PCC6803.results/GFFs to make sure that there are output GFF3 files where. You can load the GFF3 files and corresponding reference from Cyanobacterium.synechocystis.PCC6803/Databases/Genomic into any of the genomic browsers such as [NCBI Genome workbench](http://www.ncbi.nlm.nih.gov/tools/gbench/), Artemis [[PMC3278759](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3278759/)] or [CLC Genomics workbench](http://www.clcbio.com/products/clc-genomics-workbench/) for a visual inspection of the newly created annotations.
 
 I). The PGP Algorithm
 ----------------------
@@ -71,7 +78,7 @@ II). Parallelization strategy
 -----------------
 Our goal was to build a pipeline that would be portable across different parallel execution environments that users might encounter. The overall algorithm is embarassingly parallel for the most part. Specifically, it is possible to process each spectrum file independently throughout all computationally intensive stages of the algorithm. There is a global synchronization point in a middle of the workflow when the algorithm needs to build a histogram of all scores for p-value computation. We have selected a distributed workflow model where multiple serial processes are executed cuncurrently following a dependency graph defined by required input and output files. This model exploits inherent parallelism of the problem sufficiently well while being compatible with a wide variety of execution environments such as standalone multicore machines, high-throughput compute clusters and MPI clusters (more on the latter below).
 
-We achieve the portability across different execution environments by using the Makeflow workflow execution engine ([http://nd.edu/~ccl/software/makeflow/][6]). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
+We achieve the portability across different execution environments by using the Makeflow workflow execution engine ([http://nd.edu/~ccl/software/makeflow/][4]). Makeflow also provides a high degree of fault tolerance against compute node failures (in non-MPI execution mode) and restart capability in case of master node failure. 
 
 Our installation procedure builds its own local copy of the CCTools package that contains Makeflow and associated backend executables.
 
@@ -82,38 +89,42 @@ For both HTC and MPI clusters, the pipeline assumes that there is a shared file 
 III). Installation
 -----------------
 
-**A).** Dependencies
+### A). Dependencies that have to be present on your system to build and run the pipeline
 
-The integrated installation procedure needs the following tools to be present on the system: 
+The integrated installation procedure needs: 
 
-> - *Git* to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][4])
+> - [Git](http://git-scm.com/) version control system to checkout the source from the public repository on BitBucket ([https://bitbucket.org/andreyto/proteogenomics][5]). If you instead downlaod the package archive from BitBucket, you will not need Git
+> - [CMake](http://www.cmake.org/) configuration and build utility (version 2.8 or higher)
 > - *Wget* to download dependencies
 > - *BASH* shell
-> - C++ compiler (gcc or MPI wrappers, depending on the targeted execution environment), Python development libraries and Boost Python
-> interface library are needed to build and install the pipeline Python
-> extension modules, compiled executables and Makeflow workflow engine
-> - You can modify the installation procedure to use, for example, other means of getting the sources to your target system, in which case you
-> will not need Git.
+> - C++ compiler (gcc or MPI wrappers, depending on the targeted execution environment)
+> - Python interpreter and Python development libraries
+> - [Boost Python](http://www.boost.org/) interface library
+> - GNU Make
+> - Internet connection. The installation procedure will try to download an archive with some additional dependencies (such as UCSD proteomics tools) from our BitBucket repository
+
+All software components listed above are available as standard packages in major Linux distributions.
 
 For run-time, you will need:
 
 > - Java, Python, Boost Python shared libraries
 > - MPI environment if MPI backend if used for execution
 
-**B).** ***installPGP.sh*** : This is a script that attempts to automatically install the pipeline and some of its dependencies. 
+### B). Getting the sources
+    
+    git clone git@bitbucket.org:andreyto/proteogenomics.git
 
-  i). download the ***installPGP.sh*** script
-(wget --no-check-certificate  [https://bitbucket.org/andreyto/proteogenomics/raw/master/config/installPGP.sh][5]),
+### C). Building and installing
 
-  ii). make it executable (`chmod +x installPGP.sh`) 
-  
-  iii). run it from a directory of your choice ("working directory")
-as shown below under **Usage**. It only needs to be run once. The
-directory in which the software is installed by the ***installPGP.sh*** is
-referred to as **PGP\_ROOT** in the document and the scripts. The PGP
-code itself will be in **'proteogenomics'** subfolder (referred to as  **PGP\_HOME**). All the
+A shell script `proteogenomics/config/installPGP.sh` is a wrapper that calls CMake configuration, build, test and install stages in a single run. Our CMake build procedure attempts to automatically install the pipeline itself as well as some of its dependencies. When you are executing this script, your current working directory (CWD) must be **outside** of the `proteogenomics` source directory. For example, your CWD can be a directory where you have issued the `git clone` command described above.
+
+If the full build procedure does not work for you right away, you can temporarily comment out the latter stages in the `installPGP.sh` script in order to debug the configuration step of CMake.
+
+The directory in which the software is installed by the `installPGP.sh` is
+referred to as **PGP\_ROOT** in this document and the scripts. The PGP
+code itself will be in `proteogenomics` subfolder of `PGP_ROOT` (referred to as  **PGP\_HOME**). All the
 configuration files needed to set the environment for running the
-pipeline reside in the **config** subdirectory (referred to as **config\_dir**) under
+pipeline will reside in the `config` subdirectory (referred to as **config\_dir**) under
 PGP\_HOME.
 
 **Usage:** ***installPGP.sh -h***
@@ -121,34 +132,43 @@ PGP\_HOME.
 The options defining the cluster environment and the path to the
 installation directory must be provided as indicated below.
 
-OPTIONS:
+    OPTIONS:
 
--h help message
+    -h help message
 
--e computing environment name (‘ranger’ is the environment configured for XSEDE Ranger cluster; 'htc' covers both HTC clusters and multi-core workstations). The computing environments are discussed in detail below.
+    -e computing environment name ("ranger" is the environment configured for XSEDE Ranger cluster; "htc" covers both HTC clusters and multi-core workstations). The computing environments are discussed in detail in README under "Customizing the build procedure".
 
--r the installation directory (PGP\_ROOT)
+    -r the installation directory (PGP\_ROOT)
 
 **example:**
 
     installPGP.sh -e ranger -r <path to PGP_ROOT>
 
--   When the script exits successfully after installing the software, it will print messages to standard output, informing the user what to do next for executing the pipeline.
+When the script exits successfully after installing the software, it will print messages to standard output, informing the user what to do next for executing the pipeline.
+
+####Customizing the build procedure
+Although CMake invoked by `installPGP.sh` will try to figure out the locations of necessary libraries on your system automatically, it might still need some explicit instructions that you can provide by editing some files under checked out **source** directory `proteogenomics/config` **before** `installPGP.sh` is invoked. This is especially likely needed on compute clusters, where the administrators often build multiple customized versions of libraries such as Boost and place them in non-standard locations (such as /usr/local/packages). Pointing CMake to the right Boost Python bindings library is typically the most challenging part of the build procedure on such heavily modified systems. There has to be a match between the versions of the selected Python interpreter, C++ compiler (or mpiCC wrapper) and Boost Python library. Additionally, the pipeline environment file might have to be modified by appending the directory where Boost shared libraries are located to the `LD_LIBRARY_PATH` environment variable.
+
+We customize CMake variables through the so called "toolchain" files in `proteogenomics/config/`, with files named after a specific target computing environment. For example, there is `toolchain.ranger.cmake` that sets necessary CMake variables for XSEDE Ranger cluster. TACC Ranger was the XSEDE cluster where we have tested the MPI execution mode.
+
+When the user selects "ranger" installation environment, our pipeline instantiates several scripts that make it more simple for the user to later execute the pipeline under the MPI Makeflow backend described above. At build time, the "ranger" option also uses "module" commands to make available the proper dependencies such as MPI compilers for building Makeflow as well as Boost libraries. "Module" command is a standardised user environment management script used by XSEDE clusters ([https://www.xsede.org/software-environments][7]). 
+
+On XSEDE systems, the users will have to modify the details of specific package versions activated my the "module" command in order to adapt the building and execution environment to their specific cluster. If they decide to call their cluster `my_cluster`, they can copy every file that has a name like `*.ranger.*` in the source `proteogenomics/config` directory to a file that has the word `ranger` replaced with the word `my_cluster`, modify the necessary content in the new files, and then run the installation procedure as `installPGP.sh -e my_cluster -r <path to PGP_ROOT>`. Alternatively, the users can simply edit the `*.ranger.*` files and use `installPGP.sh -e ranger -r <path to PGP_ROOT>`.
+
+Using other Makeflow backends such as SGE serial job submission or multicore workstation is much more simple, and those cases are covered by the sample execution scripts instantiated when "htc" environment is selected during installation. 
+
+To customize the build procedure on HTC systems, the users can edit `*.htc.*` files.
 
 IV). Running the pipeline
 --------------------------
 
-When the user selects "ranger" installation environment, our pipeline instantiates several scripts that make it more simple for the user to execute the pipeline under the MPI Makeflow backend described above. TACC Ranger was the XSEDE cluster where we have tested the MPI execution mode. At build time, the "ranger" option also uses "module" commands to make available the proper dependencies such as MPI compilers for building Makeflow as well as Boost libraries. "Module" command is a standardised user environment management script used by XSEDE clusters ([https://www.xsede.org/software-environments][7]). 
-
-The users will have to modify the details of specific package versions activated my the "module" command in order to adapt the building and execution environment to their specific XSEDE cluster. If they call their cluster `my_cluster`, they can copy every file that has a name like `*.ranger.*` to a file that has the word `ranger` replaced with the word `my_cluster`, modify the necessary content the new files, and then run the installation procedure as `installPGP.sh -e my_cluster -r <path to PGP_ROOT>`
-
-Using other Makeflow backends such as SGE serial job submission or multicore workstation is much more simple, and those cases are covered by the sample execution scripts instantiated when "htc" environment is selected during installation. 
-
-The users can always modify the parameters of Makeflow execution and backend job submission following Makeflow User Manual ([http://www3.nd.edu/~ccl/software/manuals/makeflow.html][8]), possibly using our scipts as the starting point. Our scripts have extensive annotations in inline comments. Some site-specific tuning of job submission scripts will likely to be required on any computational cluster, considering the multitude of customizations of both the operating and batch systems that cluster administrators typically employ.
-
 At high level, the pipeline execution consists of two stages. The first, serial stage prepares the input data and generates the workflow file for the second stage. The second stage performs the analysis in multiple parallel processes (with some internal barrier synchronisation steps, for example, for computing the *p-values*). 
 
-Because scheduling policies and node availability are typically vastly different between serial and parallel jobs on MPI clusters like XSEDE systems, we have given to the user the control over launching these two stages in these environments as described below. For HTC environments, these two stages are executed consequtively by a single script.
+Because scheduling policies and node availability are typically vastly different between serial and parallel jobs on MPI clusters like XSEDE systems, we have given to the user the control over launching these two stages in these environments as described below. For HTC environments, these two stages are executed consecutively by a single script.
+
+The users can always modify the parameters of Makeflow execution and backend job submission by following the Makeflow User Manual ([http://www3.nd.edu/~ccl/software/manuals/makeflow.html][8]), possibly using our template scipts as the starting points. Our scripts have extensive annotations in inline comments. Some site-specific tuning of job submission scripts will likely to be required on any computational cluster, considering the multitude of customizations of both the operating and batch systems that cluster administrators typically employ.
+
+The following steps must be taken to execute the proteogenomics analysis:
 
 **A). Data Requirements: Genomic & Proteomic Data.**
 
@@ -305,7 +325,7 @@ c) change directory (‘cd’) to `--work-dir/<speciesX>` (as defined in the pre
 
 **D). Execution on HTC clusters or multicore workstations**
 
-In this execution environments, there is a single script that runs the serial data preparation stage followed by the parallel processing stage. There is no need to edit the template script. Rather, you should execute the script `config_dir/runPGP.htc.qsub`, directly passing to it the necessary command line arguments described below.
+In this execution environments, there is a single script that runs the serial data preparation stage followed by the parallel processing stage. There is no need to edit the template script. Rather, you should execute the script `config_dir/runPGP.htc.sh`, directly passing to it the necessary command line arguments described below.
 
 **Usage:**
 
@@ -327,7 +347,7 @@ where the string `SGE options` (must be in quotes as shown above) is passed verb
 
     config_dir/run.PGP.htc.sh INPUT OUT -T sge -B '-P 0000 -b n -S /bin/bash'
 
-You can look at the Makeflow manual for possible command line arguments if you want to use other backends such as Condor or modify the behavior of Makeflow (e.g. to restrict the number of concurrent jobs).
+You can look at the Makeflow manual for possible command line arguments if you want to use other backends such as Condor or modify the behavior of Makeflow (e.g. to constrain the number of concurrent jobs).
 
 In the commands above, both the data preparation as well as the controlling process of the Makeflow (the "master") will run on the login node, and the script `run.PGP.htc.sh` will keep running until the entire workflow has finished. It will use very little resources during the data processing stage, merely farming out tasks to the batch system. You can also submit the command above itself to your batch system through a standard (e.g. qsub) mechanism in case you do not want to wait for it to finish on the login node. This would require that your compute nodes are allowed to submit new jobs themselves, because Makeflow will be submitting new jobs from the node where the master script is executing.
 
@@ -336,7 +356,7 @@ V). Results
 
 **Structured Output Data Directory:** When the PGP analysis is complete,
 in addition to some log files, the following directories are created in
-–work-dir/speciesX directory.
+-–work-dir/speciesX directory.
 
 **Databases:** the 6-frame translated refseq genomic data copied from
 input directory.
@@ -347,7 +367,7 @@ input directory.
 various reports for each input dataset.
 
 **GFFs:** a sub-directory with the gff file containing peptide
-annotations of the genome generated from mapping the proteomics spectra. **This can be considered the main output of the pipeline.** See [] regarding the interpretation and downstream use of these annotations.
+annotations of the genome generated from mapping the proteomics spectra. **This can be considered the main output of the pipeline.** See [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)] regarding the interpretation and downstream use of these annotations.
 
 **ResultsX:** the directory contains results from Inspect analysis.
 
@@ -367,12 +387,15 @@ VI). Testing
 
 We have created a sample archive of an input directory completely populated with spectra and genomic data for *Cyanobacterium synechocystis PCC6803*. You can download it **wget URL**, unpack with `tar -xzf` and supply the path of the resulting directory as input to the pipeline. Note that this is a real size dataset, and it will take about 100 CPU*hrs to process it.
 
+There is also the input archive for the same genome (as referenced in the Quick Start section), with spectra data drastically subsampled in order to provide a quick way of testing that the pipeline can run to completion after the installation. Due to low coverage in this artificially constructed sample, the output should not be used for any biological interpretation.
+
+
   [1]: https://www.xsede.org/
   [2]: http://omics.pnl.gov/pgp/overview.php
   [3]: http://proteomics.ucsd.edu
-  [4]: https://bitbucket.org/andreyto/proteogenomics
-  [5]: https://bitbucket.org/andreyto/proteogenomics/raw/HEAD/config/installPGP.sh
-  [6]: http://nd.edu/~ccl/software/makeflow/
+  [4]: http://nd.edu/~ccl/software/makeflow/
+  [5]: https://bitbucket.org/andreyto/proteogenomics
+  [6]: Customizing%20the%20build%20procedure
   [7]: https://www.xsede.org/software-environments
   [8]: http://www3.nd.edu/~ccl/software/manuals/makeflow.html
   [9]: http://www.ncbi.nlm.nih.gov/refseq/
