@@ -15,12 +15,10 @@ in different kinds of parallel Linux computing environments:
     through a peer reviewed proposal system. We considered it as an
     important requirement that the biologists could use our software on
     this major computational resource.
-
 -   HTC (high-throughput computing) clusters widely used as local
     bioinformaics computing resources. These clusters are configured to
     efficiently schedule large numbers of serial jobs under a control of
     batch queuing system.
-
 -   A single multi-core workstation without a batch queuing system
     (including a case of single core machine).
 
@@ -79,10 +77,10 @@ And execute:
     PGP/proteogenomics/config/run.PGP.htc.sh Cyanobacterium.synechocystis.PCC6803  Cyanobacterium.synechocystis.PCC6803.results
 
 This will take about 100 CPU\*hrs. Following completion, check
-Cyanobacterium.synechocystis.PCC6803.results/GFFs to make sure that
+`Cyanobacterium.synechocystis.PCC6803.results/GFFs` to make sure that
 there are output GFF3 files where. You can load the GFF3 files and
 corresponding reference from
-Cyanobacterium.synechocystis.PCC6803/Databases/Genomic into any of the
+`Cyanobacterium.synechocystis.PCC6803/Databases/Genomic` into any of the
 genomic browsers such as [NCBI Genome
 workbench](http://www.ncbi.nlm.nih.gov/tools/gbench/), Artemis
 [[PMC3278759](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3278759/)] or
@@ -222,7 +220,6 @@ The integrated installation procedure needs:
     download the package archive from BitBucket, you will not need Git
 -   [CMake](http://www.cmake.org/) configuration and build utility
     (version 2.8 or higher)
--   *Wget* to download dependencies
 -   *BASH* shell
 -   C++ compiler (gcc or MPI wrappers, depending on the targeted
     execution environment)
@@ -385,7 +382,7 @@ analysis:
 
 ##B). Structured Input Data Directory
 
-1. The input data mentioned under **'A'** should be organized in a
+1. The input data mentioned under **'A)'** should be organized in a
 specific directory structure as shown by the listings of the directories
 below. This can be easily accomplished by uncomressing the
 `template.directory.tar.gz` provided in the data subdirectory of the
@@ -490,7 +487,7 @@ Make sure to do the following before executing the qsub script
     and batch system parameters.
 -   For example, at least these batch options have to be modified under
     SGE on XSEDE:
-    `-A (account name), -pe (number of nodes and cores), -l h_rt (requested run-time)`.
+    `-A (account name), -pe (number of nodes and cores), -l h_rt (requested     run-time)`.
     A "serial" queue is specified in the script - edit the script if
     such queue does not exist on your cluster. This serial job needs
     only the minimum number of cores allowed on the particular cluster.
@@ -498,7 +495,7 @@ Make sure to do the following before executing the qsub script
     directory in the format described above) and OUT (--work-dir path
     for output results) variables. These arguments have to be specified.
 
-**Run**:
+**Run it**:
 
 Submit the job to your batch system. In case of SGE or PBS, it will look
 like:
@@ -539,7 +536,7 @@ options inside the script to fit your execution environment.
 -   Set the correct batch system options inside the qsub scripts. For
     example, at least these options have to be modified under SGE on
     XSEDE:
-    `-A (account name), -pe (number of nodes and cores), -l h_rt (requestedrun-time)`.
+    `-A (account name), -pe (number of nodes and cores), -l h_rt (requested run-time)`.
     Set the total number of cores to be at least three times less than
     the total number of spectra files in your input archive. Also edit
     the queue name if necessary. Replace the options if your cluster
@@ -551,7 +548,7 @@ options inside the script to fit your execution environment.
     `--work-dir/<speciesX>` (as defined in the previous qsub script
     `prepPGPdata.ranger.qsub`.
 
-**Run:**
+**Run it:**
 
 `qsub <edited script location>/runPGP.ranger.qsub`
 
@@ -567,7 +564,7 @@ There is no need to edit the template script. Rather, you should execute
 the script `config_dir/runPGP.htc.sh`, directly passing to it the
 necessary command line arguments described below.
 
-**Run:**
+**Run it:**
 
     config_dir/run.PGP.htc.sh INPUT OUT [Makeflow arguments]
 
@@ -615,27 +612,28 @@ submitting new jobs from the node where the master script is executing.
 V). Results
 -----------
 
-- **Structured Output Data Directory:** When the PGP analysis is complete,
+**Structured Output Data Directory.** When the PGP analysis is complete,
 in addition to some log files, the following directories are created in
 -–work-dir/speciesX directory.
+
 - **Databases:** the 6-frame translated refseq genomic data copied from
-input directory.
+  input directory.
 - **mzxml:** MS spectral data copied from input directory.
 - **DerivedData:** contains the proteogenomics analysis results and
-various reports for each input dataset.
+  various reports for each input dataset.
 - **GFFs:** a sub-directory with the gff file containing peptide
-annotations of the genome generated from mapping the proteomics spectra. 
-**This can be considered the main output of the pipeline.** 
-See [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]
-regarding the interpretation and downstream use of these annotations.
+  annotations of the genome generated from mapping the proteomics spectra. 
+  **This can be considered the main output of the pipeline.** 
+  See [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]
+  regarding the interpretation and downstream use of these annotations.
 - **ResultsX:** the directory contains results from Inspect analysis.
 - **pepnovo:** the directory contains results from PepNovo analysis.
 - **pvalue10H:** the sub-directory with the output of PValue.py (with -p
-0.1, -H).
+  0.1, -H).
 - **msgfOfPepnovo:** the sub-directory with the output of MS\_GF
-validation.
+  validation.
 - **jobs, Done, output:** other directories with pipeline working data
-(could be empty).
+  (could be empty).
 
 VI). Testing
 ------------
