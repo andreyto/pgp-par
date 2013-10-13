@@ -220,6 +220,7 @@ The integrated installation procedure needs:
     download the package archive from BitBucket, you will not need Git
 -   [CMake](http://www.cmake.org/) configuration and build utility
     (version 2.8 or higher)
+-   [Expat](http://expat.sourceforge.net/) XML parsing library
 -   *BASH* shell
 -   C++ compiler (gcc or MPI wrappers, depending on the targeted
     execution environment)
