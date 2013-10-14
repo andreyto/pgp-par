@@ -1,0 +1,40 @@
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   See COPYING file distributed along with the PGP package for the
+#   copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+main_pkg_name = "PGP"
+
+import os,sys,tempfile
+
+#prevent easy_install from complaining about sys.path
+sys.path.insert(0,r"@PY_INSTALL_PREFIX@")
+sys.path.insert(0,r"@PY_BUILD_INSTALL_PREFIX@")
+
+
+#activate 'distribute', installing it if necessary
+from distribute_setup import use_setuptools
+use_setuptools()
+
+from setuptools import setup, find_packages, Extension
+
+indexSearchExt = Extension('_IndexSearch',
+     include_dirs = r"@PY_BUILD_INCLUDE_DIRS@".split(";"),
+     sources = ['IndexSearch.cpp'])
+
+setup(
+    name = main_pkg_name,
+    version = "@PACKAGE_VERSION@",
+    install_requires = ['biopython_at'],
+    dependency_links=["file:"+"@VENDOR_ARCHIVE_BIOPYTHON@"+"#egg=biopython_at"],
+    #py_modules = ["IndexSearch.py"],
+    packages = ["IndexSearch"],
+    ext_modules = [indexSearchExt],
+    author = "Andrey Tovchigrechko",
+    author_email = "andreyto@gmail.com",
+    description = "Python components of PGP proteogenomics pipeline",
+    license = "GPL",
+    keywords = "proteogenomics distributed makeflow",
+    url = "https://bitbucket.org/andreyto/proteogenomics", 
+)

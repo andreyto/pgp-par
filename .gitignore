@@ -1,0 +1,41 @@
+*.py[cod]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+sdist
+develop-eggs
+.installed.cfg
+__pycache__
+
+# Editor files
+*~
+*.swp
+
+# Installer logs
+pip-log.txt
+
+# Translations
+*.mo
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+#VStudio parsed headers
+ipch/
+
+files_vs2010.*
