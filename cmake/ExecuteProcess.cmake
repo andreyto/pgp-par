@@ -75,11 +75,11 @@
 #
 # @ingroup CMakeUtilities
 ##############################################################################
+#
+# Modified by Andrey Tovchigrechko, JCVI 2013
+#
+##############################################################################
 
-# ----------------------------------------------------------------------------
-# unset environment variables that may cause problems otherwise
-unset (ENV{PYTHONHOME})
-unset (ENV{PYTHONPATH})
 
 # ----------------------------------------------------------------------------
 # initialize arguments
