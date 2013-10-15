@@ -1,4 +1,5 @@
 ## Python extension and dependencies (Biopython)
+include(CustomCommands)
 
 set(PY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PY_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/py_build")
@@ -36,7 +37,7 @@ file(MAKE_DIRECTORY ${PY_BUILD_DIR})
 #that can be only done by running a generated cmake script
 #as the custom command, such as:
 #add_custom_command( 
-#  COMMAND ${CMAKE_EXECUTABLE} -DVAR=VAL 
+#  COMMAND ${CMAKE_COMMAND} -DVAR=VAL 
 #    -P ${PROJECT_BINARY_DIR}/script.cmake 
 #  DEPENDS ${PROJECT_BINARY_DIR}/script.cmake 
 #  WORKING_DIRECTORY ${PROJECT_BINARY_DIR} 
@@ -46,25 +47,40 @@ file(MAKE_DIRECTORY ${PY_BUILD_DIR})
 #myscript.cmake:
 #set(ENV{PATH} ...)
 #execute_process(....)
+#
+#The reason for the above is because custom_command will
+#be executed at build time (e.g. when 'make' is running),
+#so any changes we make by set(ENV{}) here will be already lost.
+#
 #For install, use install(SCRIPT ...) signature.
 
 
-set(cmd_build_install ${PYTHON} ${SETUP_PY} easy_install 
+set(cmd_build_install "${PYTHON} ${SETUP_PY} easy_install 
 					--install-dir ${PY_BUILD_INSTALL_PREFIX}
 					--site-dirs ${PY_BUILD_INSTALL_PREFIX}
 					--build-directory ${PY_BUILD_DIR} 
 					--always-copy 
-					.)
+					.")
 
 set(cmd_develop ${PYTHON} ${SETUP_PY} develop 
 					--install-dir ${PY_BUILD_INSTALL_PREFIX} 
 					--build-directory ${PY_BUILD_DIR})
 
+set(cmd "
+set(ENV{CFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
+set(ENV{CXXFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
+execute_process(
+    COMMAND ${cmd_build_install}
+    )
+")
+
+make_script_command(py_build "${cmd}" cmd_build_install_scr build_install_scr)
+
 add_custom_command(OUTPUT ${OUTPUT}
-                    COMMAND ${cmd_build_install}
+                    COMMAND ${cmd_build_install_scr}
                     #COMMAND ${cmd_develop}
                     COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
-                    DEPENDS ${DEPS}
+                    DEPENDS ${build_install_scr} ${DEPS}
 					WORKING_DIRECTORY ${PY_SOURCE_DIR} 
 					VERBATIM
 					COMMENT "Command to build and install Python modules into build dir")
