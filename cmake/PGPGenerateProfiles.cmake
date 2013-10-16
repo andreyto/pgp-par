@@ -13,7 +13,7 @@ set(PGP_CONFIG "${config_dir}/pgp.ini")
 set(PGP_ROOT "${CMAKE_INSTALL_PREFIX}")
 set(PGP_HOME "${PGP_INSTALL_PREFIX}")
 
-foreach(dir_name in config bin)
+foreach(dir_name config bin)
     set(dir_out "${CMAKE_BINARY_DIR}/${dir_name}")
     file(MAKE_DIRECTORY "${dir_out}")
     file(GLOB arch_files_in ${PROJECT_SOURCE_DIR}/${dir_name}/${PGP_TARGET_ENV}/*)
