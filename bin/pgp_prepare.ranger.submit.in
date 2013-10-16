@@ -1,0 +1,20 @@
+#!/bin/bash
+function replace() {
+    $PGP_PYTHON -c "import sys,re,fileinput; [sys.stdout.write(re.sub('$2','$3',line)) for line in fileinput.input($1,inplace=$4)]"
+}
+
+if [[ "$#" != "2" ]]; then
+    echo "Arguments: <input dir> <output dir>" >&2
+    exit 1
+fi
+
+PGP_INPUT_DIR=$1
+PGP_OUTPUT_DIR=$2
+
+source @PGP_LOGIN_RC@
+source @PGP_TASK_RC@
+#edit @PGP_PREPARE_QSUB_IN@ to pgp_prepare.qsub
+replace "##PGP_INPUT_DIR##" "$PGP_INPUT_DIR" @PGP_PREPARE_QSUB_IN@ 0 > pgp_prepare.qsub
+replace "##PGP_OUTPUT_DIR##" "$PGP_OUTPUT_DIR" pgp_prepare.qsub 1
+qsub pgp_prepare.qsub
+

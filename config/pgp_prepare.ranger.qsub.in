@@ -18,15 +18,15 @@
 #$ -q serial # run in serial queue
 #$ -l h_rt=01:30:00 # Run time (hh:mm:ss) -1.5 hours
 
-INP=##PGP_INPUT_DIR##
-OUT=##PGP_OUTPUT_DIR##
-@PGP_PREPARE@ --inp-dir=$INP --work-dir=$OUT
+INP="##PGP_INPUT_DIR##"
+OUT="##PGP_OUTPUT_DIR##"
+@PGP_PREPARE@ --inp-dir="$INP" --work-dir="$OUT"
 
 echo
 if [ $? -eq 0 ]; then
         echo "PGP has prepared the workflow."
-        echo "Now run the workflow with @PGP_WORKFLOW_SUBMIT@."   
-        echo "See comments inside @PGP_WORKFLOW_SUBMIT@" 
+        echo "Now run the workflow with @PGP_RUN_SUBMIT@."   
+        echo "See comments inside @PGP_RUN_SUBMIT@" 
         echo "for instructions." 
 else
         echo "Error when preparing the workflow!!!"

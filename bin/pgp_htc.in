@@ -1,0 +1,15 @@
+#!/bin/bash
+
+source @PGP_LOGIN_RC@
+source @PGP_TASK_RC@
+
+INPUT_DIR=$1
+OUTPUT_DIR=$2
+shift
+shift
+
+#this will check non-empty args:
+@PGP_PREPARE@ $INPUT_DIR $OUTPUT_DIR
+
+exec @CCTOOLS_INSTALL_DIR@/bin/makeflow "$@" pgp_proc.mkf
+

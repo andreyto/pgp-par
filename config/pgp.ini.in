@@ -12,7 +12,7 @@
 [main]
 pgp_root=@PGP_ROOT@
 pgp_home=@PGP_HOME@
-task_env=%(pgp_home)s/config/pgp_task.rc
+task_env=@PGP_TASK_RC@
 prep_wrapper=prep_wrapper.sh
 inspect_wrapper=inspect_wrapper.sh
 pvalue_wrapper=pvalue_wrapper.sh

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [[ "$#" != "1" ]]; then
+    echo "Arguments: <workflow dir> (output dir of pgp_prepare)" >&2
+    exit 1
+fi
+
+WORKFLOW_DIR=$1
+
+if [ ! -d "$WORKFLOW_DIR" ]; then
+    echo "$WORKFLOW_DIR must be a directory" >&2
+    exit 1
+fi
+
+cd "$WORKFLOW_DIR"
+
+source @PGP_LOGIN_RC@
+source @PGP_TASK_RC@
+
+qsub @PGP_RUN_QSUB_IN@
+

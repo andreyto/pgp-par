@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source @PGP_TASK_RC@
+
+#remaining arguments need to be quoted otherwise those with spaces
+#inside will get busted
+exec $PGP_PYTHON $PGP_HOME/PGPMakeflow.py --config-file="@PGP_CONFIG@" "$@"
+
