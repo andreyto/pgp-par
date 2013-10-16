@@ -45,16 +45,12 @@ set(PY_BUILD_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/${PY_INSTALL_SUBDIR}")
 
 set(PGP_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/proteogenomics")
 
-set(WRAPPER_SCRIPT_ROOT pgp)
-
-#set(WRAPPER_SCRIPT_IN "${CMAKE_SOURCE_DIR}/bin/${WRAPPER_SCRIPT_ROOT}.in")
-#set(WRAPPER_SCRIPT "${CMAKE_BINARY_DIR}/${WRAPPER_SCRIPT_ROOT}")
-
-#configure_file(${WRAPPER_SCRIPT_IN} ${WRAPPER_SCRIPT} @ONLY)
-#install(PROGRAMS ${WRAPPER_SCRIPT} DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 add_subdirectory(vendor)
 add_subdirectory(proteogenomics)
 add_subdirectory(index_search)
 
+message(STATUS "Target execution environment is: ${PGP_TARGET_ENV}")
+
+include(PGPGenerateProfiles)
 

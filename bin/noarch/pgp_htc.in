@@ -8,8 +8,12 @@ OUTPUT_DIR=$2
 shift
 shift
 
+set -ex
+
 #this will check non-empty args:
 @PGP_PREPARE@ $INPUT_DIR $OUTPUT_DIR
+
+cd $OUTPUT_DIR
 
 exec @CCTOOLS_INSTALL_DIR@/bin/makeflow "$@" pgp_proc.mkf
 
