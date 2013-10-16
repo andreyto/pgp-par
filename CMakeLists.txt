@@ -22,7 +22,12 @@ enable_testing()
 set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/test_data
     CACHE FILEPATH "Root directory for input data files used by the test cases")
 
+#these should be on the PATH already (and probably 
+#LD_LIBRARY_PATH must be set accordingly)
 find_program(PYTHON "python")
+#TODO: run a test on MSGF.jar to make sure
+#it works with the java that is found
+find_program(JAVA "java" VAR JAVA_HOME)
 
 set(VENDOR_DISTRO ${PROJECT_SOURCE_DIR}/vendor)
 set(VENDOR_PREFIX_INSTALL ${CMAKE_INSTALL_PREFIX}/vendor)

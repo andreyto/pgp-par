@@ -14,19 +14,14 @@
 #Boost Python library.
 #This should be sourced from task scripts generated to be called from
 #the makeflow makefile
-export PGP_ROOT=/work/01241/atovchig/PGP
-export PGP_HOME=$PGP_ROOT/proteogenomics
-export PGP_VENDOR_HOME=$PGP_ROOT/vendor
-export PGP_VENDOR_BIN=$PGP_VENDOR_HOME/bin
-export PATH=$PGP_VENDOR_BIN:$PATH
-export PGP_PYTHON_PREFIX=$PGP_VENDOR_HOME
-export PYTHONPATH=$PGP_HOME:$PYTHONPATH
+export PGP_ROOT=@PGP_ROOT@
+export PGP_HOME=@PGP_HOME@
+export PATH=@CCTOOLS_INSTALL_DIR@/bin:$PATH
+export PYTHONPATH=$PGP_HOME:@PY_INSTALL_PREFIX@:$PYTHONPATH
 
-[ -n "$JAVA_HOME" ] || echo "JAVA_HOME undefined"
-export PGP_JAVA=$JAVA_HOME/bin/java
+export PGP_JAVA=@JAVA@
 
-[ -n "$PYTHONHOME" ] || echo "PYTHONHOME undefined"
-export PGP_PYTHON=$PYTHONHOME/bin/python
+export PGP_PYTHON=@PYTHON@
 
 if [ -f "$PGP_PYTHON" ]; then
 
@@ -37,5 +32,5 @@ if [ -f "$PGP_PYTHON" ]; then
     export PYTHONPATH=${PGP_PYDIST}:${PGP_PYCOMMON}:${PYTHONPATH}
 fi
 
-export PGP_PEPNOVO_HOME=$PGP_VENDOR_HOME/productionPepNovo
+export PGP_PEPNOVO_HOME=@PEPNOVO_INSTALL_DIR@
 

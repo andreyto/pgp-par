@@ -1,0 +1,38 @@
+#!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012-2013
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
+#set serial batch mode with options
+##$ -A  # <project_account_name>. Used only for multi-project logins. Account names and reports are displayed at login.
+#$ -V # Inherit the submission environment
+#$ -cwd # Start job in submission directory
+#$ -j y # Combine stderr and stdout
+#$ -o $JOB_NAME.o$JOB_ID # Name of the output file (eg. myMPI.oJobID)
+#$ -pe 1way 16 # 1 execution on node of 16 cores
+#$ -q serial # run in serial queue
+#$ -l h_rt=01:30:00 # Run time (hh:mm:ss) -1.5 hours
+
+INP=##PGP_INPUT_DIR##
+OUT=##PGP_OUTPUT_DIR##
+@PGP_PREPARE@ --inp-dir=$INP --work-dir=$OUT
+
+echo
+if [ $? -eq 0 ]; then
+        echo "PGP has prepared the workflow."
+        echo "Now run the workflow with @PGP_WORKFLOW_SUBMIT@."   
+        echo "See comments inside @PGP_WORKFLOW_SUBMIT@" 
+        echo "for instructions." 
+else
+        echo "Error when preparing the workflow!!!"
+        echo "You will need to repeat this step"
+        echo "after fixing the source of the error."
+fi
+echo
+echo
+

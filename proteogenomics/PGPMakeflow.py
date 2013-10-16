@@ -243,17 +243,11 @@ class pgp_makeflow(object):
         msgf_dir = config.get(ini_section,"msgf_dir")
         #somehow on TACC Ranger JAVA_HOME defined by 'module add'
         #does not transfer to compute nodes as it should with 
-        #qsub -V, so we pull it here on submit node from our
-        #current environment.
-        try:
-            msgf_java = os.environ["PGP_JAVA"]
-        except KeyError:
-            logger.error("PGP_JAVA not defined. Have you sourced PGP environment file?")
-            raise
+        #qsub -V
         makedir(msgf_dir)
         script = msgf_script_tpl % dict(
                 env=task_env,
-                msgf_java=msgf_java,
+                msgf_java=config.get(ini_section,"msgf_java"),
                 msgf_java_args=config.get(ini_section,"msgf_java_args"),
                 msgf_jar=config.get(ini_section,"msgf_jar"),
                 )

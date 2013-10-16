@@ -1,0 +1,34 @@
+#!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012-2013
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
+#
+#This profile is responsible for setting up the proper environment
+#as expected by the PGP components
+#This should be sourced from task scripts generated to be called from
+#the Makeflow makefile.
+#
+#Note: on XSEDE systems (that use 'module' framework to configure
+#the runtime environment) do not put any 'module' commands here.
+#They should go to 'pgp_login.rc' that should be sourced on login
+#node only before submitting the job. Use '-V' qsub parameter
+#(or equivalent) to propagate environment variables to compute nodes.
+#'module' commands do not relaibly work if executed on compute
+#nodes.
+#
+
+export PGP_ROOT=@PGP_ROOT@
+export PGP_HOME=@PGP_HOME@
+export PATH=@CCTOOLS_INSTALL_DIR@/bin:$PATH
+export PYTHONPATH=$PGP_HOME:@PY_INSTALL_PREFIX@:$PYTHONPATH
+
+export PGP_PYTHON=@PYTHON@
+
+export PGP_PEPNOVO_HOME=@PEPNOVO_INSTALL_DIR@
+

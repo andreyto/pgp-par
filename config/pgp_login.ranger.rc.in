@@ -1,0 +1,50 @@
+#!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012-2013
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
+#This sets up the system environment needed to
+#both build and run the PGP pipeline on TACC Ranger.
+#This can be a reasonable starting point for adaptation
+#to other XSEDE clusters.
+#Source (not execute) this file on your login node
+#before building the pipeline or executing its
+#master script.
+
+#This SHOULD NOT be sourced on compute nodes - you
+#will get errors from 'module' commands. Instead, 
+#your qsub script should use -V
+#option to propagate the environment variables from login
+#to compute nodes. It is best not to source this file
+#from your Bash startup profiles - you might end up
+#sourcing it on compute nodes with your MPI jobs not 
+#running or even worse, getting stuck eating your allocation
+#time.
+
+#We guard against sourcing more than once.
+#The downside - if you have edited it,
+#the most reliable way to see new changes
+#is to start with a fresh shell (e.g.
+#logoff+login).
+if [ -z "$PGP_LOGIN_RC_ENTERED" ]; then
+export PGP_LOGIN_RC_ENTERED=1
+
+#Add your commands here:
+
+#Use gcc compiler toolchain
+module swap pgi gcc
+module unload openmpi
+module load mvapich
+module load python
+#cctools make fail with default Globus 5, use 4
+module add globus/4.0.8
+#1.6 that PGP MSGF needs is default java here
+module add java
+
+fi
+

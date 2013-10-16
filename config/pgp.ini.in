@@ -10,15 +10,16 @@
 ; Configuration of proteogenomic pipeline makeflow implementation;
 
 [main]
-pgp_root=/work/01241/atovchig/PGP
-pgp_home=%(pgp_root)s/proteogenomics
-task_env=%(pgp_home)s/config/pgp_makeflow_env.sh
+pgp_root=@PGP_ROOT@
+pgp_home=@PGP_HOME@
+task_env=%(pgp_home)s/config/pgp_task.rc
 prep_wrapper=prep_wrapper.sh
 inspect_wrapper=inspect_wrapper.sh
 pvalue_wrapper=pvalue_wrapper.sh
 msgf_wrapper=msgf_wrapper.sh
+msgf_java=@JAVA@
 msgf_java_args=-Xmx1000M
-msgf_jar=%(pgp_root)s/vendor/MSGF/MSGF.jar
+msgf_jar=@MSGF_INSTALL_DIR@/MSGF.jar
 postproc_wrapper=postproc_wrapper.sh
 mzxml_dir=mzxml
 results_dir=ResultsX
