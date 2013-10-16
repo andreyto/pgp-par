@@ -22,12 +22,22 @@ enable_testing()
 set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/test_data
     CACHE FILEPATH "Root directory for input data files used by the test cases")
 
-#these should be on the PATH already (and probably 
+#THis should be on the PATH already (and probably 
 #LD_LIBRARY_PATH must be set accordingly)
+#We also assume that distutils will be able to
+#build the extension. We do not try to find
+#Python development headers here.
 find_program(PYTHON "python")
+if("${PYTHON}" STREQUAL "PYTHON-NOTFOUND")
+    MESSAGE(FATAL_ERROR "Python not found")
+endif()
+
 #TODO: run a test on MSGF.jar to make sure
-#it works with the java that is found
+#it works with the java that is found.
 find_program(JAVA "java" VAR JAVA_HOME)
+if("${JAVA}" STREQUAL "JAVA-NOTFOUND")
+    MESSAGE(FATAL_ERROR "Java not found")
+endif()
 
 set(VENDOR_DISTRO ${PROJECT_SOURCE_DIR}/vendor)
 set(VENDOR_PREFIX_INSTALL ${CMAKE_INSTALL_PREFIX}/vendor)
