@@ -140,7 +140,7 @@ class pgp_makeflow(object):
         task_env = config.get(ini_section,"task_env")
         prep_flag_ok = config.get(ini_section,"prep_flag_ok")
         inp_dir = self.inp_dir
-        proj_dir = basedir(inp_dir)
+        proj_dir = config.get(ini_section,"run_dir")
         work_dir = os.getcwd()
         db_genomic_dir = config.get(ini_section,"db_genomic_dir")
         gbk_ext = config.get(ini_section,"gbk_ext")

@@ -13,7 +13,8 @@ set -ex
 #this will check non-empty args:
 @PGP_PREPARE@ $INPUT_DIR $OUTPUT_DIR
 
-cd $OUTPUT_DIR
+#'run' should match value in pgp_task.ini
+cd $OUTPUT_DIR/run
 
 exec @CCTOOLS_INSTALL_DIR@/bin/makeflow "$@" pgp_proc.mkf
 

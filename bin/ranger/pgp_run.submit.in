@@ -5,7 +5,8 @@ if [[ "$#" != "1" ]]; then
     exit 1
 fi
 
-WORKFLOW_DIR=$1
+#'run' must match value in pgp_task.ini
+WORKFLOW_DIR="$1/run"
 
 if [ ! -d "$WORKFLOW_DIR" ]; then
     echo "$WORKFLOW_DIR must be a directory" >&2
