@@ -156,7 +156,7 @@ homology to another spore coat protein from B. cereus, not annotated in
 any anthrax genome.
 
 ![Image of Novel Anthrax Sporecoat
-Protein](https://bitbucket.org/andreyto/proteogenomics/raw/master/docs.PGP/anthrax_sporecoat.png)
+Protein](https://bitbucket.org/andreyto/proteogenomics/raw/master/proteogenomics/docs.PGP/anthrax_sporecoat.png)
 
 II). Parallelization strategy
 -----------------------------
