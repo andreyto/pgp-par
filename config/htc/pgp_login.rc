@@ -14,6 +14,8 @@
 #Source (not execute) this file on your login node
 #before building the pipeline or executing 
 #its master script.
+#Current install and submit scripts will source
+#it automatically - you do not have to do it.
 
 #We guard against sourcing more than once.
 #The downside - if you have edited it,

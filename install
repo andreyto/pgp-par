@@ -59,15 +59,26 @@ if [ -z "$prefix" ]; then
     echo "--prefix is a required argument" >&2
     exit 1
 fi
+
 if [ -z "$target_env" ]; then
     echo "--target-env is a required argument" >&2
     exit 1
 fi
+
 cmake_toolchain="$src_dir/cmake/$target_env/toolchain.cmake"
 if [ ! -f "$cmake_toolchain" ]; then
-    echo "CMake toolchain file does not exist: $cmake_toolchain" >&2
+    echo "CMake toolchain file must exist: $cmake_toolchain" >&2
     exit 1
 fi
+
+login_rc="$src_dir/config/$target_env/pgp_login.rc"
+if [ ! -f "$login_rc" ]; then
+    echo "Login node environment file must exist: $login_rc" >&2
+    exit 1
+fi
+
+## We need to set up the build environment before we run CMake
+source "$login_rc"
 
 cmake \
 -D PGP_TARGET_ENV="$target_env" \

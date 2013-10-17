@@ -20,6 +20,8 @@ foreach(dir_name config bin)
     file(GLOB noarch_files_in ${PROJECT_SOURCE_DIR}/${dir_name}/noarch/*)
     foreach( file_in IN LISTS arch_files_in noarch_files_in)
         get_filename_component(file_out "${file_in}" NAME)
+        #remove '.in' from file_out name if present
+        #TODO: use COPY option to configure_file if there is no '.in'
         string(REGEX REPLACE ".in\$" "" file_out "${file_out}")
         set(file_out "${dir_out}/${file_out}")
         configure_file(${file_in} ${file_out} @ONLY)
