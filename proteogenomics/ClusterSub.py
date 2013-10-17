@@ -533,8 +533,8 @@ if __name__ == "__main__":
     Mongler = ScriptMongler()
     Mongler.ParseCommandLine()
     if Mongler.scratchBase:
-        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.scratchBase,Mongler.projectDir)
+        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.scratchBase)
     else:
-        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(Mongler.projectDir)
+        Mongler.gridEnv = ClusterUtils.JCVIGridEnv(os.getcwd())
     Mongler.gridEnv.MakeGridDirectories()
     Mongler.BuildJobs()

@@ -45,8 +45,8 @@ source %(env)s
 set -e
 rm -f %(prep_flag_ok)s
 prep_script=$PGP_HOME/ClusterSub.py
-$PGP_PYTHON $prep_script -t %(inp_dir)s -s %(work_dir)s
-#copy gbk files into work_dir too
+$PGP_PYTHON $prep_script -t %(inp_dir)s -s %(run_dir)s
+#copy gbk files into run_dir too
 cp %(gbk_src)s %(gbk_dest)s
 touch %(prep_flag_ok)s
 """
@@ -140,16 +140,16 @@ class pgp_makeflow(object):
         task_env = config.get(ini_section,"task_env")
         prep_flag_ok = config.get(ini_section,"prep_flag_ok")
         inp_dir = self.inp_dir
-        proj_dir = config.get(ini_section,"run_dir")
+        run_dir = config.get(ini_section,"run_dir")
         work_dir = os.getcwd()
         db_genomic_dir = config.get(ini_section,"db_genomic_dir")
         gbk_ext = config.get(ini_section,"gbk_ext")
         gbk_src = pjoin(inp_dir,db_genomic_dir,"*"+gbk_ext)
-        gbk_dest = pjoin(work_dir,proj_dir,db_genomic_dir)
+        gbk_dest = pjoin(work_dir,run_dir,db_genomic_dir)
         script = prep_script_tpl % dict(
                 env=task_env,
                 inp_dir=inp_dir,
-                work_dir=work_dir,
+                run_dir=pjoin(work_dir,run_dir),
                 prep_flag_ok=prep_flag_ok,
                 gbk_src=gbk_src,
                 gbk_dest=gbk_dest
@@ -157,7 +157,7 @@ class pgp_makeflow(object):
         script_file = config.get(ini_section,"prep_wrapper")
         strToFile(script,script_file)
         cmd = "bash %s" % (script_file,)
-        tasks = [ dict(proj_dir=proj_dir,
+        tasks = [ dict(proj_dir=run_dir,
             prep_res=prep_flag_ok) ]
         prep_res_all = " ".join([ task["prep_res"] \
                     for task in tasks ])
