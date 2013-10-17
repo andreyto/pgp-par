@@ -13,6 +13,7 @@
 pgp_root=@PGP_ROOT@
 pgp_home=@PGP_HOME@
 task_env=@PGP_TASK_RC@
+makeflow=@MAKEFLOW@
 prep_wrapper=prep_wrapper.sh
 inspect_wrapper=inspect_wrapper.sh
 pvalue_wrapper=pvalue_wrapper.sh

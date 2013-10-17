@@ -119,7 +119,7 @@ class pgp_makeflow(object):
 
         # execute "prepare data" makefile which is needed
         # to generate "process data" makefile
-        run(["makeflow",make_prep])
+        run([config.get(ini_section,"makeflow"),make_prep])
 
         # create "process data" makefile
         start_dir = os.getcwd()

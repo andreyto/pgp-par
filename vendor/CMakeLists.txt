@@ -50,7 +50,8 @@ ExternalProject_Add(CCTOOLS
 #extract property from the external project and assign to
 #global variable
 ExternalProject_Get_Property(CCTOOLS INSTALL_DIR)
-set(CCTOOLS_INSTALL_DIR ${INSTALL_DIR} CACHE INTERNAL "")
+set(CCTOOLS_INSTALL_DIR "${INSTALL_DIR}" CACHE INTERNAL "")
+set(MAKEFLOW "${CCTOOLS_INSTALL_DIR}/bin/makeflow" CACHE INTERNAL "")
 
 #TODO: pepnovo uses g++ hardcoded; convert its build to CMake
 ExternalProject_Add(PEPNOVO
