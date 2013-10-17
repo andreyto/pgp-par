@@ -1,0 +1,3 @@
+#set(CMAKE_CXX_FLAGS "-O3" CACHE INTERNAL "")
+
+

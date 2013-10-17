@@ -1,0 +1,83 @@
+#!/bin/bash
+set -e
+
+this_script_base="$(basename $0)"
+this_dir="$(cd $(dirname $0) && pwd)"
+src_dir="$this_dir"
+
+if [ -f CMakeLists.txt ]; then
+    echo "You should not build in the source directory."
+    echo "Change to an empty directory outside of the source"
+    echo "and run again this script:"
+    echo "$this_dir/$this_script_base $@"
+    exit 1
+fi
+
+target_env="htc"
+verbose_build="OFF"
+
+IFS_old="$IFS"
+IFS=" ="
+export IFS
+
+while [ $# -gt 0 ]
+do
+	case $1 in
+		--prefix)
+			shift
+			prefix=$1
+			;;
+		--target-env)
+            shift
+			target_env=$1
+			;;
+		--verbose-build)
+			verbose_build="ON"
+			;;
+		-h | -help | --h | --help)
+			cat <<EOF
+Use: ${this_script_base} [options]
+Where options are:
+  --help
+  --prefix        <path>          Installation prefix
+  --target-env    <ranger|htc>    Target execution environment
+EOF
+			exit 1
+			;;
+		*)
+			echo "Unknown argument $1" >&2
+			exit 1
+			;;
+	esac
+	shift
+done
+
+IFS="$IFS_old"
+export IFS
+
+if [ -z "$prefix" ]; then
+    echo "--prefix is a required argument" >&2
+    exit 1
+fi
+if [ -z "$target_env" ]; then
+    echo "--target-env is a required argument" >&2
+    exit 1
+fi
+cmake_toolchain="$src_dir/cmake/$target_env/toolchain.cmake"
+if [ ! -f "$cmake_toolchain" ]; then
+    echo "CMake toolchain file does not exist: $cmake_toolchain" >&2
+    exit 1
+fi
+
+cmake \
+-D PGP_TARGET_ENV="$target_env" \
+-D CMAKE_INSTALL_PREFIX="$prefix" \
+-D CMAKE_TOOLCHAIN_FILE="$cmake_toolchain" \
+-D CMAKE_VERBOSE_MAKEFILE="$verbose_build" \
+-G "Unix Makefiles" \
+$src_dir
+
+cmake --build .
+
+make install
+
