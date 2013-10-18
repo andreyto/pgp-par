@@ -4,6 +4,7 @@ Simple summary script: Count the PRMs found in data-sets, by type.
 import os
 import sys
 import random
+random.seed(1)
 import types
 import traceback
 from TrainPTMFeatures import FormatBits

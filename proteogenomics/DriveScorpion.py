@@ -26,6 +26,7 @@ import sys
 import math
 import struct
 import random
+random.seed(1)
 import string
 import getopt
 import traceback

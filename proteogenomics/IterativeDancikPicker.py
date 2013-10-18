@@ -15,6 +15,7 @@ import sys
 import traceback
 import math
 import random
+random.seed(1)
 import getopt
 import MSSpectrum
 from Utils import *

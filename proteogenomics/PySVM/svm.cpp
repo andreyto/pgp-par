@@ -1913,6 +1913,7 @@ void svm_binary_svc_probability(
 {
 	int i;
 	int nr_fold = 5;
+	srand(1);
 	int *perm = Malloc(int,prob->l);
 	double *dec_values = Malloc(double,prob->l);
 
@@ -2361,6 +2362,7 @@ void svm_cross_validation(const svm_problem *prob, const svm_parameter *param, i
 		int *start = NULL;
 		int *label = NULL;
 		int *count = NULL;
+		srand(1);
 		svm_group_classes(prob,&nr_class,&label,&start,&count,perm);
 
 		// random shuffle and then data grouped by fold using the array perm

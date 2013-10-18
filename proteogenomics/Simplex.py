@@ -7,7 +7,7 @@ import math
 import sys
 import traceback
 import random
-
+random.seed(1)
 
 # Simplex optimization loaf:
 class SimplexPoint:
@@ -163,7 +163,6 @@ def GetGoodCoords(GoodCoords, EvilCoords, FileName,
 
 def SimplexOptimize(CoordCount):
     SimplexPoints = []
-    random.seed()
     for PointIndex in range(CoordCount + 1):
         Point = SimplexPoint(CoordCount)
         Point.GetScore()

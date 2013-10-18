@@ -42,6 +42,7 @@ match above the score cutoff is correct:
 import os
 import sys
 import random
+random.seed(1)
 import math
 import getopt
 import traceback

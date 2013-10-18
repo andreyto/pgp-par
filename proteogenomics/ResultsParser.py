@@ -3,6 +3,7 @@ Constants and methods for parsing (Inspect) search results
 """
 import os
 import random
+random.seed(1)
 class Columns:
     "Constants for which columns contain which data"
     SpectrumFile = 0

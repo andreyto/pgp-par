@@ -3,9 +3,9 @@ Generate equal number of false and true elements:
 """
 import sys
 import random
+random.seed(1)
 import os
 
-random.seed(1) # for reproducibility
 
 File = open(sys.argv[1], "r")
 ProportionalFlag = 0

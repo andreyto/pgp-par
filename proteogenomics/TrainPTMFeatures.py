@@ -43,12 +43,12 @@ import getopt
 import MSSpectrum
 import PyInspect
 import random
+random.seed(1)
 import shutil
 import Learning
 import BasicStats
 import ResultsParser
 import SpectralSimilarity
-random.seed(1)
 from Utils import *
 Initialize()
 try:

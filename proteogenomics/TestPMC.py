@@ -3,6 +3,7 @@ Invoke parent mass correction code programatically.
 """
 import sys
 import random
+random.seed(1)
 import os
 import getopt
 import traceback
@@ -330,7 +331,6 @@ class PMCFeatureGrabber(ResultsParser.ResultsParser):
         File = open(OracleFileName, "rb")
         LineNumber = 0
         FileLines = File.readlines()
-        random.seed(1)
         random.shuffle(FileLines)
         FileLines = FileLines[:SpectrumCount]
         for FileLine in FileLines:

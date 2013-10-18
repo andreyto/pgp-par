@@ -13,6 +13,7 @@ import os
 import getopt
 import sys
 import random
+random.seed(1)
 import struct
 import SelectProteins
 
@@ -90,7 +91,6 @@ class LiarClass:
         """Using the amino acid frequencies (actually the cumulativeProbabilities table) we
         create totally fake amino acid sequences
         """
-        random.seed()
         RandomNum = random.random()
         ProteinLength = int(RandomNum * 1000 )# to getsequences between 100 and 1000 amino acids long
         ProteinSequence = ""

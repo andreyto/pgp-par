@@ -4,6 +4,7 @@ Test charge-correction.  Run this *after* training parent mass correction.
 import os
 import sys
 import random
+random.seed(1)
 import getopt
 import traceback
 import time

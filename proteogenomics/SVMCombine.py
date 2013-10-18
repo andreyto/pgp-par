@@ -2,6 +2,7 @@
 Combine training data from multiple files.  Randomly select n rows from each one.
 """
 import random
+random.seed(1)
 
 FileNames = [("SVMTrain\\Ch2SimMod1Blind.Correct.txt",800),
              ("SVMTrain\\SimMod0LargeDB.Correct.txt",800),

@@ -29,6 +29,7 @@ import math
 import os
 import sys
 import random
+random.seed(1)
 import struct
 import traceback
 
@@ -145,7 +146,6 @@ class LDAClassifier:
         if ScaleVectors:
             self.ScaleVectors()
         if FoldValidation:
-            random.seed(1)
             random.shuffle(self.GoodVectors)
             random.shuffle(self.BadVectors)
         # n-fold validation:

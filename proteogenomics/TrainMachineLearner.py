@@ -4,6 +4,7 @@ General-purpose machine learner driver.
 import os
 import sys
 import random
+random.seed(1)
 import traceback
 import getopt
 import Learning

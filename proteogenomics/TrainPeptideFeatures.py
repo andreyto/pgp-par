@@ -11,6 +11,7 @@ import getopt
 import MSSpectrum
 import PyInspect
 import random
+random.seed(1)
 import shutil
 import Learning
 import BasicStats
@@ -28,7 +29,6 @@ try:
 except:
     print "** Warning: Unable to import Numpy.  Logit training not available"
 
-random.seed(1)
 
 UsageInfo = """
 TrainPeptideFeatures: Train a model to differentiate between CORRECT and

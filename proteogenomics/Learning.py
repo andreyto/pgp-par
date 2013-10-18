@@ -6,6 +6,7 @@ import os
 import sys
 import struct
 import random
+random.seed(1)
 import math
 import traceback
 import cPickle
@@ -27,8 +28,6 @@ except:
     print "  Please install NumPy (see http://numpy.scipy.org/ for details)"
     print "  Error details are shown here:"
     traceback.print_exc()
-    
-random.seed(1)
 
 MaxSVMFeatureCount = 500
 

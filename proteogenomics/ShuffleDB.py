@@ -11,6 +11,7 @@ import string
 import getopt
 import struct
 import random
+random.seed(1)
 
 UsageInfo = """
 ShuffleDB - Produce a 'red herring' database of erroneous peptide records.

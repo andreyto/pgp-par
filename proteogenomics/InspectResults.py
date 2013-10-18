@@ -29,6 +29,7 @@ Constants and methods for parsing (Inspect) search results
 import os
 import bz2
 import random
+random.seed(1)
 
 class Row:
     "Object representing one row of inspect output."

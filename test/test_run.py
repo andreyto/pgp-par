@@ -22,6 +22,9 @@ inp_dir = util.tar_extractall_safe_single_dir(args.test_archive,path=run_dir)
 out_dir = inp_dir+".out"
 run_exe = pjoin(args.install_prefix,"bin","pgp_htc")
 run_cmd = [run_exe,inp_dir,out_dir]
+#run_cmd = [run_exe,inp_dir,out_dir, "-T", "sge", "-B", '-l fast -P 0534 -b n -S /bin/bash']
+
+print "Pipeline command is: {}".format(" ".join(run_cmd))
 
 try:
     check_call(run_cmd)

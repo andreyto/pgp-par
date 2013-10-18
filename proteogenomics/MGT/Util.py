@@ -20,6 +20,7 @@ try:
     n = numpy
     nma = numpy.ma
     import numpy.random as nrnd
+    nrnd.seed(1)
 except ImportError:
     pass
 from tempfile import mkstemp

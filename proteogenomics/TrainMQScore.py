@@ -8,6 +8,7 @@ import getopt
 import traceback
 import struct
 import random
+random.seed(1)
 import ResultsParser
 import PyInspect
 from Utils import *
