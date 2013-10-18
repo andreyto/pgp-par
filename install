@@ -15,6 +15,8 @@ fi
 
 target_env="htc"
 verbose_build="OFF"
+skip_test=
+verbose_test="--verbose"
 
 IFS_old="$IFS"
 IFS=" ="
@@ -33,6 +35,12 @@ do
 			;;
 		--verbose-build)
 			verbose_build="ON"
+			;;
+		--skip-test)
+			skip_test=1
+			;;
+		--quiet-test)
+			verbose_test=
 			;;
 		-h | -help | --h | --help)
 			cat <<EOF
@@ -91,4 +99,8 @@ $src_dir
 cmake --build .
 
 make install
+
+if [ -z "$skip_test" ]; then
+    ctest $verbose_test
+fi
 

@@ -74,7 +74,10 @@ execute_process(
     )
 ")
 
-make_script_command(py_build "${cmd}" cmd_build_install_scr build_install_scr)
+make_script_command(SCRIPT_NAME py_build 
+    SCRIPT_BODY "${cmd}" 
+    VAR_SCRIPT_COMMAND cmd_build_install_scr 
+    VAR_SCRIPT_FILE build_install_scr)
 
 add_custom_command(OUTPUT ${OUTPUT}
                     COMMAND ${cmd_build_install_scr}

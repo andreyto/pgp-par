@@ -19,8 +19,8 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 # For Visual Studio builds, defines Visual Studio project named RUN_TESTS.
 enable_testing()
 
-set(TEST_DATA_DIR ${PROJECT_SOURCE_DIR}/test_data
-    CACHE FILEPATH "Root directory for input data files used by the test cases")
+set(TEST_DATA_DIR "${PROJECT_SOURCE_DIR}/proteogenomics/TestSuite"
+    CACHE INTERNAL "Directory with test data")
 
 #THis should be on the PATH already (and probably 
 #LD_LIBRARY_PATH must be set accordingly)
