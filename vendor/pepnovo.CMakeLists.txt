@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 2.8)
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${src_dir})
+## This file is to build as ExternalProject target, so globbing for 
+## sources should be OK
+## But, there are extra sources where that fail to compile.
+#file(GLOB SOURCES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${src_dir}/*.cpp")
+
+set(SOURCES_base PepNovo_main.cpp AnnotatedSpecturm.cpp auxfun.cpp base64.cpp 
+    BasicDataStructs.cpp Config.cpp
+    ConversionTables.cpp DeNovoDp.cpp DeNovoSolutions.cpp DiscretePeakModel.cpp 
+    EdgeModel.cpp FileManagement.cpp
+    Fragmentation.cpp FragmentSelection.cpp FragProbTable.cpp Isotopes.cpp 
+    MassRangeMap.cpp ME_REG.cpp
+    ME_Regression_DataSet.cpp ME_Regression_Model.cpp Model.cpp 
+    MultiPath.cpp MZXML_parsing.cpp    
+    PrmGraph.cpp PTM_stuff.cpp RegionalPepNovoModel.cpp RegularRankModel.cpp 
+    AminoAcidProbs.cpp
+    Spectrum.cpp PMCSQS.cpp PMCSQS_model.cpp QCBasicSpecReader.cpp 
+    QuickClusteringSpectra.cpp
+    QCoutputter.cpp PMC_rank.cpp RankBoost.cpp RankBoostSample.cpp 
+    AdvancedScoreModel.cpp AdvancedScoreModel_fill.cpp	
+    AdvancedScoreModel_frag.cpp AdvancedScoreModel_regional.cpp PeptideComp.cpp
+    PartitionModel.cpp PeakRankModel.cpp
+	PeakRankPartialDenovo.cpp PeakRank_combined.cpp PeakRank_advanced.cpp 
+    PeakRank_simple.cpp PeakRank_combined_dnv.cpp
+	DeNovoRankTrain.cpp DeNovoRankScore.cpp DeNovoPartModel.cpp ReScoreDB.cpp)
+
+foreach(source IN LISTS SOURCES_base)
+    LIST(APPEND SOURCES "src/${source}")
+endforeach()
+
+add_executable(PepNovo_bin ${SOURCES})
+
+target_link_libraries(PepNovo_bin m)
+
+install(DIRECTORY Models 
+    DESTINATION ${CMAKE_INSTALL_PREFIX} 
+    USE_SOURCE_PERMISSIONS
+    REGEX "${src_dir}" EXCLUDE)
+install(TARGETS PepNovo_bin RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX})
+

@@ -47,10 +47,16 @@ if os.path.isdir(gff_dir_exp):
         path_out = gff_files_out[f_exp]
         recs_exp = open(path_exp,"r").readlines()
         recs_out = open(path_out,"r").readlines()
-        assert len(recs_exp) == len(recs_out),\
-                "Different # of lines in {} ({}) and {} ({}).".\
-                format(path_exp,len(recs_exp),path_out,len(recs_out))
-        print "Found {} output GFF records".format(len(recs_out))
+        len_recs_exp = len(recs_exp)
+        len_recs_out = len(recs_out)
+        max_len_recs = max(len_recs_exp,len_recs_out)
+        #we give 5% slack for numerical stability across runs and architectures
+        #when comparing the number of annotated peptides with the reference run
+        assert max_len_recs == 0 or \
+                float(abs(len_recs_exp - len_recs_out))/max_len_recs <= 0.05,\
+                "Substantially different # of peptides in {} ({}) and {} ({}).".\
+                format(path_exp,len_recs_exp,path_out,len_recs_out)
+        print "Found {} output GFF records".format(len_recs_out)
 print
 print "Pipeline command was: {}".format(" ".join(run_cmd))
 print

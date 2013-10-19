@@ -53,18 +53,16 @@ ExternalProject_Get_Property(CCTOOLS INSTALL_DIR)
 set(CCTOOLS_INSTALL_DIR "${INSTALL_DIR}" CACHE INTERNAL "")
 set(MAKEFLOW "${CCTOOLS_INSTALL_DIR}/bin/makeflow" CACHE INTERNAL "")
 
-#TODO: pepnovo uses g++ hardcoded; convert its build to CMake
+set(pepnovo_CMakeLists "${CMAKE_CURRENT_SOURCE_DIR}/pepnovo.CMakeLists.txt")
 ExternalProject_Add(PEPNOVO
     URL ${VENDOR_DISTRO}/productionPepNovo.tar.gz
-	UPDATE_COMMAND ""
-	BUILD_IN_SOURCE 1
     INSTALL_DIR ${VENDOR_PREFIX_INSTALL}/productionPepNovo
-    CONFIGURE_COMMAND ""
-	BUILD_COMMAND cd src && make
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E make_directory <INSTALL_DIR> && 
-    cd <SOURCE_DIR> && cp -a copyright.txt  Models  
-    MS-Filter.readme.txt readme.txt <INSTALL_DIR> && 
-    cp -a src/PepNovo_bin <INSTALL_DIR>
+    #CMAKE_GENERATOR "Unix Makefiles"
+    PATCH_COMMAND ${CMAKE_COMMAND} 
+        -E copy 
+            "${pepnovo_CMakeLists}" 
+            CMakeLists.txt
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
     )
 
 ExternalProject_Get_Property(PEPNOVO INSTALL_DIR)
