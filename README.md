@@ -2,8 +2,9 @@ PGP: Parallel Proteogenomics Pipeline for MPI clusters, high-througput batch clu
 ================================================================================================================
 
 The open source, automated proteogenomics pipeline (PGP) described here
-is freely accessible to the scientific community. It is designed to run
-in different kinds of parallel Linux computing environments:
+is freely available under [GPLv3](http://www.gnu.org/copyleft/gpl.html) 
+license. It is designed to run in a range of different parallel Linux 
+computing environments:
 
 -   HPC (high-performance computing) clusters that are set up to
     efficiently schedule only large (100s+ of cores) parallel MPI jobs
