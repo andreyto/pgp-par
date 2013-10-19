@@ -309,8 +309,8 @@ files are:
     the `install` and submit the pipeline for execution). You should put
     where any Bash shell commands and variables needed to properly
     configure your environment (such as setting `LD_LIBRARY_PATH`
-    variable to make sure that your Python interpreter works if it is
-    installed in a non-standard location).
+    and `PYTHONPATH` variables to make sure that your GCC compiler and
+    Python interpreter work if they are installed in non-standard locations).
 
     For the `ranger` environment, the `pgp_login.rc` uses "module" commands
     to make available the proper dependencies such as MPI compilers for
@@ -507,14 +507,15 @@ cluster file system, do the following:
     accessible from the compute nodes. The data in it will be staged to
     the `OUTPUT_DIR` (you should substitute the actual path for the
     `OUTPUT_DIR` placeholder). The `OUTPUT_DIR` should be located on a
-    shared cluster file system with access from the compute nodes. The
-    script mostly spends time unpacking the spectra files and counting
+    shared cluster file system with access from the compute nodes. This
+    job mostly spends time unpacking the spectra files and counting
     the number of spectra in them.
 
-    You can edit this script e.g. to modify the job submission command.
+    You can edit the `pgp_prepare.submit`, e.g. to modify the job submission 
+    command.
 
     If running such jobs on the login node is tolerated by your cluster
-    user policy, you can execute the corresponding \*.qsub script
+    user policy (unlikely), you can execute the corresponding \*.qsub script
     locally instead of submitting it for the batch execution. In that
     case you do not have to edit any batch system related options inside
     the `*.qsub` file, but you will have to copy
@@ -550,20 +551,27 @@ following:
     where `OUTPUT_DIR` should match `OUTPUT_DIR` from the `prepare`
     step.
 
-    The results should be written to `OUTPUT_DIR/run`
+    After the job completes, the structured output directory described
+    above will be created as `OUTPUT_DIR/run`
 
 D). Execution on HTC clusters or multicore workstations
 -------------------------------------------------------
 
-In this execution environments, there is a single script that runs the
-serial data preparation stage followed by the parallel processing stage.
+In this execution environments, there is a single script that first runs the
+serial data preparation stage, and then runs the parallel processing stage.
+
 There is no `*.qsub` script to edit. Execute:
 
-    `PGP_ROOT/bin/pgp_htc INPUT_DIR OUTPUT_DIR [Makeflow arguments]`
+    `PGP_ROOT/bin/pgp_htc [--local-prep] INPUT_DIR OUTPUT_DIR [Makeflow arguments]`
 
 where `OUTPUT_DIR` should be on a shared file system if you are running
-on a cluster. The optional Makeflow arguments will be passed to the
-Makeflow instance that will be running the data processing stage.
+on a cluster. The arguments in square brackets `[...]` are optional.
+The optional `Makeflow arguments` will be passed directly to the
+Makeflow. If the `--local-prep` flag is provided, the data preparation stage
+will be executed locally on the submit node. You might have to use that flag
+if your compute nodes do not have access to the file system where the `INPUT_DIR`
+resides (e.g. it is on some kind of archival storage only available on the login
+node of your cluster).
 
 On a single workstation without a batch system, the Makeflow arguments
 can be omitted. In that case, Makeflow will run the number of concurrent
@@ -585,14 +593,14 @@ You can look at the Makeflow manual for possible command line arguments
 if you want to use other backends such as Condor or modify the behavior
 of Makeflow (e.g. to constrain the number of concurrent jobs).
 
-In the commands above, both the data preparation as well as the
-controlling process of the Makeflow (the "master") will run on the login
+In the commands above, the controlling process of the Makeflow (the "master") 
+and, optionally, the data preparation stage will run on the login
 node, and the script `pgp_htc` will be in a running state until the
 entire workflow has finished. This script itself will use very little
-resources during the data processing stage, merely farming out tasks to
-the batch system. You can also submit the command above itself to your
-batch system through a standard (e.g. qsub) mechanism in case you do not
-want to wait for it to finish on the login node. This would require that
+resources during the data processing stage, when Makeflow master is merely farming 
+out tasks to the batch system. In case you do not want to wait for `pgp_htc` on
+the login node, you can also submit the command above itself to your
+batch system through a standard (e.g. qsub) mechanism. This would require that
 your compute nodes are allowed to submit new jobs themselves, because
 Makeflow will be submitting new jobs from the node where the master
 script is executing.
@@ -615,7 +623,8 @@ in addition to some log files, the following directories are created in
     from mapping the proteomics spectra.
 
     See [[PMC3219674](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3219674/)]
-    regarding the interpretation and downstream use of these annotations. 
+    regarding the interpretation and downstream use of these annotations.
+    
 -   **ResultsX:** the directory contains results from Inspect analysis.
 -   **pepnovo:** the directory contains results from PepNovo analysis.
 -   **pvalue10H:** the sub-directory with the output of PValue.py (with -p
