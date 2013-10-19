@@ -563,7 +563,7 @@ serial data preparation stage, and then runs the parallel processing stage.
 
 There is no `*.qsub` script to edit. Execute:
 
-    `PGP_ROOT/bin/pgp_htc [--local-prep] INPUT_DIR OUTPUT_DIR [Makeflow arguments]`
+    PGP_ROOT/bin/pgp_htc [--local-prep] INPUT_DIR OUTPUT_DIR [Makeflow arguments]
 
 where `OUTPUT_DIR` should be on a shared file system if you are running
 on a cluster. The arguments in square brackets `[...]` are optional.
