@@ -29,7 +29,7 @@ if(MAKEFLOW_GLOBUS_PATH)
 endif()
 
 ExternalProject_Add(CCTOOLS
-	URL ${VENDOR_DISTRO}/cctools-3.4.3-src.at.tar.gz
+	URL ${VENDOR_DISTRO}/at-fork-cctools-at-release-4.0.2.tar.gz
 	UPDATE_COMMAND ""
 	BUILD_IN_SOURCE 1
     INSTALL_DIR ${VENDOR_PREFIX_INSTALL}
