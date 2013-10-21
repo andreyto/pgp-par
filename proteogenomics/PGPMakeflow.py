@@ -322,7 +322,13 @@ class pgp_makeflow(object):
                         cmd=cmd)
                     )
             tasks.append(task)
-        return tasks
+        all_postproc_flag_ok = " ".join([ task["postproc_res"] for task in tasks ])
+        mf_out.write(makeflow_rule_tpl %\
+                dict(targets=postproc_flag_ok_root,
+                    inputs=all_postproc_flag_ok,
+                    cmd="LOCAL echo ok > {}".format(postproc_flag_ok_root))
+                )
+        return [dict(postproc_res=postproc_flag_ok_root)]
 
 def getProgOptions():
     from optparse import OptionParser, make_option

@@ -1,0 +1,26 @@
+
+##set serial batch mode with options
+##You might have to add the account:
+##$ -A  <project_account_name>. Used only for multi-project logins. Account names and reports are displayed at login.
+#$ -V # Inherit the submission environment
+#$ -cwd # Start job in submission directory
+
+## For serial job
+#$ -pe 1way 16 # 1 execution on node of 16 cores
+#$ -q serial # run in serial queue
+#$ -l h_rt=01:30:00 # Run time (hh:mm:ss) -1.5 hours
+
+## For parallel job (number of cores <= number of MS run files / 3)
+#$ -pe 16way 64 # Requests 16 tasks/node, 64 cores total
+#$ -q normal # Queue name "normal"
+#$ -l h_rt=12:00:00 # Run time (hh:mm:ss)
+
+COMMON_BATCH="-V -cwd"
+
+pgp_proc.mkf: ##PGP_INPUT_DIR##
+    @BATCH_OPTIONS="$COMMON_BATCH -pe 1way 16 -q serial -l h_rt=01:30:00"
+    @PGP_PREPARE@ ##PGP_INPUT_DIR## .
+postproc_flag_ok: pgp_proc.mkf
+    @BATCH_OPTIONS="$COMMON_BATCH -pe 16way 64 -q normal -l h_rt=12:00:00"
+    MAKEFLOW pgp_proc.mkf
+

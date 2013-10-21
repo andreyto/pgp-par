@@ -23,7 +23,7 @@ msgf_java_args=-Xmx1000M
 msgf_jar=@MSGF_INSTALL_DIR@/MSGF.jar
 postproc_wrapper=postproc_wrapper.sh
 ;generated run is under this dir
-run_dir=run
+run_dir=.
 mzxml_dir=mzxml
 results_dir=ResultsX
 inspect_dir=%(results_dir)s

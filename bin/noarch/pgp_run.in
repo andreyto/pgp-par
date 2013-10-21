@@ -1,0 +1,43 @@
+#!/bin/bash
+function replace() {
+    $PGP_PYTHON -c "import sys,re,fileinput; [sys.stdout.write(re.sub('$2','$3',line)) for line in fileinput.input('$1',inplace=$4)]"
+}
+
+MAKEFLOW_EXE=@CCTOOLS_INSTALL_DIR@/bin/makeflow
+
+if (( "$#" < "2" )); then
+    echo "Arguments: [--pgp-run-makeflow makeflow_file] <input dir> <output dir> [Makeflow args]" >&2
+    echo "Where optional makeflow_file is a path to a Makeflow file" >&2
+    echo "that you can create by editing a copy of @PGP_RUN_MKF_IN@." >&2
+    echo "You should set where your batch system parameters."
+    echo "If that argument is omitted, @PGP_RUN_MKF_IN@ will be used."
+    echo "Optional [Makeflow arguments] will be passed to Makeflow." >&2
+    echo "You should at least set -t <backend> argument if you are running" >&2
+    echo "on a cluster. Run '$MAKEFLOW_EXE --help' for a list of backends."
+    exit 1
+fi
+
+if [[ "$1" == "--pgp-run-makeflow" ]]; then
+    shift
+    PGP_RUN_MKF_IN=$1
+    shift
+else
+    PGP_RUN_MKF_IN=@PGP_RUN_MKF_IN@
+fi
+
+PGP_INPUT_DIR=$1
+PGP_OUTPUT_DIR=$2
+shift
+shift
+
+source @PGP_LOGIN_RC@
+source @PGP_TASK_RC@
+
+mkdir -p "$PGP_OUTPUT_DIR"
+
+cd "$PGP_OUTPUT_DIR"
+
+replace "$PGP_RUN_MKF_IN" "##PGP_INPUT_DIR##" "$PGP_INPUT_DIR" 0 > pgp_run.mkf
+
+exec @CCTOOLS_INSTALL_DIR@/bin/makeflow "$@" pgp_run.mkf
+
