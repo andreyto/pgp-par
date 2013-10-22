@@ -26,6 +26,7 @@ if [ -z "$PGP_LOGIN_RC_ENTERED" ]; then
 export PGP_LOGIN_RC_ENTERED=1
 
 #Add your commands here:
+source $HOME/.bashrc
 
 fi
 

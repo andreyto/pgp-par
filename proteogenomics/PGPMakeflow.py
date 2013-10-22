@@ -113,10 +113,11 @@ class pgp_makeflow(object):
         
         # create "prepare data" makefile
         make_prep = config.get(ini_section,"make_prep")
-        self.mf_out = open(make_prep,"w")
+        make_prep_work = make_prep+".tmp"
+        self.mf_out = open(make_prep_work,"w")
         tasks_prep = self.gen_prep()
         self.mf_out.close()
-
+        os.rename(make_prep_work,make_prep)
         # execute "prepare data" makefile which is needed
         # to generate "process data" makefile
         run([config.get(ini_section,"makeflow"),make_prep])
@@ -125,12 +126,15 @@ class pgp_makeflow(object):
         start_dir = os.getcwd()
         try:
             os.chdir(tasks_prep[0]["proj_dir"])
-            self.mf_out = open(config.get(ini_section,"make_proc"),"w")
+            make_proc = config.get(ini_section,"make_proc")
+            make_proc_work = make_proc+".tmp"
+            self.mf_out = open(make_proc_work,"w")
             tasks_inspect = self.gen_inspect()
             tasks_pvalue = self.gen_pvalue(tasks_inspect=tasks_inspect)
             tasks_msgf = self.gen_msgf(tasks_pvalue=tasks_pvalue)
             tasks_postproc = self.gen_postproc(tasks_msgf=tasks_msgf)
             self.mf_out.close()
+            os.rename(make_proc_work,make_proc)
         finally:
             os.chdir(start_dir)
 

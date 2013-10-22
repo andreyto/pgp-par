@@ -41,6 +41,8 @@ inspect_tasks_dir=jobs
 prep_flag_ok=prep_flag_ok
 postproc_flag_ok=postproc_flag_ok
 
+; top level makefile
+make_top_in=@PGP_RUN_MKF_IN@
 ; main processing makefile
 make_proc=pgp_proc.mkf
 ; data preparation makefile

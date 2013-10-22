@@ -1,6 +1,4 @@
 pgp_proc.mkf: ##PGP_INPUT_DIR##
-    @BATCH_LOCAL=1
-    @PGP_PREPARE@ ##PGP_INPUT_DIR## .
+    @PGP_PREPARE@ ##PGP_INPUT_DIR## ##PGP_OUTPUT_DIR##
 postproc_flag_ok: pgp_proc.mkf
-    @BATCH_LOCAL=1
-    MAKEFLOW pgp_proc.mkf
+    LOCAL ##PGP_NESTED_MAKEFLOW_COMMAND## pgp_proc.mkf
