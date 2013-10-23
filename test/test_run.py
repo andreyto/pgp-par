@@ -20,7 +20,7 @@ if os.path.exists(run_dir):
 inp_dir = util.tar_extractall_safe_single_dir(args.test_archive,path=run_dir)
 #inp_dir = pjoin(run_dir,"Bacillus.anthracis.sterne.PNNL.chunk.4sp")
 out_dir = inp_dir+".out"
-run_exe = pjoin(args.install_prefix,"bin","pgp_htc")
+run_exe = pjoin(args.install_prefix,"bin","pgp_run")
 run_cmd = [run_exe,inp_dir,out_dir]
 #run_cmd = [run_exe,inp_dir,out_dir, "-T", "sge", "-B", '-l fast -P 0534 -b n -S /bin/bash']
 
@@ -33,7 +33,7 @@ except:
     print >> sys.stderr, "Running the pipeline resulted in error"
     raise
 
-out_dir_data = pjoin(out_dir,"run")
+out_dir_data = out_dir
 gff_dir_out = pjoin(out_dir_data,"DerivedData","GFFs")
 assert os.path.isdir(gff_dir_out),"Output GFF dir does not exist"
 gff_dir_exp = pjoin(inp_dir,"DerivedData.expected","GFFs")

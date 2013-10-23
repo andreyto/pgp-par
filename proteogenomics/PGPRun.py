@@ -27,6 +27,14 @@ parser.add_argument("-T","--batch-type", type=str,
         default="local")
 parser.add_argument("-B","--batch-options", type=str, 
         help="Makeflow: Add these options to all batch submit files. Quote in '' if spaces are present inside.")
+parser.add_argument("--pgp-batch-options-extra-prepare", type=str, default="",
+        help="Makeflow: Add these options to --batch-options for 'prepare' (serial) stage. Quote in '' if spaces are present inside.")
+parser.add_argument("--pgp-batch-options-extra-process", type=str, default="",
+        help="Makeflow: Add these options to --batch-options for 'process' (parallel) stage. Quote in '' if spaces are present inside.")
+parser.add_argument("--pgp-local-prepare", action="store_true", 
+        help="Run the 'prepare' stage on a local machine regardless of --batch-type setting")
+parser.add_argument("--pgp-process-mpi", action="store_true", 
+        help="Use MPI backend for the 'process' stage")
 args,makeflow_args_other = parser.parse_known_args()
 
 #print args
@@ -52,42 +60,47 @@ assert not os.path.exists(args.output_dir),\
 
 os.makedirs(args.output_dir)
 
-if args.batch_type == "local":
-    nested_makeflow_command = "MAKEFLOW"
-else:
-    nested_makeflow_command = "{} --batch-type {}".\
-            format(makeflow_exe,args.batch_type)
-    if args.batch_options:
-        assert not "'" in args.batch_options, \
-                "Use double quotes inside of --batch-options value instead of single quotes"
-        nested_makeflow_command += " --batch-options '{}'".\
-                format(args.batch_options)
-
-with open(args.pgp_top_makefile,"r") as inp:
-    text = inp.read()
-text = text.replace("##PGP_INPUT_DIR##",args.input_dir)
-text = text.replace("##PGP_OUTPUT_DIR##",args.output_dir)
-text = text.replace("##PGP_NESTED_MAKEFLOW_COMMAND##",nested_makeflow_command)
-
 top_makefile_out = pjoin(args.output_dir,"pgp_run.mkf")
 
-with open(top_makefile_out,"w") as out:
-    out.write(text)
+shutil.copy(args.pgp_top_makefile,top_makefile_out)
 
 top_makefile_out = os.path.basename(top_makefile_out)
 
-makeflow_args = ["--batch-type",args.batch_type] + makeflow_args_other
-if args.batch_options:
-    makeflow_args += ["--batch-options",args.batch_options]
-
-run_cmd = [makeflow_exe] + makeflow_args + [top_makefile_out]
+run_cmd = [makeflow_exe] + makeflow_args_other + [top_makefile_out]
 
 os.chdir(args.output_dir)
+
+def _evar(out,name,val):
+    out.write('export {}="{}"\n'.format(name,val))
+
 with open(command_file,"w") as out:
     out.write("""#!/bin/bash
 source {env_file}
-{run_cmd}""".format(env_file=env_file,run_cmd=" ".join(['"{}"'.format(c) for c in run_cmd])))
-#os.chmod(command_file,0x755)
+""".format(env_file=env_file))
+    _evar(out,"PGP_INPUT_DIR",args.input_dir)
+    _evar(out,"PGP_OUTPUT_DIR",args.output_dir)
+    _evar(out,"MAKEFLOW_BATCH_QUEUE_TYPE",args.batch_type)
+    if not args.batch_options:
+        batch_options = ""
+    else:
+        batch_options = args.batch_options
+    _evar(out,"BATCH_OPTIONS",batch_options)
+    _evar(out,"PGP_BATCH_OPTIONS_PREPARE", " ".join((batch_options,args.pgp_batch_options_extra_prepare)).strip())
+    _evar(out,"PGP_BATCH_OPTIONS_PROCESS", " ".join((batch_options,args.pgp_batch_options_extra_process)).strip())
+    _evar(out,"PGP_BATCH_LOCAL_PREPARE", 1 if args.pgp_local_prepare else 0)
+    if args.pgp_process_mpi:
+        local_nested = 0
+        wrapper_nested = config.get(ini_section,"wrapper_nested_mpi")
+        assert os.path.isfile(wrapper_nested),\
+                "Wrapper script for nested MPI makeflows does not exist: {}".format(wrapper_nested)
+    else:
+        local_nested = 1
+        wrapper_nested = ""
+    _evar(out,"PGP_BATCH_LOCAL_PROCESS", local_nested)
+    _evar(out,"PGP_NESTED_WRAPPER_PROCESS", wrapper_nested)
+
+    out.write(" ".join(['"{}"'.format(c) for c in run_cmd])+"\n")
+
 os.chmod(command_file,os.stat(command_file).st_mode|0755)
 
 print "PGP: Makeflow command is saved to a file if you want to execute it later as ./{}".\
@@ -95,5 +108,5 @@ print "PGP: Makeflow command is saved to a file if you want to execute it later 
 
 if not args.do_not_run:
     print "PGP: starting the run"
-    check_call(run_cmd)
+    check_call(["bash",command_file])
 
