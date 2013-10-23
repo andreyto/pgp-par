@@ -1,27 +1,42 @@
 import argparse
 from subprocess import check_call
-import os, sys, glob, shutil
+import os, sys, glob, shutil, shlex
 from os.path import join as pjoin
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--test-archive", type=str)
-parser.add_argument("--install-prefix", type=str)
-parser.add_argument("--test-source-dir", type=str)
-args = parser.parse_args()
+parser = argparse.ArgumentParser(description="Test driver program.",
+        epilog="Any remaining options will be passed directly to pgp_run program.")
+parser.add_argument("test_archive", type=os.path.abspath, 
+    help="Path to structured input directory. "+\
+            "It can be either archive in 'tar.gz' format or an actual directory")
+parser.add_argument("install_prefix", type=os.path.abspath,
+    help="Path to --prefix used when installing the package")
 
-sys.path.insert(0,args.test_source_dir)
+args,args_other = parser.parse_known_args()
+
+if len(args_other) == 1:
+    args_other = shlex.split(args_other[0])
+
+sys.path.insert(0,os.path.dirname(os.path.abspath(sys.argv[0])))
 
 import util
 
-run_dir = pjoin(os.getcwd(),"run")
+run_dir = pjoin(os.getcwd(),"run_"+os.path.basename(args.test_archive))
 if os.path.exists(run_dir):
     shutil.rmtree(run_dir,ignore_errors=True)
-inp_dir = util.tar_extractall_safe_single_dir(args.test_archive,path=run_dir)
+os.makedirs(run_dir)
+if os.path.isfile(args.test_archive):
+    inp_dir = util.tar_extractall_safe_single_dir(args.test_archive,path=run_dir)
+    out_dir = inp_dir+".out"
+elif os.path.isdir(args.test_archive):
+    inp_dir = args.test_archive
+    out_dir = pjoin(run_dir,os.path.basename(inp_dir)+".out")
+else:
+    raise ValueError("test_archive is neither file nor directory: {}".\
+            format(args.test_archive))
 #inp_dir = pjoin(run_dir,"Bacillus.anthracis.sterne.PNNL.chunk.4sp")
-out_dir = inp_dir+".out"
 run_exe = pjoin(args.install_prefix,"bin","pgp_run")
-run_cmd = [run_exe,inp_dir,out_dir]
+run_cmd = [run_exe,inp_dir,out_dir] + args_other
 #run_cmd = [run_exe,inp_dir,out_dir, "-T", "sge", "-B", '-l fast -P 0534 -b n -S /bin/bash']
 
 print "Pipeline command is: {}".format(" ".join(run_cmd))
@@ -36,6 +51,8 @@ except:
 out_dir_data = out_dir
 gff_dir_out = pjoin(out_dir_data,"DerivedData","GFFs")
 assert os.path.isdir(gff_dir_out),"Output GFF dir does not exist"
+assert glob.glob(pjoin(out_dir_data,"DerivedData","*.txt")),\
+        "Output report files were not created"
 gff_dir_exp = pjoin(inp_dir,"DerivedData.expected","GFFs")
 if os.path.isdir(gff_dir_exp):
     gff_files_exp = glob.glob(pjoin(gff_dir_exp,"*.gff"))

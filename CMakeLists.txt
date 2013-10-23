@@ -59,9 +59,9 @@ set(PGP_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/proteogenomics")
 add_subdirectory(vendor)
 add_subdirectory(proteogenomics)
 add_subdirectory(index_search)
-add_subdirectory(test)
 
 message(STATUS "Target execution environment is: ${PGP_TARGET_ENV}")
 
 include(PGPGenerateProfiles)
+add_subdirectory(test)
 

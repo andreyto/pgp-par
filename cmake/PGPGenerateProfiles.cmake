@@ -4,6 +4,7 @@ set(bin_dir "${CMAKE_INSTALL_PREFIX}/bin")
 
 set(PGP_LOGIN_RC "${config_dir}/pgp_login.rc")
 set(PGP_TASK_RC "${config_dir}/pgp_task.rc")
+set(PGP_WRAPPER "${bin_dir}/pgp_wrapper")
 set(PGP_PREPARE "${bin_dir}/pgp_prepare")
 set(PGP_PREPARE_SUBMIT "${bin_dir}/pgp_prepare_submit")
 set(PGP_RUN_SUBMIT "${bin_dir}/pgp_run_submit")

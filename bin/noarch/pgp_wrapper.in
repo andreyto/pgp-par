@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "General purpose wrapper that sets up the environment" >&2
+    echo "variables and the executes the command line that was" >&2
+    echo "passed to it in arguments" >&2
+fi
+
+source @PGP_TASK_RC@
+
+#arguments need to be quoted otherwise those with spaces
+#inside will get busted
+exec "$@"
+
