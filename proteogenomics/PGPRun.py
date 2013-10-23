@@ -4,37 +4,66 @@ import os, sys, glob, shutil
 from os.path import join as pjoin
 import ConfigParser
 
-parser = argparse.ArgumentParser(description="""Execute entire PGP pipeline, possibly 
+parser = argparse.ArgumentParser(
+
+description="""Execute entire PGP pipeline, possibly 
 running different stages with different cluster job requirements or locally on
 submit node.""",
+
 epilog="""You can also include any combination of Makeflow options, which will be passed directly to the Makeflow.
- In particular, if running on a cluster, you will need to provide the Makeflow
- arguments described below.""")
+In particular, if running on a cluster, you will need to provide the Makeflow
+arguments for --batch-type and --batch-options. See README.md for the examples.
+"""
+
+)
 
 #parser.parse_args(['--', '-f'])
+
 parser.add_argument("--pgp-config-file", type=os.path.abspath, 
-        help="PGP config file")
+        help="""PGP config file [default from config will be used if this 
+is executed through pgp_run wrapper script]""")
+
 parser.add_argument("input_dir", type=os.path.abspath, 
         help="Input structured data directory")
+
 parser.add_argument("output_dir", type=os.path.abspath, 
         help="Output and work directory")
+
 parser.add_argument("--pgp-top-makefile", type=os.path.abspath, 
-        help="Top level Makeflow makefile")
+        help="Top level Makeflow makefile [default from config directory]")
+
 parser.add_argument("--do-not-run", action="store_true", 
-        help="Do not run the pipeline, only generate the workflow")
+        help="""Do not run the pipeline, only generate the workflow and 
+shell script to execute later""")
+
 parser.add_argument("-T","--batch-type", type=str, 
-        help="Makeflow: Batch system type [%(default)s]",
+        help="""Makeflow: Batch system type [%(default)s].""",
         default="local")
+
 parser.add_argument("-B","--batch-options", type=str, 
-        help="Makeflow: Add these options to all batch submit files. Quote in '' if spaces are present inside.")
+        help="""Makeflow: Add these options to all batch submit files. 
+Quote in '' if spaces are present inside.""")
+
 parser.add_argument("--pgp-batch-options-extra-prepare", type=str, default="",
-        help="Makeflow: Add these options to --batch-options for 'prepare' (serial) stage. Quote in '' if spaces are present inside.")
+        help="""Makeflow: Add these options to --batch-options for 'prepare'
+(serial) stage. Quote in '' if spaces are present inside.""")
+
 parser.add_argument("--pgp-batch-options-extra-process", type=str, default="",
-        help="Makeflow: Add these options to --batch-options for 'process' (parallel) stage. Quote in '' if spaces are present inside.")
+        help="""Makeflow: Add these options to --batch-options for 'process' 
+(parallel) stage. Quote in '' if spaces are present inside.""")
+
 parser.add_argument("--pgp-local-prepare", action="store_true", 
-        help="Run the 'prepare' stage on a local machine regardless of --batch-type setting")
+        help="""Run the 'prepare' stage on a local machine regardless of 
+--batch-type setting. Use if your cluster compute nodes do not have access 
+to file system where input_dir in located.""")
+
 parser.add_argument("--pgp-process-mpi", action="store_true", 
-        help="Use MPI backend for the 'process' stage")
+        help="""Use MPI backend for the 'process' stage. Not supported under 
+HTC target environment installations. You will need to provide batch system 
+parameters to launch parallel job of a required size through 
+--pgp-batch-options-extra-process and possibly edit 
+PGP_ROOT/bin/pgp_wrapper_nested_mpi. See README.md for details and examples.""")
+
 args,makeflow_args_other = parser.parse_known_args()
 
 #print args
