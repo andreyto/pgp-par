@@ -39,7 +39,9 @@ run_exe = pjoin(args.install_prefix,"bin","pgp_run")
 run_cmd = [run_exe,inp_dir,out_dir] + args_other
 #run_cmd = [run_exe,inp_dir,out_dir, "-T", "sge", "-B", '-l fast -P 0534 -b n -S /bin/bash']
 
-print "Pipeline command is: {}".format(" ".join(run_cmd))
+run_cmd_str = " ".join([ '"{}"'.format(c) for c in run_cmd ])
+
+print "Pipeline command is: {}".format(run_cmd_str)
 
 try:
     check_call(run_cmd)
@@ -75,7 +77,7 @@ if os.path.isdir(gff_dir_exp):
                 format(path_exp,len_recs_exp,path_out,len_recs_out)
         print "Found {} output GFF records".format(len_recs_out)
 print
-print "Pipeline command was: {}".format(" ".join(run_cmd))
+print "Pipeline command was: {}".format(run_cmd_str)
 print
 print "Pipeline output is in: {}".format(out_dir_data)
 print
