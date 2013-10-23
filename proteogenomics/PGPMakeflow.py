@@ -119,8 +119,9 @@ class pgp_makeflow(object):
         self.mf_out.close()
         os.rename(make_prep_work,make_prep)
         # execute "prepare data" makefile which is needed
-        # to generate "process data" makefile
-        run([config.get(ini_section,"makeflow"),make_prep])
+        # to generate "process data" makefile; set to run
+        # as local to override MAKEFLOW env vars
+        run([config.get(ini_section,"makeflow"),"-T","local",make_prep])
 
         # create "process data" makefile
         start_dir = os.getcwd()
