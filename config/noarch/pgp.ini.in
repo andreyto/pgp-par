@@ -43,6 +43,10 @@ postproc_flag_ok=postproc_flag_ok
 
 ; top level makefile
 make_top_in=@PGP_RUN_MKF_IN@
+; wrapper script (third argument for MAKEFLOW keyword) 
+; to be used in top level makefile for 'process' nested 
+; makeflow when mpi backend is requested
+wrapper_nested_mpi=@PGP_WRAPPER_NESTED_MPI@
 ; main processing makefile
 make_proc=pgp_proc.mkf
 ; data preparation makefile
