@@ -580,8 +580,10 @@ In the commands above, the controlling process of the Makeflow (the
 "master") and, optionally, the data preparation stage will run on the
 login node, and the script `pgp_run` will be in a running state until
 the entire workflow has finished. This script itself will use very
-little resources (outside of the local
-'prepare`stage), with Makeflow master merely farming  out tasks to the batch system. In case you do not want to wait for`pgp\_run\`
+little resources (outside of the local `prepare` stage), with Makeflow 
+master merely farming  out tasks to the batch system. 
+
+In case you do not want to wait for`pgp_run`
 on the login node, you can also submit the command above itself to your
 batch system through a standard (e.g. qsub) mechanism. This would
 require that your compute nodes are allowed to submit new jobs
@@ -595,7 +597,7 @@ can use `--do-not-run` option to `pgp_run`, and execute
 `./this_pgp_run.sh` later from shell after making `output_dir` your
 current working directory. You can also submit this script to your batch
 system (assuming your compute nodes are allowed to submit jobs too, and
-they can access INPUT\_DIR).
+they can access `INPUT_DIR`).
 
 When the pipeline finishes successfully, it prints to standard output
 "Nothing left to do". If it fails, it prints "Makeflow failed".
@@ -641,7 +643,7 @@ The following will happen when that command line is processed:
 -   Makeflow will submit jobs to SGE batch system
 -   The `prepare` stage will be submitted to a queue called `serial`
     with `qsub` options
-    `'-V -b n -S /bin/bash -pe 1way 16 -q serial -l h_rt=01:30:00'`. The
+    `-V -b n -S /bin/bash -pe 1way 16 -q serial -l h_rt=01:30:00`. The
     `-V` option tells SGE to propagate environment variables from login
     (submit) node to the compute nodes. This switch **has** to be used
     on XSEDE clusters that have `module` system for configuring the user
