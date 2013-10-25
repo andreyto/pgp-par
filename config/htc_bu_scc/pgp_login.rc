@@ -1,0 +1,36 @@
+#!/bin/bash
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+#
+#   Copyright J. Craig Venter Institute 2012-2013
+#   See docs.PGP/COPYING file distributed along with the proteogenomics 
+#   package for the copyright and license terms.
+#
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ##
+
+#This sets up the system environment needed to
+#both build and run the PGP pipeline on 
+#High Throughput Computing (HTC) clusters.
+#Source (not execute) this file on your login node
+#before building the pipeline or executing 
+#its master script.
+#Current install and submit scripts will source
+#it automatically - you do not have to do it.
+
+#We guard against sourcing more than once.
+#The downside - if you have edited it,
+#the most reliable way to see new changes
+#is to start with a fresh shell (e.g.
+#logoff+login).
+if [ -z "$PGP_LOGIN_RC_ENTERED" ]; then
+export PGP_LOGIN_RC_ENTERED=1
+
+#Add your commands here:
+source $HOME/.bashrc
+
+#this brings in sufficiently fresh cmake
+module add cmake
+module add python/2.7.5
+
+fi
+
