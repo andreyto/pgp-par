@@ -285,7 +285,8 @@ the actual values as described below.
     -   `ranger` is the environment configured for XSEDE TACC Ranger
         cluster (that was our primary testing site for the MPI execution
         mode).
-    -   `htc` covers both HTC clusters and multi-core workstations.
+    -   `htc` covers a generic case of HTC clusters and multi-core workstations.
+    -   `htc_bu_scc` is for BU SCC cluster used in HTC mode.
 
     The computing environments are discussed in detail below under
     "Customizing the build procedure". `htc` is assumed by default.
@@ -337,6 +338,7 @@ system, and then pass the corresponding environment name to the
     compilers for building the Makeflow. "Module" command is a
     standardized user environment management script used by XSEDE
     clusters (<https://www.xsede.org/software-environments>).
+    "module" commands are also used for `htc_bu_scc` environment.
 
     On XSEDE systems, the users will have to modify the details of
     specific package versions activated by the "module" command in order
