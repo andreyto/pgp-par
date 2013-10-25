@@ -6,6 +6,10 @@ if [ -z "$1" ]; then
     echo "passed to it in arguments" >&2
 fi
 
+if [ ! -f "@PGP_TASK_RC@" ]; then
+    echo "Task profile environment file must exist: @PGP_TASK_RC@" >&2
+    exit 1
+fi
 source @PGP_TASK_RC@
 
 #arguments need to be quoted otherwise those with spaces

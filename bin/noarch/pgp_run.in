@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ ! -f "@PGP_TASK_RC@" ]; then
+    echo "Task profile environment file must exist: @PGP_TASK_RC@" >&2
+    exit 1
+fi
 source @PGP_TASK_RC@
 
 #remaining arguments need to be quoted otherwise those with spaces
