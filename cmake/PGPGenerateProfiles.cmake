@@ -22,7 +22,7 @@ foreach(dir_name config bin)
     file(GLOB arch_files_in ${PROJECT_SOURCE_DIR}/${dir_name}/${PGP_TARGET_ENV}/*)
     file(GLOB noarch_files_in ${PROJECT_SOURCE_DIR}/${dir_name}/noarch/*)
     foreach( file_in IN LISTS arch_files_in noarch_files_in)
-        if(NOT file_in MATCHES "*.\\.cmake\$")  
+        if(NOT file_in MATCHES ".*\\.cmake\$")  
             get_filename_component(file_out "${file_in}" NAME)
             #remove '.in' from file_out name if present
             #TODO: use COPY option to configure_file if there is no '.in'
