@@ -54,7 +54,7 @@ Follow the Installation instructions from this manual, downloading the
 source code, editing the environment scripts and CMake configuration
 variables if necessary, and then running the installation command:
 
-    SOURCE/install --target-env htc --prefix PGP
+    SOURCE/install --target-env htc --prefix ../PGP
 
 where `SOURCE` stands for a path to a directory where you have
 downloaded or checked out the source code. The command above will
