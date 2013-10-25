@@ -72,7 +72,7 @@ if os.path.isdir(gff_dir_exp):
         #we give 5% slack for numerical stability across runs and architectures
         #when comparing the number of annotated peptides with the reference run
         assert max_len_recs == 0 or \
-                float(abs(len_recs_exp - len_recs_out))/max_len_recs <= 0.05,\
+                float(abs(len_recs_exp - len_recs_out))/max_len_recs <= 0.1,\
                 "Substantially different # of peptides in {} ({}) and {} ({}).".\
                 format(path_exp,len_recs_exp,path_out,len_recs_out)
         print "Found {} output GFF records".format(len_recs_out)
