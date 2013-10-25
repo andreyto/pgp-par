@@ -73,7 +73,7 @@ if [ -z "$target_env" ]; then
     exit 1
 fi
 
-cmake_toolchain="$src_dir/cmake/$target_env/toolchain.cmake"
+cmake_toolchain="$src_dir/config/$target_env/toolchain.cmake"
 if [ ! -f "$cmake_toolchain" ]; then
     echo "CMake toolchain file must exist: $cmake_toolchain" >&2
     exit 1
@@ -85,8 +85,13 @@ if [ ! -f "$login_rc" ]; then
     exit 1
 fi
 
-## We need to set up the build environment before we run CMake
+## We need to set up the build environment before we run CMake,
+## so we source the login_rc.
+## Manipulate set +/- e to prevent errors from causing exit because 
+## errors might be caused by irrelevant problems in system wide profiles.
+set +e
 source "$login_rc"
+set -e
 
 cmake \
 -D PGP_TARGET_ENV="$target_env" \
