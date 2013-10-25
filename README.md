@@ -666,7 +666,7 @@ V). Results
 
 **Structured Output Data Directory.** When the PGP analysis is complete,
 in addition to some log files, the following directories are created in
-`OUTPUT_DIR/run` directory.
+`OUTPUT_DIR` directory.
 
 -   **Databases:** the 6-frame translated refseq genomic data copied
     from input directory.
