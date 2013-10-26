@@ -67,6 +67,17 @@ set(cmd_develop ${PYTHON} ${SETUP_PY} develop
 					--install-dir ${PY_BUILD_INSTALL_PREFIX} 
 					--build-directory ${PY_BUILD_DIR})
 
+set(sitecustomize_body "
+##This file causes .pth files to be processed if the directory
+##of this file is on PYTHONPATH. Placing this file in such a directory
+##is the way to create an additional site-packages like directory in which
+##eggs can be installed without having to edit any system or user wide Python
+##config files.
+import site
+import os,inspect
+site.addsitedir(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+")
+
 set(cmd "
 set(ENV{CFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
 set(ENV{CXXFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
@@ -77,6 +88,7 @@ execute_process(
 if( cmd_error_status )
     message(FATAL_ERROR 'execute_process failed')
 endif()
+file(WRITE ${PY_BUILD_INSTALL_PREFIX}/sitecustomize.py \"${sitecustomize_body}\")
 ")
 
 make_script_command(SCRIPT_NAME py_build 
