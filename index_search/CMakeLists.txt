@@ -62,6 +62,7 @@ set(cmd_build_install "${PYTHON} ${SETUP_PY} easy_install
 					--always-copy 
 					.")
 
+
 set(cmd_develop ${PYTHON} ${SETUP_PY} develop 
 					--install-dir ${PY_BUILD_INSTALL_PREFIX} 
 					--build-directory ${PY_BUILD_DIR})
@@ -71,7 +72,11 @@ set(ENV{CFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
 set(ENV{CXXFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
 execute_process(
     COMMAND ${cmd_build_install}
+    RESULT_VARIABLE cmd_error_status
     )
+if( cmd_error_status )
+    message(FATAL_ERROR 'execute_process failed')
+endif()
 ")
 
 make_script_command(SCRIPT_NAME py_build 
@@ -102,3 +107,4 @@ set(cmd_install ${PYTHON} ${SETUP_PY} easy_install
 #install(CODE "execute_process(COMMAND ${cmd_install} WORKING_DIRECTORY ${PY_SOURCE_DIR})")
 #trailing slash copies files but not the directory itself
 install(DIRECTORY ${PY_BUILD_INSTALL_PREFIX}/ DESTINATION ${PY_INSTALL_PREFIX} USE_SOURCE_PERMISSIONS)
+
