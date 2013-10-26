@@ -1,5 +1,6 @@
 ## Python extension and dependencies (Biopython)
 include(CustomCommands)
+include(Util)
 
 set(PY_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PY_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/py_build")
@@ -21,6 +22,8 @@ configure_file(${SETUP_PY_IN} ${SETUP_PY} @ONLY)
 
 file(MAKE_DIRECTORY ${PY_BUILD_INSTALL_PREFIX})
 file(MAKE_DIRECTORY ${PY_BUILD_DIR})
+
+get_path_separator(${PYTHON} PATH_SEP)
 
 #Doing just 'setup.py build' or 'setup.py develop'
 #does not generate
@@ -81,6 +84,9 @@ site.addsitedir(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentf
 set(cmd "
 set(ENV{CFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
 set(ENV{CXXFLAGS} -O3 -DNDEBUG -DSEQAN_ENABLE_DEBUG=0 -DSEQAN_ENABLE_TESTING=0)
+#Make sure that Python installer does not complain about install path not being in
+#PYTHONPATH
+set(ENV{PYTHONPATH} $ENV{PYTHONPATH}${PATH_SEP}${PY_BUILD_INSTALL_PREFIX})
 execute_process(
     COMMAND ${cmd_build_install}
     RESULT_VARIABLE cmd_error_status
