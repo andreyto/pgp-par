@@ -233,7 +233,7 @@ The integrated installation procedure needs:
 -   [Git](http://git-scm.com/) version control system to checkout the
     source from the public repository on BitBucket
     (<https://bitbucket.org/andreyto/proteogenomics>). If you instead
-    download the package archive from BitBucket, you will not need Git
+    download the package archive from BitBucket, you will not need Git.
 -   [CMake](http://www.cmake.org/) configuration and build utility
     (version 2.8 or higher)
 -   *BASH* shell
@@ -261,8 +261,14 @@ For run-time, you will need:
 
     git clone git@bitbucket.org:andreyto/proteogenomics.git
 
-or download an archive from the BitBucket repository
+this will put the sources into a subdirectory `proteogenomics` under your 
+current working directory.
+
+**or** download an archive from the BitBucket repository
 (<https://bitbucket.org/andreyto/proteogenomics>).
+On BitBucket, you should choose the download archive under
+`Downloads` menu -> tab `Branches` -> Branch `master` ->
+link to one of the available archive formats (e.g. `gz`).
 
 ### C). Building and installing
 
