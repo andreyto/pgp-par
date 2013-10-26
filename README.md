@@ -384,6 +384,10 @@ parameters escaped by the `@` symbol on both sides, and then copied into
 `PGP_ROOT/config` and `PGP_ROOT/bin` directories, along with any files
 from `noarch` subdirectories.
 
+The generic `htc` configuration has been tested on Ubuntu 12.04
+workstation with `local` execution backend and on CentOS 6 JCVI HTC 
+cluster with both `local` and `sge` backends.
+
 IV). Running the pipeline
 -------------------------
 
