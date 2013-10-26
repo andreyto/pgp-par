@@ -266,9 +266,12 @@ current working directory.
 
 **or** download an archive from the BitBucket repository
 (<https://bitbucket.org/andreyto/proteogenomics>).
-On BitBucket, you should choose the download archive under
-`Downloads` menu -> tab `Branches` -> Branch `master` ->
-link to one of the available archive formats (e.g. `gz`).
+On BitBucket, you should choose the download archive under `Downloads` 
+menu -> tab `Branches` -> Branch `master` -> link to one of the 
+available archive formats. For example, this is the link to the 
+["gz" archive](https://bitbucket.org/andreyto/proteogenomics/get/master.tar.gz).
+Expand the downloaded "gz" archive with `tar -zxf master.tar.gz` 
+and rename the resulting folder to`proteogenomics`.
 
 ### C). Building and installing
 
