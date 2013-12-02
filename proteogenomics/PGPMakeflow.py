@@ -45,7 +45,7 @@ source %(env)s
 set -e
 rm -f %(prep_flag_ok)s
 prep_script=$PGP_HOME/ClusterSub.py
-$PGP_PYTHON $prep_script -t %(inp_dir)s -s %(run_dir)s
+$PGP_PYTHON $prep_script -t %(inp_dir)s -s %(run_dir)s -c %(config_file)s
 #copy gbk files into run_dir too
 cp %(gbk_src)s %(gbk_dest)s
 touch %(prep_flag_ok)s
@@ -103,10 +103,11 @@ touch %(postproc_flag_ok)s
 class pgp_makeflow(object):
     """Generator of Makeflow input for the PGP pipeline."""
 
-    def __init__(self,pgp_home,config,inp_dir):
+    def __init__(self,pgp_home,config,inp_dir,config_file):
         self.pgp_home = pgp_home
         self.config = config
         self.inp_dir = inp_dir
+        self.config_file = config_file
 
     def gen_all(self):
         config = self.config
@@ -157,7 +158,8 @@ class pgp_makeflow(object):
                 run_dir=pjoin(work_dir,run_dir),
                 prep_flag_ok=prep_flag_ok,
                 gbk_src=gbk_src,
-                gbk_dest=gbk_dest
+                gbk_dest=gbk_dest,
+                config_file=self.config_file
                 )
         script_file = config.get(ini_section,"prep_wrapper")
         strToFile(script,script_file)
@@ -360,7 +362,7 @@ def getProgOptions():
     return options,args
 
 if __name__ == "__main__":
-    pgp_home = os.path.dirname(sys.argv[0])
+    pgp_home = os.path.abspath(os.path.dirname(sys.argv[0]))
     opt,args = getProgOptions()
     assert opt.inp_dir is not None,"--inp-dir is mandatory argument"
     opt.inp_dir = os.path.abspath(opt.inp_dir)
@@ -368,6 +370,7 @@ if __name__ == "__main__":
         config_file = opt.config_file
     else:
         config_file = pjoin(pgp_home,config_file_def)
+    config_file = os.path.abspath(config_file)
     config = ConfigParser.SafeConfigParser()
     config.read(config_file)
     pgp_home = config.get(ini_section,"pgp_home")
@@ -378,7 +381,10 @@ if __name__ == "__main__":
     start_dir = os.getcwd()
     try:
         os.chdir(opt.work_dir)
-        mkf = pgp_makeflow(config=config,pgp_home=pgp_home,inp_dir=opt.inp_dir)
+        mkf = pgp_makeflow(config=config,
+                pgp_home=pgp_home,
+                inp_dir=opt.inp_dir,
+                config_file=config_file)
         mkf.gen_all()
     finally:
         os.chdir(start_dir)

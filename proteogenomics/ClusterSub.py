@@ -19,6 +19,7 @@ import sys
 import getopt
 import shutil
 import tarfile
+import ConfigParser
 
 import ClusterUtils
 import SixFrameFasta
@@ -28,6 +29,8 @@ import CountScans
 
 # 50mb or so is plenty of stuff to search in one *unmodified* run:
 MAX_MZMXML_PER_RUN = 50000000
+
+ini_section = "main"
 
 class JobClass:
     """
@@ -158,13 +161,8 @@ class ScriptMongler:
                 SpectraStr += "spectra,%s,%s,%s\n"%(ScratchMZXMLPath, firstScanNumber, lastScanNumber)
             else:
                 SpectraStr += "spectra,%s\n"%(ScratchMZXMLPath)
-        Script = """
-instrument,ESI-ION-TRAP
-protease,Trypsin
-mod,+57,C,fix
-tagcount,25
-PMTolerance,3.0
-""" 
+        param = self.config.get(ini_section,"inspect_param")
+        Script = param
         Script += "\n"
         Script += SpectraStr
         Script += "\n"
@@ -471,7 +469,7 @@ PMTolerance,3.0
         """
         Parse command-line arguments.
         """
-        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:s:t:")
+        (Options, Args) = getopt.getopt(sys.argv[1:], "am:bp:s:t:c:")
         OptionsSeen = {}
         if len(Options) == 0:
             print UsageInfo
@@ -499,6 +497,15 @@ PMTolerance,3.0
                 self.scratchBase = Value
             elif Option == "-t":
                 self.projectDir = Value
+            elif Option == "-c":
+                if not os.path.exists(Value):
+                    print "** Error: couldn't find config file '%s'\n\n"%(Value,)
+                    print UsageInfo
+                    sys.exit(1)
+                self.configFile = Value
+                config = ConfigParser.SafeConfigParser()
+                config.read(self.configFile)
+                self.config = config
             else:
                 print UsageInfo
                 sys.exit(1)
@@ -517,6 +524,7 @@ ClusterSub.py - Prepare scripts to search mzXML files over a grid.
 
 Required Parameters:
  -t [FileName] transfer all mzxml files from the named dir into a grid ready work dir
+ -c [FileName] config file with Inspect parameters, see PGP_HOME/config/pgp.ini
 
 Options:
  -a Search ALL mzxml files in the mzxml directory, ignore flags in the "done" directory

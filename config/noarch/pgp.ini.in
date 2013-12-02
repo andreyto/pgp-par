@@ -40,7 +40,14 @@ gff_dir=%(postproc_results_dir)s/GFFs
 inspect_tasks_dir=jobs
 prep_flag_ok=prep_flag_ok
 postproc_flag_ok=postproc_flag_ok
-
+; Parameters to pass to Inspect
+; You need to keep second and following lines
+; indented as below.
+inspect_param=instrument,ESI-ION-TRAP
+ protease,Trypsin
+ mod,+57,C,fix
+ tagcount,25
+ PMTolerance,3.0
 ; top level makefile
 make_top_in=@PGP_RUN_MKF_IN@
 ; wrapper script (third argument for MAKEFLOW keyword) 
