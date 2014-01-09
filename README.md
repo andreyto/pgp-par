@@ -92,19 +92,6 @@ See the description of `PGP_TEST_PGP_RUN_EXTRA_OPTIONS` CMake variable
 below if you want the automated test to be executed with a distributed
 cluster backend instead of the default local multi-core backend.
 
-You can also run test on a real size dataset (8GB) by executing this
-command in the directory where you have built the software:
-
-    ctest -R test_large 
-
-This test will try to download the spectra from public repositories and
-then run the pipeline. Because this is a large download, it might or
-might not work depending on the speed and stability of your Internet
-connection and the status of the external servers. The pipeline will
-also take a day or so to complete on a quad core workstation.
-
-You can likewise examine the output GFF3 files in any genomic browser.
-
 I). The PGP Algorithm
 ---------------------
 
