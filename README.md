@@ -47,8 +47,7 @@ To test the pipeline, you can run it on a single workstation (preferably
 multicore one).
 
 Make sure that your are in a directory where you have write access and
-enough free space (2G for small test and 20G for large test, see below
-for a description of the tests).
+enough free space (2G to process the included small test dataset).
 
 Follow the Installation instructions from this manual, downloading the
 source code, editing the environment scripts and CMake configuration
