@@ -26,6 +26,10 @@ Parallel execution ability is important for proteogenomic annotation
 software due to a high volume of required computations (order of 100
 CPU\*hrs for a typical bacterial genome).
 
+### Citations
+Please cite this article if you use this software
+[[PMID:24470574](http://bioinformatics.oxfordjournals.org/content/early/2014/01/27/bioinformatics.btu051)].
+
 ### The significance of proteogenomic annotation
 
 Our pipeline is a tool for improving the existing genomic annotations
