@@ -233,8 +233,6 @@ The integrated installation procedure needs:
 -   GNU Make
 -   Internet connection. The installation procedure might try to
     download some Python dependencies from Python Package Index (PyPi).
-    If you try ro run the large test, the test script will try to
-    download MS data from public repositories.
 
 All software components listed above are available as standard packages
 in major Linux distributions.
