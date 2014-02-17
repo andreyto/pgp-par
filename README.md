@@ -28,7 +28,7 @@ CPU\*hrs for a typical bacterial genome).
 
 ### Citations
 Please cite this article if you use this software
-[[PMID:24470574](http://bioinformatics.oxfordjournals.org/content/early/2014/01/27/bioinformatics.btu051)].
+[[PMID:24470574](http://bioinformatics.oxfordjournals.org/content/early/2014/02/14/bioinformatics.btu051.long)].
 
 ### The significance of proteogenomic annotation
 
