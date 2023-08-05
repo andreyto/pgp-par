@@ -30,6 +30,12 @@ CPU\*hrs for a typical bacterial genome).
 Please cite this article if you use this software
 [[PMID:24470574](http://bioinformatics.oxfordjournals.org/content/early/2014/02/14/bioinformatics.btu051.long)].
 
+### Funding
+
+National Science Foundation awards (EF-0949047 and 1048199), 
+and XSEDE allocation (DEB100001) on the Texas Advanced Computing Center 
+Ranger.
+
 ### The significance of proteogenomic annotation
 
 Our pipeline is a tool for improving the existing genomic annotations
